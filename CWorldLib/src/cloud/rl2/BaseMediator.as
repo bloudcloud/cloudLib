@@ -71,6 +71,7 @@ package cloud.rl2
 		public function destroy():void
 		{
 			removeListener();
+			_view=null;
 			logger.info((_type+"->destroy()"));
 		}
 		
