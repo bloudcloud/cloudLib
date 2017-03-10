@@ -1,7 +1,5 @@
 package cloud.core.utils
 {
-	import flash.geom.Vector3D;
-	
 	public class CMathUtil
 	{
 		public static const RADIANS_TO_DEGREES:Number = 180/Math.PI;

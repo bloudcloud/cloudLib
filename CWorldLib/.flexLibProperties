@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <flexLibProperties includeAllClasses="true" useMultiPlatformConfig="false" version="3">
-  <includeClasses/>
+  <includeClasses>
+    <classEntry path="cloud.geometry.threed.Ray"/>
+    <classEntry path="cloud.geometry.threed.Geometry3DUtil"/>
+    <classEntry path="cloud.geometry.threed.Vector3DUtil"/>
+  </includeClasses>
   <includeResources/>
   <namespaceManifests/>
 </flexLibProperties>
