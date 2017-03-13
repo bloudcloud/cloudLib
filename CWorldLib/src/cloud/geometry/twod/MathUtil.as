@@ -1,12 +1,20 @@
-package cloud.core.utils
+package cloud.geometry.twod
 {
-	public class CMathUtil
+	public class MathUtil
 	{
 		public static const RADIANS_TO_DEGREES:Number = 180/Math.PI;
 		public static const DEGREES_TO_RADIANS:Number = Math.PI/180;
 		
-		public function CMathUtil()
+		public function MathUtil()
 		{
+		}
+		public static function toRadians(degrees:Number):Number
+		{
+			return degrees * DEGREES_TO_RADIANS;
+		}
+		public static function toDegrees(radians:Number):Number
+		{
+			return radians * RADIANS_TO_DEGREES;
 		}
 		/**
 		 * 用坐标获取两点间的距离 
