@@ -12,6 +12,7 @@ package cloud.geometry.threed
 		public static const AXIS_X:Vector3D = new Vector3D(1,0,0);
 		public static const AXIS_Y:Vector3D = new Vector3D(0,1,0);
 		public static const AXIS_Z:Vector3D = new Vector3D(0,0,1);
+		public static const RAY_3D:Ray3D = new Ray3D();
 		/**
 		 * 用向量方法获取点到线段的距离 
 		 * @param a	线上a点

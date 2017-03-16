@@ -6,7 +6,7 @@ package cloud.geometry.threed
 	 *  3D射线
 	 * @author cloud
 	 */
-	public class Ray
+	public class Ray3D
 	{
 		private var _originPos:Vector3D;
 
@@ -22,9 +22,9 @@ package cloud.geometry.threed
 			return _direction;
 		}
 
-		public function Ray(position:Vector3D = null,direction:Vector3D = null)
+		public function Ray3D(originPos:Vector3D = null,direction:Vector3D = null)
 		{
-			_originPos = position;
+			_originPos = originPos;
 			_originPos ||= new Vector3D();
 			_direction = direction;
 			_direction ||= new Vector3D();

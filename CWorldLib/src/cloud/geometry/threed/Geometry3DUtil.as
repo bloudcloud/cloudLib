@@ -17,7 +17,7 @@ package cloud.geometry.threed
 		 * @return Boolean 是否相交
 		 * 
 		 */		
-		public static function intersectPlaneByRay(ray:Ray,planePos:Vector3D,planeNormal:Vector3D,intersectPos:Vector3D):Boolean
+		public static function intersectPlaneByRay(ray:Ray3D,planePos:Vector3D,planeNormal:Vector3D,intersectPos:Vector3D):Boolean
 		{
 			var tmpVec:Vector3D;
 			var rp2cp:Vector3D=planePos.subtract(ray.originPos);
