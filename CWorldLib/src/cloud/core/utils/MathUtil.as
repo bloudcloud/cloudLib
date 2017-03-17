@@ -1,4 +1,4 @@
-package cloud.geometry.twod
+package cloud.core.utils
 {
 	import flash.geom.Point;
 
