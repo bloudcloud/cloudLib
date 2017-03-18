@@ -1,15 +1,17 @@
 package cloud.core.collections
 {
+	import cloud.core.interfaces.ICData;
+
 	public class DoubleNode implements IDoubleNode
 	{
 		//双向链表， double list node 
-		private var _data:*; 
+		private var _data:ICData; 
 		private var _prev:IDoubleNode; 
 		private var _next:IDoubleNode; 
 		//标志是否已在链表中 
 		private var _hasIN:Boolean=false; 
 		//@initData:结点初始值， the node’ data; 
-		public function DoubleNode(source:*) { 
+		public function DoubleNode(source:ICData) { 
 			_data = source; 
 			_prev = _next = null; 
 		} 
@@ -37,11 +39,11 @@ package cloud.core.collections
 			_prev = newNode; 
 		} 
 		//取得当前结点数据, return the node’s data 
-		public function get nodeData():* { 
+		public function get nodeData():ICData { 
 			return _data; 
 		} 
 		//设置当前结点数据， set the node‘s data 
-		public function set nodeData(newData:*):void { 
+		public function set nodeData(newData:ICData):void { 
 			_data = newData; 
 		} 
 		//在当前节点后插入结点， append a new node after current node 

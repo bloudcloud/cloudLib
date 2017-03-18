@@ -1,5 +1,7 @@
 package cloud.core.collections
 {
+	import cloud.core.interfaces.ICData;
+
 	public interface IDoubleNode
 	{
 		function get hasIn():Boolean;
@@ -8,8 +10,8 @@ package cloud.core.collections
 		function set next(value:IDoubleNode):void;
 		function get prev():IDoubleNode;
 		function set prev(value:IDoubleNode):void;
-		function get nodeData():*;
-		function set nodeData(value:*):void;
+		function get nodeData():ICData;
+		function set nodeData(value:ICData):void;
 		function addAfter(node:IDoubleNode):void;
 		function addBefore(node:IDoubleNode):void;
 		function unlink():void;
