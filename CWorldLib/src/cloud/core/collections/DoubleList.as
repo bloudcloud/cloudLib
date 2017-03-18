@@ -1,17 +1,16 @@
 package cloud.core.collections
 {
 	import cloud.core.interfaces.ICData;
-
 	/**
 	 *  双向链表结构
 	 * @author cloud
 	 */
 	public class DoubleList implements IDoubleList
 	{
-		private var _currentNode:IDoubleNode;
+		protected var _currentNode:IDoubleNode;
 		private var _rootNode:IDoubleNode;
 		private var _endNode:IDoubleNode;
-		private var _length:uint=0;
+		private var _numberChildren:uint=0;
 		
 		public function DoubleList()
 		{
@@ -19,28 +18,41 @@ package cloud.core.collections
 		
 		private function initList(nodeData:ICData):void
 		{
-			var node:DoubleNode=new DoubleNode(nodeData);
+			var node:IDoubleNode=createNode(nodeData);
 			node.hasIn=true;
 			_rootNode=node;
 			_endNode=node;
 			_currentNode=node;
-			_length++;
+			_numberChildren++;
+		}
+		/**
+		 * 初始化根节点 
+		 * @param nodeData
+		 * @return IDoubleNode
+		 * 
+		 */		
+		protected function createNode(nodeData:ICData):IDoubleNode
+		{
+			return new DoubleNode(nodeData);
 		}
 		/**
 		 * 将节点添加到当前节点之前 
 		 * @param node
 		 * 
 		 */		
-		protected function addNodeBefore(node:IDoubleNode):void
+		protected function addNodeBefore(sourceData:ICData,targetNode:IDoubleNode):Boolean
 		{
-			++_length;
-			_currentNode.addBefore(node);
-			if(_currentNode==_rootNode)
+			if(_endNode != targetNode || sourceData.compare(targetNode.nodeData)<0) return false;
+			
+			++_numberChildren;
+			if(node==null)
 			{
 				//变更根节点
-				_rootNode=node;
-				_currentNode=node;
+				_rootNode=_currentNode;
+				
 			}
+			node.addBefore(_currentNode);
+			return true;
 		}
 		/**
 		 * 将节点添加到当前节点之后 
@@ -49,7 +61,7 @@ package cloud.core.collections
 		 */		 
 		protected function addNodeAfter(node:IDoubleNode):void
 		{
-			++_length;
+			++_numberChildren;
 			_currentNode.addAfter(node);
 			if(_currentNode==_endNode)
 			{
@@ -66,9 +78,15 @@ package cloud.core.collections
 		protected function removeNode(node:IDoubleNode):void
 		{
 			node.unlink();
-			--_length;
+			--_numberChildren;
 		}
-
+		/**
+		 * 更新坐标 
+		 * 
+		 */		
+		protected function updateList():void
+		{
+		}
 		public function get rootNode():IDoubleNode
 		{
 			return _rootNode;
@@ -88,28 +106,33 @@ package cloud.core.collections
 		{
 			_endNode=value;
 		}
-		public function get length():uint
+		public function get numberChildren():uint
 		{
-			return _length;
+			return _numberChildren;
 		}
-		public function add(nodeData:ICData):void
+		public function add(nodeData:ICData):Boolean
 		{
-			var node:DoubleNode=new DoubleNode(nodeData);
+			var node:IDoubleNode=createNode(nodeData);
+			if(nodeData.compare(_currentNode.nodeData)<0)
+			{
+				mapNextFromNow();
+			}
 			if(_currentNode!=null)
 			{
-				if(nodeData.compare(_currentNode.nodeData)>0)
-					addNodeBefore(node);
-				else
-					addNodeAfter(node);
+				mapFromNow(nodeData,);
 			}
 			else
 			{
 				initList(nodeData);
 			}
+			updateList();
+			return true;
 		}
-		public function remove(nodeData:ICData):void
+		public function remove(nodeData:ICData):Boolean
 		{
-			mapFromNow(nodeData,removeNode);
+			searchFromNow(nodeData,removeNode);
+			updateList();
+			return true;
 		}
 		
 		public function getDataByID(uniqueID:String):ICData
@@ -121,30 +144,53 @@ package cloud.core.collections
 			}
 			return null;
 		}
-
-		public function mapFromNow(nodeData:ICData,callback:Function):Boolean
+		/**
+		 * 从当前节点向下遍历搜索 
+		 * @param nodeData
+		 * @param callback
+		 * @return Boolean
+		 * 
+		 */
+		public function mapNextFromNow(nodeData:ICData,callback:Function):Boolean
+		{
+			for(var child:IDoubleNode=_currentNode; child!=null; child=child.next)
+			{
+				if(child.next==null && (callback.call(null,nodeData,child))) return true;
+				if(nodeData.compare(child.nodeData)>=0 && callback.call(null,nodeData,child)) return true;
+			}
+			return false;
+		}
+		/**
+		 * 从当前节点向上遍历搜索 
+		 * @param nodeData
+		 * @param callback
+		 * @return Boolean
+		 * 
+		 */		
+		public function mapPrevFromNow(nodeData:ICData,callback:Function):Boolean
+		{
+			for(var child:IDoubleNode=_currentNode; child!=null; child=child.prev)
+			{
+				if(callback.call(null,child)) return true;
+			}
+			return false;
+		}
+		
+		public function mapFromNow(source:ICData,callback:Function):Boolean
 		{
 			var child:IDoubleNode;
-			if(nodeData.compare(_currentNode.nodeData)>0)
+			if(source.compare(_currentNode.nodeData)<0)
 			{
-				for(child=_currentNode; child!=null; child=child.prev)
+				for(child=_currentNode; child!=null; child=child.next)
 				{
-					if(nodeData==child.nodeData)
-					{
-						callback.call(null,child);
-						return true;
-					}
+					if(callback.call(null,source,child)) return true;
 				}
 			}
 			else
 			{
-				for(child=_currentNode; child!=null; child=child.next)
+				for(child=_currentNode; child!=null; child=child.prev)
 				{
-					if(nodeData==child.nodeData)
-					{
-						callback.call(null,child);
-						return true;
-					}
+					if(callback.call(null,source,child)) return true;
 				}
 			}
 			return false;

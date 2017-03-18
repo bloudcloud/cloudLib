@@ -19,6 +19,23 @@ package cloud.core.interfaces
 		 */		
 		function set uniqueID(value:String):void;
 		/**
+		 * 获取对象数据类型属性 
+		 * @return uint
+		 * 
+		 */		
+		function get type():uint;
+		/**
+		 * 设置对象数据类型属性 
+		 * @param value
+		 * 
+		 */		
+		function set type(value:uint):void;
+		/**
+		 * 获取位置 
+		 * @return Vector3D
+		 * 
+		 */
+		/**
 		 * 更新对象数据
 		 * @param value
 		 * 
