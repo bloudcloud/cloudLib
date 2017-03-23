@@ -1,7 +1,9 @@
 package cloud.core.utils
 {
-	import flash.geom.Point;
-
+	/**
+	 *  数学工具
+	 * @author cloud
+	 */
 	public class MathUtil
 	{
 		/**
@@ -60,6 +62,7 @@ package cloud.core.utils
 		{
 			return Math.sqrt((x1-x2)*(x1-x2)+(y1-y2)*(y1-y2)+(z1-z2)*(z1-z2));
 		}
+		
 		/**
 		 * 求两根直线的交点
 		 * @param _pointA1  直线A上的一点
@@ -69,7 +72,7 @@ package cloud.core.utils
 		 * @return  返回交点坐标，null 两线平行
 		 * 
 		 */		
-		public static function lineIntersection(ax1:Number,ay1:Number,ax2:Number,ay2:Number,bx1:Number,by1:Number,bx2:Number,by2:Number):Point
+		public static function lineIntersection(ax1:Number,ay1:Number,ax2:Number,ay2:Number,bx1:Number,by1:Number,bx2:Number,by2:Number):Vector2D
 		{
 			var aK:Number = lineK(ax1,ay1,ax2,ay2);
 			var bK:Number = lineK(bx1,by1,bx2,by2);
@@ -77,7 +80,7 @@ package cloud.core.utils
 			{
 				return null;
 			}
-			var point:Point = new Point();
+			var point:Vector2D = new Vector2D();
 			var aB:Number;
 			var bB:Number;
 			///////////////////////////////////////////////////////start

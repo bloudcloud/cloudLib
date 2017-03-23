@@ -52,7 +52,7 @@ package cloud.core.collections
 			newNode.prev = this; 
 			if (_next!=null) { 
 				_next.prev = newNode; 
-			} 
+			}
 			_next = newNode; 
 			newNode.hasIn=true; 
 		} 
@@ -85,6 +85,7 @@ package cloud.core.collections
 			} 
 			_next = _prev = null; 
 			_hasIN=false; 
+			this._data=null;
 		} 
 		//描述当前double-node， rerurn a string represent the double-node 
 		public function toString():String { 
