@@ -6,7 +6,7 @@ package cloud.core.interfaces
 	 *  
 	 * @author cloud
 	 */
-	public interface IC3DObjectData extends ICData
+	public interface ICObject3DData extends ICData
 	{
 		/**
 		 * 获取方向 
@@ -68,10 +68,5 @@ package cloud.core.interfaces
 		 * 
 		 */		
 		function set position(value:Vector3D):void;
-		/**
-		 * 清空数据 
-		 * 
-		 */		
-		function clear():void;
 	}
 }

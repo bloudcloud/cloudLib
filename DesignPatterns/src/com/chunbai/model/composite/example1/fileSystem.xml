@@ -1,0 +1,12 @@
+<fileSystem>
+    <fileSystemItem type="Directory" name="Program Files" bytes="1024">
+        <fileSystemItem type="Directory" name="Adobe Illustrator">
+            <fileSystemItem type="File" name="Illustrator.exe" />
+        </fileSystemItem>
+    </fileSystemItem>
+    
+    <fileSystemItem type="Directory" name="My Documents">
+        <fileSystemItem type="File" name="Document.txt" />
+        <fileSystemItem type="File" name="Image.jpg" />
+    </fileSystemItem>
+</fileSystem>

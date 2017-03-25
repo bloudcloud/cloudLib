@@ -1,0 +1,7 @@
+这一模式的意图是：“定义一个用于创建对象的接口，让子类决定实例化哪一个类。Factory Method是一个类的实例化延迟到其子类。”
+这一模式的关键是掌握“何时应用这一模式”，事实上我觉得这也是所有设计模式的关键。
+一个已知的应用就是MFC中关于Document和Frame之间的关系。通常在生成一个多文档程序时，VC会为你创建一个Frame类和Document类，
+你的Frame类可以用来相应OnFileNew消息，然后创建一个Document对象。但是对于Windows的消息系统来说，
+它并不知道用户程序中创建的Document类有什么特性，对于它来说，它所看到是CFrame对象和CDocument对象。
+Factory Method模式可以保证其他对象不需要知道具体对象的类型而管理这些对象，这一模式通常用于制定框架。
+这一模式和Abstract Factory模式很相像，事实上Abstract Factory模式可以由一系列Factory Method模式实现。

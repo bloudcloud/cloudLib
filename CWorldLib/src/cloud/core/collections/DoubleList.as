@@ -2,7 +2,10 @@ package cloud.core.collections
 {
 	import cloud.core.interfaces.ICData;
 	import cloud.core.utils.CDebug;
+	
+	import ns.cloudLib;
 
+	use namespace cloudLib;
 	/**
 	 *  双向链表结构
 	 * @author cloud
@@ -10,18 +13,16 @@ package cloud.core.collections
 	public class DoubleList implements IDoubleList
 	{
 		protected var _invalidChildren:Boolean;
+		protected var _isFullState:Boolean;
 		
 		protected var _currentNode:IDoubleNode;
-//		protected var _lastNode:IDoubleNode;
 		protected var _headNode:IDoubleNode;
 		protected var _endNode:IDoubleNode;
+		//需要更新的位置的节点数据集合
+		cloudLib var _changedVos:Vector.<ICData> = new Vector.<ICData>();
+		
 		private var _numberChildren:uint;
-		
-		protected function get currentNode():IDoubleNode
-		{
-			return _currentNode;
-		}
-		
+
 		public function DoubleList()
 		{
 		}
@@ -137,21 +138,26 @@ package cloud.core.collections
 				_endNode=prevNode;
 			_numberChildren--;
 			_invalidChildren=true;
+			_isFullState=false;
 		}
 		/**
 		 * 更新链表 
 		 * 
 		 */		
-		protected function updateList(isNext:Boolean):void
+		protected function updateList(isNext:Boolean=true):void
 		{
 		}
-
+		
+		public function get isFull():Boolean
+		{
+			return _isFullState;
+		}
 		public function get numberChildren():uint
 		{
 			return _numberChildren;
 		}
 
-		public function add(nodeData:ICData):Boolean
+		public function add(nodeData:ICData):Vector.<ICData>
 		{
 			var isNext:Boolean=true;
 			if(_currentNode!=null)
@@ -164,13 +170,13 @@ package cloud.core.collections
 				doAddNode(nodeData,null,isNext);
 			}
 			updateList(isNext);
-			return true;
+			return _changedVos.length>0?_changedVos:null;
 		}
-		public function remove(nodeData:ICData):Boolean
+		public function remove(nodeData:ICData):Vector.<ICData>
 		{
 			doRemoveNode(nodeData);
-			updateList(true);
-			return true;
+			updateList();
+			return _changedVos.length>0?_changedVos:null;
 		}
 		
 		public function getDataByID(uniqueID:String):ICData
@@ -191,43 +197,58 @@ package cloud.core.collections
 			}
 		}
 		/**
-		 * 根据遍历顺序，比较源节点数据与当前节点数据，根据结果执行回调，返回回调的结果 
-		 * @param nodeData	源节点数据
-		 * @param callback	回调函数
-		 * @param isNext 是否向下遍历
-		 * @return *
+		 * 根据遍历顺序，比较源节点数据与当前节点数据，根据结果执行回调，返回回调的结果  
+		 * @param nodeData
+		 * @param callback
+		 * @param isNext
+		 * @return 
 		 * 
-		 */		
+		 */				
 		protected function compareFromNow(nodeData:ICData,callback:Function,isNext:Boolean):*
 		{
 			var otherNode:IDoubleNode;
-			var reverseNode:IDoubleNode;
-			var compareResult:Boolean;
+			var lastChild:IDoubleNode;
+			var isResult:Boolean;
+			var reciprocalDistance:Number;
 			var child:IDoubleNode=_currentNode;
 			for(;child!=null;child=otherNode)
 			{
+				reciprocalDistance=nodeData.compare(child.nodeData);
 				if(isNext)
 				{
 					otherNode=child.next;
-					compareResult=nodeData.compare(child.nodeData)>=0;
-					reverseNode=child.prev;
+					isResult=reciprocalDistance>=0;
+					lastChild=child.prev;
 				}
 				else
 				{
 					otherNode=child.prev;
-					compareResult=nodeData.compare(child.nodeData)<0;
-					reverseNode=child.next;
+					isResult=reciprocalDistance<0;
+					lastChild=child.next;
 				}
-				if(otherNode==null)
+				if(isResult)
+				{
+					//当前节点在两个节点之间,选择最优节点
+					var reciprocalDistance_last:Number=nodeData.compare(lastChild.nodeData);
+					if(Math.abs(reciprocalDistance)>Math.abs(reciprocalDistance_last))
+					{
+						//最优节点
+						lastChild=child;
+					}
+					else
+					{
+						reciprocalDistance=reciprocalDistance_last;
+					}
+					return callback.call(null,nodeData,lastChild,reciprocalDistance<0);
+				}
+				else if(otherNode==null)
 					return callback.call(null,nodeData,child,isNext);
-				if(compareResult)
-					return callback.call(null,nodeData,reverseNode,isNext);
 			}
 			return null;
 		}
 		protected function searchFromNow(nodeData:ICData,callback:Function):Boolean
 		{
-			var compareEnd:int=nodeData.compare(_currentNode.nodeData);
+			var compareEnd:Number=nodeData.compare(_currentNode.nodeData);
 			var child:IDoubleNode
 			if(compareEnd<0)
 			{
@@ -262,13 +283,16 @@ package cloud.core.collections
 			return false;
 		}
 		
-		public function forEach(callback:Function,isNext:Boolean=true):void
+		public function forEachNode(callback:Function,isNext:Boolean=true):void
 		{
 			var child:IDoubleNode;
-			for(child=_headNode; child!=null; child=isNext?child.next:child.prev)
+			for(child=isNext?_headNode:_endNode; child!=null; child=isNext?child.next:child.prev)
 			{
 				callback.call(null,child.nodeData);
 			}
 		}
+
+		
+
 	}
 }

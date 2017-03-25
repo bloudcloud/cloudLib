@@ -46,7 +46,6 @@ package cloud.core.utils
 			}
 			return returnLength;
 		}
-		
 		public function Vector3DUtil()
 		{
 		}

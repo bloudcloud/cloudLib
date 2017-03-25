@@ -1,9 +1,20 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <flexLibProperties includeAllClasses="true" useMultiPlatformConfig="false" version="3">
   <includeClasses>
-    <classEntry path="cloud.geometry.threed.Ray"/>
-    <classEntry path="cloud.geometry.threed.Geometry3DUtil"/>
-    <classEntry path="cloud.geometry.threed.Vector3DUtil"/>
+    <classEntry path="cloud.core.utils.Ray3D"/>
+    <classEntry path="cloud.core.utils.Geometry3DUtil"/>
+    <classEntry path="cloud.core.utils.Vector3DUtil"/>
+    <classEntry path="cloud.core.utils.Matrix3DUtil"/>
+    <classEntry path="cloud.core.collections.IDoubleNode"/>
+    <classEntry path="cloud.core.collections.IDoubleList"/>
+    <classEntry path="cloud.core.collections.DoubleNode"/>
+    <classEntry path="cloud.core.collections.DoubleList"/>
+    <classEntry path="cloud.core.interfaces.ICData"/>
+    <classEntry path="cloud.core.interfaces.ICObject3DData"/>
+    <classEntry path="cloud.core.utils.Vector2D"/>
+    <classEntry path="cloud.core.utils.Geometry2DUtil"/>
+    <classEntry path="cloud.core.collections.DoubleListNode"/>
+    <classEntry path="cloud.core.collections.ICycleDoubleNode"/>
   </includeClasses>
   <includeResources/>
   <namespaceManifests/>

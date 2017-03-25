@@ -6,8 +6,8 @@ package cloud.core.collections
 	{
 		//双向链表， double list node 
 		private var _data:ICData; 
-		private var _prev:IDoubleNode; 
-		private var _next:IDoubleNode; 
+		protected var _prev:IDoubleNode; 
+		protected var _next:IDoubleNode; 
 		//标志是否已在链表中 
 		private var _hasIN:Boolean=false; 
 		//@initData:结点初始值， the node’ data; 

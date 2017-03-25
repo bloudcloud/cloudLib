@@ -4,25 +4,27 @@ package cloud.core.collections
 	
 	public interface IDoubleList
 	{
-//		function get rootNode():IDoubleNode;
-//		function set rootNode(value:IDoubleNode):void;
-//		function get endNode():IDoubleNode;
-//		function set endNode(value:IDoubleNode):void;
+		/**
+		 * 链表是否已满 
+		 * @return Boolean
+		 * 
+		 */		
+		function get isFull():Boolean;
 		function get numberChildren():uint;
 		/**
 		 * 添加数据 
 		 * @param nodeData
-		 * @return Boolean	是否执行成功
+		 * @return Vector.<ICData>		返回发生改变的数据集合
 		 * 
 		 */			
-		function add(nodeData:ICData):Boolean;
+		function add(nodeData:ICData):Vector.<ICData>;
 		/**
 		 * 移除数据 
 		 * @param nodeData
-		 * @return Boolean 	是否执行成功
+		 * @return Vector.<ICData> 	返回发生改变的数据集合
 		 * 
 		 */			
-		function remove(nodeData:ICData):Boolean;
+		function remove(nodeData:ICData):Vector.<ICData>;
 		/**
 		 * 获取 
 		 * @param uniqueID
@@ -60,6 +62,6 @@ package cloud.core.collections
 		 * @param isNext	是否向下遍历
 		 * 
 		 */			
-		function forEach(callback:Function,isNext:Boolean=true):void;
+		function forEachNode(callback:Function,isNext:Boolean=true):void;
 	}
 }
