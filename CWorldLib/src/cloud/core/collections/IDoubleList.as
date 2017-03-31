@@ -32,36 +32,17 @@ package cloud.core.collections
 		 * 
 		 */		
 		function getDataByID(uniqueID:String):ICData;
-//		/**
-//		 * 从当前节点向下遍历搜索 
-//		 * @param nodeData	数据
-//		 * @param callback	回调
-//		 * @return Boolean	成功执行回调
-//		 * 
-//		 */					
-//		function mapNextFromNow(nodeData:ICData,callback:Function):Boolean;
-//		/**
-//		 * 从当前节点向上遍历搜索 
-//		 * @param nodeData	数据
-//		 * @param callback	回调
-//		 * @return Boolean	成功执行回调
-//		 * 
-//		 */		
-//		function mapPrevFromNow(nodeData:ICData,callback:Function):Boolean;
-//		/**
-//		 * 遍历当前节点，执行回调 
-//		 * @param callback
-//		 * @param isNext	是否向下遍历
-//		 * @return Boolean
-//		 * 
-//		 */				
-//		function mapFromNow(callback:Function,isNext:Boolean):Boolean;
 		/**
 		 * 根据遍历顺序，遍历所有节点并执行回调 
-		 * @param callback	回调函数
+		 * @param callback	回调函数，回调函数的格式：function callback(data:ICData):void
 		 * @param isNext	是否向下遍历
 		 * 
 		 */			
 		function forEachNode(callback:Function,isNext:Boolean=true):void;
+		/**
+		 * 清理链表 
+		 * 
+		 */		
+		function clear():void;
 	}
 }

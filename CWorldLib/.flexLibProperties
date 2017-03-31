@@ -15,6 +15,7 @@
     <classEntry path="cloud.core.utils.Geometry2DUtil"/>
     <classEntry path="cloud.core.collections.DoubleListNode"/>
     <classEntry path="cloud.core.collections.ICycleDoubleNode"/>
+    <classEntry path="cloud.core.interfaces.ICStatus"/>
   </includeClasses>
   <includeResources/>
   <namespaceManifests/>

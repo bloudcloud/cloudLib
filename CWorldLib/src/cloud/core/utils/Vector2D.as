@@ -159,16 +159,16 @@ package cloud.core.utils
 			return _x*v2.y-_y*v2.x == 0;   
 		}  
 		/**
-		 * 返回向量的符号值 
+		 * 返回向量的符号值
 		 * @param v2
-		 * @return int
+		 * @return int		大于0在向量左侧，小于0在向量右侧
 		 * 
 		 */		   
 		final public function sign(v2:Vector2D):int{   
 			return perp.dotProd(v2)<0?-1:1;   
 		}   
 		/**
-		 * 返回坐标向量 
+		 * 返回坐标向量（与当前向量垂直）
 		 * @return Vector2D
 		 * 
 		 */		

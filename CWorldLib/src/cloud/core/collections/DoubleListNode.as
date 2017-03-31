@@ -13,6 +13,11 @@ package cloud.core.collections
 		protected var _prev:IDoubleNode;
 		protected var _hasIn:Boolean;
 		
+		public function get isEmpty():Boolean
+		{
+			return _currentNode==null;
+		}
+		
 		public function DoubleListNode()
 		{
 			super();

@@ -16,10 +16,10 @@ package cloud.core.collections
 		protected var _isFullState:Boolean;
 		
 		protected var _currentNode:IDoubleNode;
-		protected var _headNode:IDoubleNode;
-		protected var _endNode:IDoubleNode;
+		cloudLib var headNode:IDoubleNode;
+		cloudLib var endNode:IDoubleNode;
 		//需要更新的位置的节点数据集合
-		cloudLib var _changedVos:Vector.<ICData> = new Vector.<ICData>();
+		cloudLib var changedVos:Vector.<ICData> = new Vector.<ICData>();
 		
 		private var _numberChildren:uint;
 
@@ -31,9 +31,19 @@ package cloud.core.collections
 		{
 			var node:IDoubleNode=createNode(nodeData);
 			node.hasIn=true;
-			_headNode=node;
-			_endNode=node;
+			headNode=node;
+			endNode=node;
 			_currentNode=node;
+		}
+		/**
+		 * 添加发生改变的节点数据 
+		 * @param vo		反生改变的节点数据
+		 * 
+		 */		
+		cloudLib function addChangedVo(vo:ICData):void
+		{
+			if(changedVos.indexOf(vo)<0)
+				changedVos.push(vo);
 		}
 		/**
 		 * 初始化根节点 
@@ -56,10 +66,10 @@ package cloud.core.collections
 			var opreateNode:IDoubleNode=createNode(opreateData);
 			node.addBefore(opreateNode);
 			_currentNode=opreateNode;
-			if(node==_headNode)
+			if(node==headNode)
 			{
 				//变更头节点
-				_headNode=opreateNode;
+				headNode=opreateNode;
 			}
 		}
 		/**
@@ -73,10 +83,10 @@ package cloud.core.collections
 			var opreateNode:IDoubleNode=createNode(opreateData);
 			node.addAfter(opreateNode);
 			_currentNode=opreateNode;
-			if(node==_endNode)
+			if(node==endNode)
 			{
 				//变更尾节点
-				_endNode=opreateNode;
+				endNode=opreateNode;
 			}
 		}
 		/**
@@ -132,10 +142,10 @@ package cloud.core.collections
 				else
 					_currentNode=prevNode;
 			}
-			if(_headNode.nodeData==null)
-				_headNode=nextNode;
-			if(_endNode.nodeData==null)
-				_endNode=prevNode;
+			if(headNode.nodeData==null)
+				headNode=nextNode;
+			if(endNode.nodeData==null)
+				endNode=prevNode;
 			_numberChildren--;
 			_invalidChildren=true;
 			_isFullState=false;
@@ -146,6 +156,11 @@ package cloud.core.collections
 		 */		
 		protected function updateList(isNext:Boolean=true):void
 		{
+		}
+		
+		public function clearCalculationData():void
+		{
+			changedVos.length=0;
 		}
 		
 		public function get isFull():Boolean
@@ -170,30 +185,33 @@ package cloud.core.collections
 				doAddNode(nodeData,null,isNext);
 			}
 			updateList(isNext);
-			return _changedVos.length>0?_changedVos:null;
+			return changedVos.length>0?changedVos:null;
 		}
 		public function remove(nodeData:ICData):Vector.<ICData>
 		{
+			var index:int=changedVos.indexOf(nodeData);
+			if(index>=0)
+				changedVos.removeAt(index);
 			doRemoveNode(nodeData);
 			updateList();
-			return _changedVos.length>0?_changedVos:null;
+			return changedVos.length>0?changedVos:null;
 		}
 		
 		public function getDataByID(uniqueID:String):ICData
 		{
-			for(var child:IDoubleNode=_headNode; child!=null; child=child.next)
+			for(var child:IDoubleNode=headNode; child!=null; child=child.next)
 			{
 				if(child.nodeData.uniqueID==uniqueID)
 					return child.nodeData;
 			}
 			return null;
 		}
-		protected function mapNode(node:IDoubleNode,callback:Function,isNext:Boolean):void
+		protected function mapFromNode(node:IDoubleNode,callback:Function,isNext:Boolean):void
 		{
 			for(var child:IDoubleNode=node; child!=null; child=isNext?child.next:child.prev)
 			{
-				if(callback.call(null,child,isNext))
-					break;
+				if(callback!=null)
+					callback.call(null,child);
 			}
 		}
 		/**
@@ -282,17 +300,16 @@ package cloud.core.collections
 			}
 			return false;
 		}
-		
+				
 		public function forEachNode(callback:Function,isNext:Boolean=true):void
 		{
-			var child:IDoubleNode;
-			for(child=isNext?_headNode:_endNode; child!=null; child=isNext?child.next:child.prev)
-			{
-				callback.call(null,child.nodeData);
-			}
+			mapFromNode(isNext?headNode:endNode,callback,isNext);
 		}
-
 		
-
+		public function clear():void
+		{
+			clearCalculationData();
+			forEachNode(removeNode);
+		}
 	}
 }
