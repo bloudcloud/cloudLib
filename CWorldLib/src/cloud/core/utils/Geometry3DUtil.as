@@ -1,6 +1,8 @@
 package cloud.core.utils
 {
 	import flash.geom.Vector3D;
+	
+	import alternativa.engine3d.core.Transform3D;
 
 	/**
 	 *  3D网格工具
@@ -8,6 +10,7 @@ package cloud.core.utils
 	 */
 	public class Geometry3DUtil
 	{
+		private static const VEC:Vector3D=new Vector3D();
 		/**
 		 * 射线与平面是否相交，相交则返回交点坐标向量
 		 * @param ray	射线
@@ -33,6 +36,19 @@ package cloud.core.utils
 			}
 			return false;
 		}
-		
+		/**
+		 * 通过Transform3D对象转换Vector3D对象,返回转换后的新Vector3D对象
+		 * @param vec
+		 * @param transform
+		 * @return Vector3D
+		 * 
+		 */		
+		public static function transformVectorByTransform3D(vec:Vector3D,transform:Transform3D,isNew:Boolean=true):Vector3D
+		{
+			VEC.x=transform.a*vec.x+transform.b*vec.y+transform.c*vec.z+transform.d;
+			VEC.y=transform.e*vec.x+transform.f*vec.y+transform.g*vec.z+transform.h;
+			VEC.z=transform.i*vec.x+transform.j*vec.y+transform.k*vec.z+transform.l;
+			return isNew ? VEC.clone() : VEC;
+		}
 	}
 }

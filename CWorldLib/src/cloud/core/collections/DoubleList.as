@@ -16,7 +16,7 @@ package cloud.core.collections
 		protected var _isFullState:Boolean;
 		
 		protected var _currentNode:IDoubleNode;
-		cloudLib var headNode:IDoubleNode;
+		cloudLib var startNode:IDoubleNode;
 		cloudLib var endNode:IDoubleNode;
 		//需要更新的位置的节点数据集合
 		cloudLib var changedVos:Vector.<ICData> = new Vector.<ICData>();
@@ -31,7 +31,7 @@ package cloud.core.collections
 		{
 			var node:IDoubleNode=createNode(nodeData);
 			node.hasIn=true;
-			headNode=node;
+			startNode=node;
 			endNode=node;
 			_currentNode=node;
 		}
@@ -66,10 +66,10 @@ package cloud.core.collections
 			var opreateNode:IDoubleNode=createNode(opreateData);
 			node.addBefore(opreateNode);
 			_currentNode=opreateNode;
-			if(node==headNode)
+			if(node==startNode)
 			{
 				//变更头节点
-				headNode=opreateNode;
+				startNode=opreateNode;
 			}
 		}
 		/**
@@ -96,23 +96,27 @@ package cloud.core.collections
 		 * @param isNext
 		 * 
 		 */
-		protected function doAddNode(opreateData:ICData,node:IDoubleNode,isNext:Boolean):Boolean
+		protected function doAddNode(opreateData:ICData,node:IDoubleNode):Boolean
 		{
+			var isNext:Boolean;
 			if(node==null)
 			{
 				initList(opreateData);
+				isNext=true;
 			}
-			else if(isNext)
+			else if(opreateData.compare(node.nodeData)>0)
 			{
 				addNodeAfter(opreateData,node);
+				isNext=true;
 			}
 			else
 			{
 				addNodeBefore(opreateData,node);
+				isNext=false;
 			}
 			_numberChildren++;
 			_invalidChildren=true;
-			return true;
+			return isNext;
 		}
 		/**
 		 * 执行删除节点操作 
@@ -121,7 +125,7 @@ package cloud.core.collections
 		 */
 		protected function doRemoveNode(opreateData:ICData):void
 		{
-			searchFromNow(opreateData,removeNode);
+			removeNode(searchFromNowByCondition(opreateData,equalByIDCondition));
 		}
 		/**
 		 * 移除节点 
@@ -142,8 +146,8 @@ package cloud.core.collections
 				else
 					_currentNode=prevNode;
 			}
-			if(headNode.nodeData==null)
-				headNode=nextNode;
+			if(startNode.nodeData==null)
+				startNode=nextNode;
 			if(endNode.nodeData==null)
 				endNode=prevNode;
 			_numberChildren--;
@@ -174,16 +178,17 @@ package cloud.core.collections
 
 		public function add(nodeData:ICData):Vector.<ICData>
 		{
-			var isNext:Boolean=true;
+			var isNext:Boolean;
 			if(_currentNode!=null)
 			{
-				isNext=nodeData.compare(_currentNode.nodeData)<0;
-				compareFromNow(nodeData,doAddNode,isNext);
+				var node:IDoubleNode=searchFromNowByCondition(nodeData,bestCondition);
+				isNext=doAddNode(nodeData,node);
 			}
 			else
 			{
-				doAddNode(nodeData,null,isNext);
+				isNext=doAddNode(nodeData,null);
 			}
+			//TODO:
 			updateList(isNext);
 			return changedVos.length>0?changedVos:null;
 		}
@@ -199,7 +204,7 @@ package cloud.core.collections
 		
 		public function getDataByID(uniqueID:String):ICData
 		{
-			for(var child:IDoubleNode=headNode; child!=null; child=child.next)
+			for(var child:IDoubleNode=startNode; child!=null; child=child.next)
 			{
 				if(child.nodeData.uniqueID==uniqueID)
 					return child.nodeData;
@@ -215,95 +220,70 @@ package cloud.core.collections
 			}
 		}
 		/**
-		 * 根据遍历顺序，比较源节点数据与当前节点数据，根据结果执行回调，返回回调的结果  
-		 * @param nodeData
-		 * @param callback
-		 * @param isNext
-		 * @return 
+		 * 根据源数据与节点数据的比较结果，返回最优节点
+		 * @param currentNode	当前节点
+		 * @param sourceData	源数据
+		 * @param compareResult	上一次的比较结果
+		 * @return IDoubleNode	最优节点对象
 		 * 
-		 */				
-		protected function compareFromNow(nodeData:ICData,callback:Function,isNext:Boolean):*
+		 */		
+		protected function bestCondition(currentNode:IDoubleNode,sourceData:ICData,compareResult:Number):IDoubleNode
 		{
-			var otherNode:IDoubleNode;
-			var lastChild:IDoubleNode;
-			var isResult:Boolean;
-			var reciprocalDistance:Number;
-			var child:IDoubleNode=_currentNode;
-			for(;child!=null;child=otherNode)
+			var targetNode:IDoubleNode
+			var otherNode:IDoubleNode=compareResult>0?currentNode.next:currentNode.prev;
+			var curDistance:Number=sourceData.compare(currentNode.nodeData);
+			if(otherNode==null)
 			{
-				reciprocalDistance=nodeData.compare(child.nodeData);
-				if(isNext)
-				{
-					otherNode=child.next;
-					isResult=reciprocalDistance>=0;
-					lastChild=child.prev;
-				}
-				else
-				{
-					otherNode=child.prev;
-					isResult=reciprocalDistance<0;
-					lastChild=child.next;
-				}
-				if(isResult)
-				{
-					//当前节点在两个节点之间,选择最优节点
-					var reciprocalDistance_last:Number=nodeData.compare(lastChild.nodeData);
-					if(Math.abs(reciprocalDistance)>Math.abs(reciprocalDistance_last))
-					{
-						//最优节点
-						lastChild=child;
-					}
-					else
-					{
-						reciprocalDistance=reciprocalDistance_last;
-					}
-					return callback.call(null,nodeData,lastChild,reciprocalDistance<0);
-				}
-				else if(otherNode==null)
-					return callback.call(null,nodeData,child,isNext);
+				targetNode=currentNode;
+			}
+			else if(curDistance*compareResult<0)
+			{
+				//不同向
+				if(Math.abs(curDistance)<Math.abs(compareResult))
+					targetNode=currentNode;
+				else 
+					targetNode=compareResult>0?currentNode.prev:currentNode.next;
+			}
+			return targetNode;
+		}
+		/**
+		 * 返回与源数据唯一ID相等的节点
+		 * @param currentNode	当前节点
+		 * @param sourceData	源数据 
+		 * @param param
+		 * @return IDoubleNode
+		 * 
+		 */		
+		protected function equalByIDCondition(currentNode:IDoubleNode,sourceData:ICData,...param):IDoubleNode
+		{
+			var targetNode:IDoubleNode;
+			if(currentNode.nodeData.uniqueID==sourceData.uniqueID)
+				targetNode=currentNode;
+			return targetNode;
+		}
+		/**
+		 * 从当前节点开始遍历，根据条件选择目标节点 
+		 * @param nodeData	源数据
+		 * @param condition	遍历条件
+		 * @return IDoubleNode	目标节点
+		 * 
+		 */		
+		protected function searchFromNowByCondition(nodeData:ICData,condition:Function):IDoubleNode
+		{
+			if(condition==null) return _currentNode;
+			var distance:Number;
+			var targetNode:IDoubleNode;
+			for(var child:IDoubleNode=_currentNode; child!=null; child=distance>0 ? child.next : child.prev)
+			{
+				distance=nodeData.compare(_currentNode.nodeData);
+				targetNode=condition.call(null,child,nodeData,distance);
+				if(targetNode!=null) return targetNode;
 			}
 			return null;
 		}
-		protected function searchFromNow(nodeData:ICData,callback:Function):Boolean
-		{
-			var compareEnd:Number=nodeData.compare(_currentNode.nodeData);
-			var child:IDoubleNode
-			if(compareEnd<0)
-			{
-				for(child=_currentNode; child!=null; child=child.next)
-				{
-					if(child.nodeData.uniqueID==nodeData.uniqueID)
-					{
-						if(callback!=null) 
-							callback.call(null,child);
-							return true;
-					}		
-				}
-			}
-			else if(compareEnd>0)
-			{
-				for(child=_currentNode; child!=null; child=child.prev)
-				{
-					if(child.nodeData.uniqueID==nodeData.uniqueID)
-					{
-						if(callback!=null) 
-							callback.call(null,child);
-						return true;
-					}		
-				}
-			}
-			else
-			{
-				if(callback!=null) 
-					callback.call(null,_currentNode);
-				return true;
-			}
-			return false;
-		}
-				
 		public function forEachNode(callback:Function,isNext:Boolean=true):void
 		{
-			mapFromNode(isNext?headNode:endNode,callback,isNext);
+			mapFromNode(isNext?startNode:endNode,callback,isNext);
 		}
 		
 		public function clear():void

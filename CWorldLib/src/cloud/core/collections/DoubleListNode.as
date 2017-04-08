@@ -18,8 +18,9 @@ package cloud.core.collections
 			return _currentNode==null;
 		}
 		
-		public function DoubleListNode()
+		public function DoubleListNode(sourceVo:ICData)
 		{
+			_data=sourceVo;
 			super();
 		}
 		/**

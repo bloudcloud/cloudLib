@@ -25,16 +25,18 @@ package cloud.core.utils
 		 */		
 		public function traceStr(...param):void
 		{
-			var returnStr:String="";
-			for (var i:int; i<param.length; i++)
+			CONFIG::debug
 			{
-				if(param[i] is String || param[i] is Number)
-					returnStr+=param[i]+" ";
-				else
-					returnStr+=param[i].toString()+" ";
+				var returnStr:String="";
+				for (var i:int; i<param.length; i++)
+				{
+					if(param[i] is String || param[i] is Number)
+						returnStr+=param[i]+" ";
+					else
+						returnStr+=param[i].toString()+" ";
+				}
+				trace(returnStr+=getTimer());
 			}
-//			_strs.push(returnStr+=getTimer());
-			trace(returnStr+=getTimer());
 		}
 		/**
 		 * 抛出错误 
@@ -46,16 +48,10 @@ package cloud.core.utils
 		 */		
 		public function throwError(className:String,functionName:String,varName:String,message:String):void
 		{
-			throw new Error(String(className+"->"+functionName+" "+varName+": "+varName+message+"\n"));
-		}
-		
-		public function outPut():void
-		{
-			for each(var str:String in _strs)
+			CONFIG::debug
 			{
-				trace(str);
+				throw new Error(String(className+"->"+functionName+" "+varName+": "+message+"\n"));
 			}
-			_strs.length=0;
 		}
 	}
 }

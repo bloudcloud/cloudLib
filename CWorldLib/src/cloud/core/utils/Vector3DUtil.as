@@ -9,9 +9,6 @@ package cloud.core.utils
 	public class Vector3DUtil
 	{
 		public static const ZERO:Vector3D = new Vector3D();
-		public static const AXIS_X:Vector3D = new Vector3D(1,0,0);
-		public static const AXIS_Y:Vector3D = new Vector3D(0,1,0);
-		public static const AXIS_Z:Vector3D = new Vector3D(0,0,1);
 		public static const RAY_3D:Ray3D = new Ray3D();
 		/**
 		 * 用向量方法获取点到线段的距离 
