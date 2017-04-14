@@ -1,0 +1,20 @@
+Interpreter模式也叫解释器模式，是由GoF提出的23种设计模式中的一种。Interpreter是行为模式之一，
+它是一种特殊的设计模式，它建立一个解释器，对于特定的计算机程序设计语言，用来解释预先定义的文法。
+本文介绍设计模式中的解释器（Interpreter）模式的概念，用法，以及实际应用中怎么样使用Interpreter模式进行开发。
+Interpreter模式：这个模式主要试图去解释一种语言。如果你学过形式语言，那么这个模式对你来说是多余的。
+Interpreter模式的概念
+Interpreter是一种特殊的设计模式，它建立一个解释器，对于特定的计算机程序设计语言，用来解释预先定义的文法。
+简单地说，Interpreter模式是一种简单的语法解释器构架。
+Interpreter模式有很多种实现方法，下面我们给出Interpreter模式的一种类图来说明Interpreter模式：
+在上图中，我们假设需要在Client中解释某文法，Client调用Context来存储文法规则，
+并调用解释器AbstractionExpression类树来对该文法加以解释。
+注意，上图只是Interpreter模式的一种实现方式的类图。
+Context
+    解释器上下文环境类。用来存储解释器的上下文环境，比如需要解释的文法等。
+AbstractExpression
+    解释器抽象类。
+ConcreteExpression
+    解释器具体实现类。
+Interpreter模式的实现范例
+为了帮助大家理解Interpreter模式的基本概念，我们在这里只举一个最简单的例子。
+让一个表达式a经过PlusExpression解释器处理后使该表达式+1，经过MinusExpression解释器处理后使该表达式-1。

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<products>
+    <product className="com.chunbai.model.abstractFactory.example2.ProductA"/>
+    <product className="com.chunbai.model.abstractFactory.example2.ProductB"/>
+</products>
