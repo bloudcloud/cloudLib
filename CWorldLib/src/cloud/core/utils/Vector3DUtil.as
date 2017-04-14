@@ -43,6 +43,28 @@ package cloud.core.utils
 			}
 			return returnLength;
 		}
+		/**
+		 * 在XY平面内计算轴方向与当前方向的夹角
+		 * @param dir	当前方向
+		 * @param axis	轴方向
+		 * @param isDegreeORRadian	ture返回角度值，false返回弧度值
+		 * @return Number	夹角
+		 * 
+		 */		
+		public static function calculateRotationByAxis(dir:Vector3D,axis:Vector3D,isDegreeORRadian:Boolean=true):Number
+		{
+			var angle:Number;
+			var len:Number = dir.length;
+			var dot:Number = axis.dotProduct(dir);
+			var cosValue:Number = dot / len;
+			var nor:Vector3D=axis.crossProduct(dir);
+			if(nor.dotProduct(Vector3D.Z_AXIS)<0)
+				angle=isDegreeORRadian ? MathUtil.toDegrees(Math.acos(cosValue))*-1 : Math.acos(cosValue)*-1;
+			else
+				angle=isDegreeORRadian ? MathUtil.toDegrees(Math.acos(cosValue)) : Math.acos(cosValue);
+			return angle;
+		}
+		
 		public function Vector3DUtil()
 		{
 		}

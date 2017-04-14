@@ -16,6 +16,11 @@
     <classEntry path="cloud.core.collections.DoubleListNode"/>
     <classEntry path="cloud.core.collections.ICycleDoubleNode"/>
     <classEntry path="cloud.core.interfaces.ICStatus"/>
+    <classEntry path="cloud.pool.CObject3DVOPool"/>
+    <classEntry path="cloud.core.interfaces.ICDataManager"/>
+    <classEntry path="cloud.core.interfaces.ICDataModel"/>
+    <classEntry path="cloud.core.model.BaseDataModel"/>
+    <classEntry path="cloud.core.model.CDataManager"/>
   </includeClasses>
   <includeResources/>
   <namespaceManifests/>

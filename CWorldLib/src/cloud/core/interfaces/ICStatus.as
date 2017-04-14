@@ -23,10 +23,11 @@ package cloud.core.interfaces
 		 */		
 		function stop():void;
 		/**
-		 * 每帧更新
-		 * @param time
+		 * 每帧更新 
+		 * @param startTime		帧起始时间
+		 * @param frameTime	帧运行时间
 		 * 
-		 */				
-		function updateByFrame(time:Number=0):void;
+		 */					
+		function updateByFrame(startTime:Number=0,frameTime:Number=0):void;
 	}
 }
