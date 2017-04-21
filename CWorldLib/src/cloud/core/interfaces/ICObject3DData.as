@@ -11,18 +11,6 @@ package cloud.core.interfaces
 	public interface ICObject3DData extends ICData
 	{
 		/**
-		 * 获取父数据对象的唯一ID
-		 * @return String
-		 * 
-		 */		
-		function get parentID():String;
-		/**
-		 * 设置父数据对象的唯一ID
-		 * @param value
-		 * 
-		 */		
-		function set parentID(value:String):void;
-		/**
 		 * 获取长度 
 		 * @return 
 		 * 

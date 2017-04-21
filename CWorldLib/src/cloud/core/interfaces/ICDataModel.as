@@ -11,12 +11,17 @@ package cloud.core.interfaces
 		 * @param data
 		 * 
 		 */		
-		function addData(data:ICData):void;
+		function addCacheData(data:ICData):void;
 		/**
 		 * 移除数据 
 		 * @param data
 		 * 
 		 */		
-		function removeData(data:ICData):void;
+		function removeCacheData(data:ICData):void;
+		/**
+		 * 清除所有存储数据 
+		 * 
+		 */		
+		function clearAll():void;
 	}
 }

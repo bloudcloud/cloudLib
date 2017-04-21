@@ -21,6 +21,7 @@
     <classEntry path="cloud.core.interfaces.ICDataModel"/>
     <classEntry path="cloud.core.model.BaseDataModel"/>
     <classEntry path="cloud.core.model.CDataManager"/>
+    <classEntry path="cloud.core.interfaces.ICDataModule"/>
   </includeClasses>
   <includeResources/>
   <namespaceManifests/>

@@ -19,6 +19,18 @@ package cloud.core.interfaces
 		 */		
 		function set uniqueID(value:String):void;
 		/**
+		 * 获取父数据对象的唯一ID
+		 * @return String
+		 * 
+		 */		
+		function get parentID():String;
+		/**
+		 * 设置父数据对象的唯一ID
+		 * @param value
+		 * 
+		 */		
+		function set parentID(value:String):void;
+		/**
 		 * 获取对象数据类型属性 
 		 * @return uint
 		 * 
