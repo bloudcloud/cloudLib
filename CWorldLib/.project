@@ -19,7 +19,7 @@
 		<link>
 			<name>bin-debug</name>
 			<type>2</type>
-			<location>C:/Lively3Dlibs</location>
+			<locationURI>DOCUMENTS/Lively3Dlibs</locationURI>
 		</link>
 	</linkedResources>
 </projectDescription>

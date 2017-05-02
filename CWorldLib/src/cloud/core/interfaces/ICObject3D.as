@@ -8,7 +8,7 @@ package cloud.core.interfaces
 	 *  3D对象数据
 	 * @author cloud
 	 */
-	public interface ICObject3DData extends ICData
+	public interface ICObject3D
 	{
 		/**
 		 * 获取长度 
@@ -65,6 +65,18 @@ package cloud.core.interfaces
 		function set y(value:Number):void;
 		function get z():Number;
 		function set z(value:Number):void;
+		/**
+		 * 获取数据是否生存
+		 * @return Boolean
+		 * 
+		 */		
+		function get isLife():Boolean;
+		/**
+		 * 设置数据是否生存 
+		 * @param value
+		 * 
+		 */		
+		function set isLife(value:Boolean):void;
 		/**
 		 * 获取旋转角度值 
 		 * @return int

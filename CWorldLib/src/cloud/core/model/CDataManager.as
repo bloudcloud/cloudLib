@@ -19,20 +19,40 @@ package cloud.core.model
 		}
 		
 		private var _dataCacheDic:Dictionary;
+		private var _dataDic:Dictionary;
 		
 		public function CDataManager(enforcer:Singleton)
 		{
 			_dataCacheDic=new Dictionary();
+			_dataDic=new Dictionary();
 		}
 		
-		public function addData(data:ICData):void
+		public function addCacheData(data:ICData):void
 		{
 			_dataCacheDic[data.type] ||= new Vector.<ICData>();
 			_dataCacheDic[data.type].push(data);
 		}
+		public function addData(data:ICData):void
+		{
+			_dataDic[data.type] ||= new Vector.<ICData>();
+			_dataDic[data.type].push(data);
+		}
+		public function removeCacheData(cache:ICData):void
+		{
+			var caches:Vector.<ICData>=_dataCacheDic[cache.type] as Vector.<ICData>;
+			if(caches)
+			{
+				var index:int=caches.indexOf(cache);
+				if(index>=0)
+				{
+					caches[index].clear();
+					caches.removeAt(index);
+				}
+			}
+		}
 		public function removeData(data:ICData):void
 		{
-			var datas:Vector.<ICData>=_dataCacheDic[data.type] as Vector.<ICData>;
+			var datas:Vector.<ICData>=_dataDic[data.type] as Vector.<ICData>;
 			if(datas)
 			{
 				var index:int=datas.indexOf(data);
@@ -43,6 +63,11 @@ package cloud.core.model
 				}
 			}
 		}
+		public function getCacheDatasByType(type:uint):Vector.<ICData>
+		{
+			_dataCacheDic[type] ||= new Vector.<ICData>();
+			return _dataCacheDic[type];
+		}
 		/**
 		 * 根据数据类型，获取数据对象集合
 		 * @param type		数据类型
@@ -51,8 +76,8 @@ package cloud.core.model
 		 */		
 		public function getDatasByType(type:uint):Vector.<ICData>
 		{
-			_dataCacheDic[type] ||= new Vector.<ICData>();
-			return _dataCacheDic[type];
+			_dataDic[type] ||= new Vector.<ICData>();
+			return _dataDic[type];
 		}
 		/**
 		 * 根据数据类型和父数据对象的唯一ID，获取数据对象集合 
@@ -63,7 +88,7 @@ package cloud.core.model
 		 */		
 		public function getDatasByTypeAndParentID(type:uint,parentID:String):Vector.<ICData>
 		{
-			var datas:Vector.<ICData>=_dataCacheDic[type] as Vector.<ICData>;
+			var datas:Vector.<ICData>=_dataDic[type] as Vector.<ICData>;
 			if(parentID!=null)
 			{
 				var returnDatas:Vector.<ICData>=new Vector.<ICData>();
@@ -85,7 +110,7 @@ package cloud.core.model
 		public function getDatasByParentID(parentID:String):Vector.<ICData>
 		{
 			var returnDatas:Vector.<ICData>=new Vector.<ICData>();
-			for each(var datas:Vector.<ICData> in _dataCacheDic)
+			for each(var datas:Vector.<ICData> in _dataDic)
 			{
 				for each(var data:ICData in datas)
 				{
@@ -103,7 +128,7 @@ package cloud.core.model
 		 */		
 		public function getDataByUniqueID(uniqueID:String):ICData
 		{
-			for each(var datas:Vector.<ICData> in _dataCacheDic)
+			for each(var datas:Vector.<ICData> in _dataDic)
 			{
 				for each(var data:ICData in datas)
 				{
@@ -124,7 +149,7 @@ package cloud.core.model
 		 */		
 		public function getDataByTypeAndID(type:uint, uniqueID:String):ICData
 		{
-			var datas:Vector.<ICData>=_dataCacheDic[type] as Vector.<ICData>;
+			var datas:Vector.<ICData>=_dataDic[type] as Vector.<ICData>;
 			for each(var data:ICData in datas)
 			{
 				if(data.uniqueID==uniqueID)
@@ -138,7 +163,21 @@ package cloud.core.model
 		 * 清空所有数据 
 		 * 
 		 */		
-		public function clear():void
+		public function clearAll():void
+		{
+			clearCache();
+			for(var key:* in _dataDic)
+			{
+				var datas:Vector.<ICData>=_dataDic[key] as Vector.<ICData>;
+				for each(var data:ICData in datas)
+				{
+					data.clear();
+				}
+				datas.length=0;
+				delete _dataDic[key];
+			}
+		}
+		public function clearCache():void
 		{
 			for(var key:* in _dataCacheDic)
 			{

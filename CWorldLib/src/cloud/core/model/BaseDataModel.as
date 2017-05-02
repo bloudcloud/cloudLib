@@ -18,6 +18,16 @@ package cloud.core.model
 		{
 		}
 		/**
+		 * 根据数据类型，获取缓存数据对象集合 
+		 * @param type		数据类型
+		 * @return Vector.<ICData>
+		 * 
+		 */		
+		protected function getCacheDatasByType(type:uint):Vector.<ICData>
+		{
+			return CDataManager.instance.getCacheDatasByType(type);
+		}
+		/**
 		 * 根据数据类型，获取数据对象集合
 		 * @param type		数据类型
 		 * @return Vector.<ICData>
@@ -59,10 +69,13 @@ package cloud.core.model
 		{
 			return CDataManager.instance.getDataByTypeAndID(type,uniqueID);
 		}
-
-		public function addCacheData(data:ICData):void
+		public function addData(data:ICData):void
 		{
 			CDataManager.instance.addData(data);
+		}
+		public function addCacheData(data:ICData):void
+		{
+			CDataManager.instance.addCacheData(data);
 		}
 		public function removeCacheData(data:ICData):void
 		{
@@ -70,7 +83,11 @@ package cloud.core.model
 		}
 		public function clearAll():void
 		{
-			CDataManager.instance.clear();
+			CDataManager.instance.clearAll();
+		}
+		public function clearCache():void
+		{
+			CDataManager.instance.clearCache();
 		}
 	}
 }

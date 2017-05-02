@@ -8,6 +8,12 @@ package cloud.core.utils
 	 */
 	public class Vector3DUtil
 	{
+		public static const NEGATIVE_X_AXIS:Vector3D = new Vector3D(-1,0,0);
+		public static const NEGATIVE_Y_AXIS:Vector3D = new Vector3D(0,-1,0);
+		public static const NEGATIVE_Z_AXIS:Vector3D = new Vector3D(0,0,-1);
+		public static const X_AXIS:Vector3D = new Vector3D(1,0,0);
+		public static const Y_AXIS:Vector3D = new Vector3D(0,1,0);
+		public static const Z_AXIS:Vector3D = new Vector3D(0,0,1);
 		public static const ZERO:Vector3D = new Vector3D();
 		public static const RAY_3D:Ray3D = new Ray3D();
 		/**

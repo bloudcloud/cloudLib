@@ -1,6 +1,7 @@
 package cloud.core.utils
 {
 	import flash.utils.getTimer;
+	
 
 	public class CDebug
 	{

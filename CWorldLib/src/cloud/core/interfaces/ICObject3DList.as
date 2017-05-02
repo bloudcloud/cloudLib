@@ -6,7 +6,7 @@ package cloud.core.interfaces
 	 *  家具列表数据类
 	 * @author cloud
 	 */
-	public interface ICObject3DListData extends ICObject3DData
+	public interface ICObject3DList
 	{
 		/**
 		 * 获取链表尾部位置坐标 

@@ -7,7 +7,13 @@ package cloud.core.interfaces
 	public interface ICDataModel
 	{
 		/**
-		 * 添加数据
+		 * 添加数据 
+		 * @param data
+		 * 
+		 */		
+		function addData(data:ICData):void;
+		/**
+		 * 添加缓存数据
 		 * @param data
 		 * 
 		 */		
@@ -23,5 +29,10 @@ package cloud.core.interfaces
 		 * 
 		 */		
 		function clearAll():void;
+		/**
+		 * 清理所有缓存数据 
+		 * 
+		 */		
+		function clearCache():void;
 	}
 }
