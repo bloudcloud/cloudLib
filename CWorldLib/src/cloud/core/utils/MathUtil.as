@@ -1,5 +1,7 @@
 package cloud.core.utils
 {
+	import flash.geom.Vector3D;
+
 	/**
 	 *  数学工具
 	 * @author cloud
@@ -13,7 +15,14 @@ package cloud.core.utils
 		public static const RADIANS_TO_DEGREES:Number = 180/Math.PI;
 		public static const DEGREES_TO_RADIANS:Number = Math.PI/180;
 		
-		public function MathUtil()
+		private static var _instance:MathUtil;
+		
+		public static function get instance():MathUtil
+		{
+			return _instance ||= new MathUtil(new SingletonEnforce());
+		}
+
+		public function MathUtil(enforcer:SingletonEnforce)
 		{
 		}
 		/**
@@ -22,7 +31,7 @@ package cloud.core.utils
 		 * @return Number
 		 * 
 		 */		
-		public static function toRadians(degrees:Number):Number
+		public function toRadians(degrees:Number):Number
 		{
 			return degrees * DEGREES_TO_RADIANS;
 		}
@@ -32,7 +41,7 @@ package cloud.core.utils
 		 * @return Number
 		 * 
 		 */		
-		public static function toDegrees(radians:Number):Number
+		public function toDegrees(radians:Number):Number
 		{
 			return radians * RADIANS_TO_DEGREES;
 		}
@@ -44,7 +53,7 @@ package cloud.core.utils
 		 * @return  返回斜率k
 		 * 
 		 */		
-		public static function lineK(x1:Number,y1:Number,x2:Number,y2:Number):Number{
+		public function lineK(x1:Number,y1:Number,x2:Number,y2:Number):Number{
 			return x1-x2==0?TAN_RADIAN_90:(y1-y2)/(x1-x2);
 		}
 		/**
@@ -58,7 +67,7 @@ package cloud.core.utils
 		 * @return Number
 		 * 
 		 */		
-		public static function getDistanceByXYZ(x1:Number,y1:Number,z1:Number,x2:Number,y2:Number,z2:Number):Number
+		public function getDistanceByXYZ(x1:Number,y1:Number,z1:Number,x2:Number,y2:Number,z2:Number):Number
 		{
 			return Math.sqrt((x1-x2)*(x1-x2)+(y1-y2)*(y1-y2)+(z1-z2)*(z1-z2));
 		}
@@ -72,7 +81,7 @@ package cloud.core.utils
 		 * @return  返回交点坐标，null 两线平行
 		 * 
 		 */		
-		public static function lineIntersection(ax1:Number,ay1:Number,ax2:Number,ay2:Number,bx1:Number,by1:Number,bx2:Number,by2:Number):Vector2D
+		public function lineIntersection(ax1:Number,ay1:Number,ax2:Number,ay2:Number,bx1:Number,by1:Number,bx2:Number,by2:Number):Vector2D
 		{
 			var aK:Number = lineK(ax1,ay1,ax2,ay2);
 			var bK:Number = lineK(bx1,by1,bx2,by2);
@@ -109,6 +118,64 @@ package cloud.core.utils
 			}
 			return point;
 		}
-
+		/**
+		 * 根据一点，从物体集合中获取拣选到的物体 
+		 * @param pos	一个点的坐标
+		 * @param objects	物体集合
+		 * @return Object	拣选到的物体对象
+		 * 
+		 */		
+		public function getCollisionObject(pos:Vector3D, objects:Array):Object
+		{
+			var collisionObj:Object;
+			var collisions:Array=new Array();
+			var minX:Number=int.MAX_VALUE,minY:Number=int.MAX_VALUE;
+			var maxX:Number=int.MIN_VALUE,maxY:Number=int.MIN_VALUE;
+			var minArea:Number=int.MAX_VALUE;
+			for each(var obj:Object in objects)
+			{
+				if(pos.w==0)
+				{
+					//2D
+					for each(var point:Vector3D in obj.points)
+					{
+						if(minX>point.x) minX=point.x;
+						if(maxX<point.x) maxX=point.x;
+						if(minY>point.y) minY=point.y;
+						if(maxY<point.y) maxY=point.y;
+					}
+					if(pos.x>minX && pos.x<maxX && pos.y>minY && pos.y<maxY)
+					{
+						//选中物体
+						collisions.push(obj);
+					}
+					minX=minY=int.MAX_VALUE;
+					maxX=maxY=int.MIN_VALUE;
+				}
+				else
+				{
+					//3D
+				}
+			}
+			if(collisions.length==1)
+			{
+				collisionObj=collisions[0];
+			}
+			else if(collisions.length>1)
+			{
+				//选择面积最小的对象
+				for each(obj in collisionObj)
+				{
+					if(minArea>obj.length*obj.height)
+					{
+						minArea=obj.length*obj.height;
+						collisionObj=obj;
+					}
+				}
+				minArea=int.MAX_VALUE;
+			}
+			return collisionObj;
+		}
 	}
 }
+class SingletonEnforce{}

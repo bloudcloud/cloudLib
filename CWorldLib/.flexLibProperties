@@ -1,31 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <flexLibProperties includeAllClasses="true" useMultiPlatformConfig="false" version="3">
   <includeClasses>
-    <classEntry path="cloud.core.utils.Ray3D"/>
-    <classEntry path="cloud.core.utils.Geometry3DUtil"/>
-    <classEntry path="cloud.core.utils.Vector3DUtil"/>
-    <classEntry path="cloud.core.utils.Matrix3DUtil"/>
-    <classEntry path="cloud.core.collections.IDoubleNode"/>
-    <classEntry path="cloud.core.collections.IDoubleList"/>
-    <classEntry path="cloud.core.collections.DoubleNode"/>
-    <classEntry path="cloud.core.collections.DoubleList"/>
-    <classEntry path="cloud.core.interfaces.ICData"/>
-    <classEntry path="cloud.core.interfaces.ICObject3D"/>
-    <classEntry path="cloud.core.utils.Vector2D"/>
-    <classEntry path="cloud.core.utils.Geometry2DUtil"/>
-    <classEntry path="cloud.core.collections.DoubleListNode"/>
-    <classEntry path="cloud.core.collections.ICycleDoubleNode"/>
-    <classEntry path="cloud.core.interfaces.ICStatus"/>
-    <classEntry path="cloud.core.interfaces.ICDataManager"/>
-    <classEntry path="cloud.core.interfaces.ICDataModel"/>
-    <classEntry path="cloud.core.model.BaseDataModel"/>
-    <classEntry path="cloud.core.model.CDataManager"/>
-    <classEntry path="cloud.core.interfaces.ICDataModule"/>
-    <classEntry path="cloud.core.interfaces.ICParamObject3D"/>
-    <classEntry path="cloud.core.interfaces.ICUnitObject3D"/>
-    <classEntry path="cloud.core.model.paramVos.CBaseParam3D"/>
-    <classEntry path="cloud.core.model.paramVos.CBaseUnit3D"/>
-    <classEntry path="cloud.core.interfaces.ICSerialization"/>
+    <classEntry path="cloud.core.dataStruct.CTransform3D"/>
   </includeClasses>
   <includeResources/>
   <namespaceManifests/>

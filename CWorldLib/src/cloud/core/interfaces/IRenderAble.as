@@ -8,6 +8,6 @@ package cloud.core.interfaces
 	 */
 	public interface IRenderAble
 	{
-		function render(stage3d:Stage3D):void;
+		function render(stage3d:Stage3D,curTime:int):void;
 	}
 }

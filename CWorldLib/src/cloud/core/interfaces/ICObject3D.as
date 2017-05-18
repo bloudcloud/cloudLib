@@ -2,7 +2,7 @@ package cloud.core.interfaces
 {
 	import flash.geom.Vector3D;
 	
-	import alternativa.engine3d.core.Transform3D;
+	import cloud.core.dataStruct.CTransform3D;
 
 	/**
 	 *  3D对象数据
@@ -100,13 +100,13 @@ package cloud.core.interfaces
 		 * @return Transform3D
 		 * 
 		 */		
-		function get transform():Transform3D;
+		function get transform():CTransform3D;
 		/**
 		 * 获取逆转换 
 		 * @return Transform3D
 		 * 
 		 */		
-		function get inverseTransform():Transform3D;
+		function get inverseTransform():CTransform3D;
 		/**
 		 * 是否发生转换
 		 * @return Boolean

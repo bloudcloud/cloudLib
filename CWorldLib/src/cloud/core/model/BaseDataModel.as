@@ -23,7 +23,7 @@ package cloud.core.model
 		 * @return Vector.<ICData>
 		 * 
 		 */		
-		protected function getCacheDatasByType(type:uint):Vector.<ICData>
+		public function getCacheDatasByType(type:uint):Vector.<ICData>
 		{
 			return CDataManager.instance.getCacheDatasByType(type);
 		}

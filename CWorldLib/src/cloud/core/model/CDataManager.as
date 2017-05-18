@@ -30,12 +30,14 @@ package cloud.core.model
 		public function addCacheData(data:ICData):void
 		{
 			_dataCacheDic[data.type] ||= new Vector.<ICData>();
-			_dataCacheDic[data.type].push(data);
+			if((_dataCacheDic[data.type] as Vector.<ICData>).indexOf(data)<0)
+				_dataCacheDic[data.type].push(data);
 		}
 		public function addData(data:ICData):void
 		{
 			_dataDic[data.type] ||= new Vector.<ICData>();
-			_dataDic[data.type].push(data);
+			if((_dataDic[data.type] as Vector.<ICData>).indexOf(data)<0)
+				_dataDic[data.type].push(data);
 		}
 		public function removeCacheData(cache:ICData):void
 		{

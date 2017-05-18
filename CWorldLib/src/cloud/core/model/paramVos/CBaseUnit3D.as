@@ -2,17 +2,17 @@ package cloud.core.model.paramVos
 {
 	import flash.geom.Vector3D;
 	
-	import alternativa.engine3d.core.Transform3D;
-	
-	import cloud.core.interfaces.ICUnitObject3D;
+	import cloud.core.dataStruct.CTransform3D;
+	import cloud.core.interfaces.ICObject3D;
+	import cloud.core.interfaces.ICSize;
+	import cloud.core.singleton.CVector3DUtil;
 	import cloud.core.utils.MathUtil;
-	import cloud.core.utils.Vector3DUtil;
 	
 	/**
 	 * 基础单元件数据类
 	 * @author cloud
 	 */
-	public class CBaseUnit3D implements ICUnitObject3D
+	public class CBaseUnit3D implements ICObject3D,ICSize
 	{
 		protected var _length:Number;
 		protected var _width:Number;
@@ -27,8 +27,8 @@ package cloud.core.model.paramVos
 		private var _z:Number;
 		private var _rotation:int;
 		private var _position:Vector3D;
-		private var _transform:Transform3D;
-		private var _inverseTransform:Transform3D;
+		private var _transform:CTransform3D;
+		private var _inverseTransform:CTransform3D;
 		
 		private var _leftSpacing:Number;
 		private var _rightSpacing:Number;
@@ -85,7 +85,7 @@ package cloud.core.model.paramVos
 			if(value!=null)
 				_direction.copyFrom(value);
 			else
-				_direction.copyFrom(Vector3DUtil.ZERO);
+				_direction.copyFrom(CVector3DUtil.ZERO);
 		}
 		
 		public function get x():Number
@@ -149,14 +149,14 @@ package cloud.core.model.paramVos
 			return _position;
 		}
 		
-		public function get transform():Transform3D
+		public function get transform():CTransform3D
 		{
 			if(_invalidTransform)
 				updateTransform();
 			return _transform;
 		}
 		
-		public function get inverseTransform():Transform3D
+		public function get inverseTransform():CTransform3D
 		{
 			if(_invalidTransform)
 				updateTransform();
@@ -212,8 +212,8 @@ package cloud.core.model.paramVos
 		{
 			_position=new Vector3D();
 			_direction=new Vector3D();
-			_transform=new Transform3D();
-			_inverseTransform=new Transform3D();
+			_transform=new CTransform3D();
+			_inverseTransform=new CTransform3D();
 			_length=_width=_height=_rotation=_x=_y=_z=0;
 			_leftSpacing=_rightSpacing=_topSpacing=_bottomSpacing=0;
 			_isLife=true;
@@ -232,8 +232,8 @@ package cloud.core.model.paramVos
 			var sinX:Number = 0;
 			var cosY:Number = 1;
 			var sinY:Number = 0;
-			var cosZ:Number = Math.cos(MathUtil.toDegrees(rotation));
-			var sinZ:Number = Math.sin(MathUtil.toDegrees(rotation));
+			var cosZ:Number = Math.cos(MathUtil.instance.toDegrees(rotation));
+			var sinZ:Number = Math.sin(MathUtil.instance.toDegrees(rotation));
 			var cosZsinY:Number = cosZ*sinY;
 			var sinZsinY:Number = sinZ*sinY;
 			var cosYscaleX:Number = cosY;
@@ -275,10 +275,10 @@ package cloud.core.model.paramVos
 
 		public function clear():void
 		{
-			_position=null;
-			_direction=null;
-			_transform=null;
-			_inverseTransform=null;
+			_position.setTo(0,0,0);
+			_direction.setTo(0,0,0);
+			_transform.identity();
+			_inverseTransform.identity();
 			_isLife=false;
 		}
 	}
