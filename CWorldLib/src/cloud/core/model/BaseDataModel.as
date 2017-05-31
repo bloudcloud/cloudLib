@@ -33,7 +33,7 @@ package cloud.core.model
 		 * @return Vector.<ICData>
 		 * 
 		 */	
-		protected function getDatasByType(type:uint):Vector.<ICData>
+		public function getDatasByType(type:uint):Vector.<ICData>
 		{
 			return CDataManager.instance.getDatasByType(type);
 		}
@@ -43,10 +43,21 @@ package cloud.core.model
 		 * @param parentID
 		 * @return Vector.<ICData>
 		 * 
-		 */		
-		protected function getDatasByTypeAndParentID(type:uint,parentID:String):Vector.<ICData>
+		 */
+		public function getDatasByTypeAndParentID(type:uint,parentID:String):Vector.<ICData>
 		{
 			return CDataManager.instance.getDatasByTypeAndParentID(type,parentID);
+		}
+		/**
+		 * 根据数据的类型和唯一ID，获取数据对象
+		 * @param type		数据的类型
+		 * @param uniqueID		数据的唯一ID
+		 * @return ICData
+		 * 
+		 */		
+		public function getDataByTypeAndID(type:uint,uniqueID:String):ICData
+		{
+			return CDataManager.instance.getDataByTypeAndID(type,uniqueID);
 		}
 		/**
 		 * 根据数据对象的父ID，获取数据对象集合 
@@ -57,17 +68,6 @@ package cloud.core.model
 		protected function getDatasByParentID(parentID:String):Vector.<ICData>
 		{
 			return CDataManager.instance.getDatasByParentID(parentID);
-		}
-		/**
-		 * 根据数据的类型和唯一ID，获取数据对象
-		 * @param type		数据的类型
-		 * @param uniqueID		数据的唯一ID
-		 * @return ICData
-		 * 
-		 */		
-		protected function getDataByTypeAndID(type:uint,uniqueID:String):ICData
-		{
-			return CDataManager.instance.getDataByTypeAndID(type,uniqueID);
 		}
 		public function addData(data:ICData):void
 		{

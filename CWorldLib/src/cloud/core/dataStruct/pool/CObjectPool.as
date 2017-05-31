@@ -41,11 +41,12 @@ package cloud.core.dataStruct.pool
 		{
 			this._name=flash.utils.getQualifiedClassName(typeCls);
 			this._typeCls=typeCls;
-			this._size=this._minSize=size;
-			this._constructors=[typeCls]
+			this._size=size;
+			this._minSize=_size;
+//			this._constructors=[typeCls]
 			if(constructors!=null)
 			{
-				this._constructors=this._constructors.concat(constructors);
+				this._constructors=constructors;
 				_constructorsCount=constructors.length;
 			}
 			this._cache=new Vector.<ICPoolObject>(size);
@@ -54,23 +55,23 @@ package cloud.core.dataStruct.pool
 
 		private function initPool():void
 		{
-			for(_curIndex=size; _curIndex>0; _curIndex--)
+			for(_curIndex=size; _curIndex>_size-_minSize; --_curIndex)
 			{
 				if(_constructorsCount>0)
-					_cache.push(CClassFactory.instance.funcs[_constructorsCount].apply(null,_constructors));
+					_cache[_curIndex-1]=CClassFactory.instance.funcs[_constructorsCount-1].call(null,_typeCls,_constructors);
 				else
-					_cache.push(new _constructors[0]());
+					_cache[_curIndex-1]=new _typeCls();
 			}
 		}
 		
 		public function push(o:ICPoolObject):void{
-			o.dispose();
 			if(_curIndex==0 || _cache[_curIndex]==null ) 
 			{
 				CDebug.instance.throwError("CObjectPool","push","_cache[_curIndex]","为空!");
 				return;
 			}
-			_cache[--_curIndex]=o;
+			_curIndex--;
+			_cache[_curIndex]=o;
 		}
 		public function pop():ICPoolObject
 		{
@@ -82,6 +83,7 @@ package cloud.core.dataStruct.pool
 				_size*=2;
 				_minSize=_size*.5;
 				_curIndex=_size;
+				_cache.length=_size;
 				initPool();
 			}
 			if(_cache[index]!=null)
@@ -93,8 +95,9 @@ package cloud.core.dataStruct.pool
 				_curIndex=index+1;
 			}
 			obj=_cache[_curIndex];
-			obj.initObject(_constructors);
-			_cache[_curIndex++]=null;
+			obj.initObject.apply(null,_constructors);
+			_cache[_curIndex]=null;
+			_curIndex++;
 			return obj;
 		}
 		public function flush():void

@@ -94,10 +94,10 @@ package cloud.core.model
 			if(parentID!=null)
 			{
 				var returnDatas:Vector.<ICData>=new Vector.<ICData>();
-				for each(var data:ICData in datas)
+				for(var i:int=0; i<datas.length; i++)
 				{
-					if(data.parentID==parentID)
-						returnDatas.push(data);
+					if(datas[i].parentID==parentID)
+						returnDatas.push(datas[i]);
 				}
 				return returnDatas.length>0 ? returnDatas : null;
 			}

@@ -1,12 +1,10 @@
 package cloud.core.dataStruct.container
 {
-	import cloud.core.interfaces.ICPoolObject;
-
 	/**
 	 * 抽象数据缓存容器类
 	 * @author cloud
 	 */
-	public class AbstractDataContainer implements ICPoolObject
+	public class AbstractDataContainer
 	{
 		protected var _container:Array;
 		protected var _abstractClass:Class
@@ -28,9 +26,8 @@ package cloud.core.dataStruct.container
 			return _length;
 		}
 		
-		public function AbstractDataContainer(abstractClass:Class)
+		public function AbstractDataContainer()
 		{
-			initObject(abstractClass);
 		}
 		
 		protected function updateContainer():void
@@ -74,20 +71,10 @@ package cloud.core.dataStruct.container
 		{
 			_container=_container.concat(container);
 		}
-		public function initObject(initParam:Object=null):void
-		{
-			_abstractClass=initParam as Class;
-			_container=[];
-		}
-		/**
-		 * 释放数据缓存 
-		 * 
-		 */		
-		public function dispose():void
+		public function clear():void
 		{
 			_container.length=0;
-			_container=null;
-			_abstractClass=null;
 		}
+	
 	}
 }
