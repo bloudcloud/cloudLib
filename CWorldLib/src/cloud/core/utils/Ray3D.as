@@ -1,6 +1,6 @@
 package cloud.core.utils
 {
-	import flash.geom.Vector3D;
+	import cloud.core.data.CVector;
 
 	/**
 	 *  3D射线
@@ -8,26 +8,26 @@ package cloud.core.utils
 	 */
 	public class Ray3D
 	{
-		private var _originPos:Vector3D;
+		private var _originPos:CVector;
 
-		public function get originPos():Vector3D
+		public function get originPos():CVector
 		{
 			return _originPos;
 		}
 
-		private var _direction:Vector3D;
+		private var _direction:CVector;
 
-		public function get direction():Vector3D
+		public function get direction():CVector
 		{
 			return _direction;
 		}
 
-		public function Ray3D(originPos:Vector3D = null,direction:Vector3D = null)
+		public function Ray3D(originPos:CVector = null,direction:CVector = null)
 		{
 			_originPos = originPos;
-			_originPos ||= new Vector3D();
+			_originPos ||= new CVector();
 			_direction = direction;
-			_direction ||= new Vector3D();
+			_direction ||= new CVector();
 		}
 		
 	}

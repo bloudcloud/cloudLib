@@ -173,7 +173,8 @@ package cloud.core.model
 				var datas:Vector.<ICData>=_dataDic[key] as Vector.<ICData>;
 				for each(var data:ICData in datas)
 				{
-					data.clear();
+					if(data.isLife)
+						data.clear();
 				}
 				datas.length=0;
 				delete _dataDic[key];
@@ -186,7 +187,8 @@ package cloud.core.model
 				var datas:Vector.<ICData>=_dataCacheDic[key] as Vector.<ICData>;
 				for each(var data:ICData in datas)
 				{
-					data.clear();
+					if(data.isLife)
+						data.clear();
 				}
 				datas.length=0;
 				delete _dataCacheDic[key];

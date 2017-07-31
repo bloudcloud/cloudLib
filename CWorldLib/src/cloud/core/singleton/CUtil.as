@@ -8,11 +8,11 @@ package cloud.core.singleton
 	 */
 	public class CUtil
 	{
-		private static var _instance:CUtil;
+		private static var _Instance:CUtil;
 		
-		public static function get instance():CUtil
+		public static function get Instance():CUtil
 		{
-			return _instance ||= new CUtil(new SingletonEnforce());
+			return _Instance ||= new CUtil(new SingletonEnforce());
 		}
 		
 		/**

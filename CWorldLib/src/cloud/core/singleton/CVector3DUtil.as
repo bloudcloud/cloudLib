@@ -2,7 +2,9 @@ package cloud.core.singleton
 {
 	import flash.geom.Vector3D;
 	
-	import cloud.core.utils.MathUtil;
+	import cloud.core.data.CVector;
+	import cloud.core.data.container.CVector3DContainer;
+	import cloud.core.utils.CMathUtil;
 	import cloud.core.utils.Ray3D;
 
 	/**
@@ -11,24 +13,27 @@ package cloud.core.singleton
 	 */
 	public class CVector3DUtil
 	{
-		public static const NEGATIVE_X_AXIS:Vector3D = new Vector3D(-1,0,0);
-		public static const NEGATIVE_Y_AXIS:Vector3D = new Vector3D(0,-1,0);
-		public static const NEGATIVE_Z_AXIS:Vector3D = new Vector3D(0,0,-1);
-		public static const X_AXIS:Vector3D = new Vector3D(1,0,0);
-		public static const Y_AXIS:Vector3D = new Vector3D(0,1,0);
-		public static const Z_AXIS:Vector3D = new Vector3D(0,0,1);
-		public static const ZERO:Vector3D = new Vector3D();
 		public static const RAY_3D:Ray3D = new Ray3D();
 		
-		private static var _instance:CVector3DUtil;
-		
-		public static function get instance():CVector3DUtil
+		private static var _Instance:CVector3DUtil;
+
+		public static function get Instance():CVector3DUtil
 		{
-			return _instance ||= new CVector3DUtil(new SingletonEnforce());
+			return _Instance ||= new CVector3DUtil(new SingletonEnforce());
 		}
 		
 		public function CVector3DUtil(enforcer:SingletonEnforce)
 		{
+		}
+		/**
+		 * 将自定义3D向量对象，转换成Vector3D对象 
+		 * @param vec	自定义3D对象
+		 * @return Vector3D
+		 * 
+		 */		
+		public function transformToVector3D(vec:CVector):Vector3D
+		{
+			return new Vector3D(vec.x,vec.y,vec.z,vec.w);
 		}
 		/**
 		 * 用向量方法获取点到线段的距离 
@@ -38,29 +43,31 @@ package cloud.core.singleton
 		 * @return Number 最短距离
 		 * 
 		 */		
-		public function getPointToSegmentDistanceByVector(a:Vector3D,b:Vector3D,p:Vector3D):Number
+		public function getPointToSegmentDistanceByVector(a:CVector,b:CVector,p:CVector):Number
 		{
 			var returnLength:Number;
-			var product:Number;
+			var dotValue:Number;
 			var scale:Number;
-			var ap:Vector3D = p.subtract(a);
-			var ab:Vector3D = b.subtract(a);
-			var ac:Vector3D = ab.clone();
-			product=ap.dotProduct(ab);
-			scale=product / ab.lengthSquared;
+			var ap:CVector = CVector.Substract(p,a);
+			var ab:CVector = CVector.Substract(b,a);
+			var ac:CVector = ab;
+			dotValue=CVector.DotValue(ap,ab);
+			scale=dotValue / ab.lengthSquared;
 			if(scale<=0)
 			{
 				returnLength = ap.length;
 			}
 			else if(scale>=1)
 			{
-				returnLength = p.subtract(b).length;
+				returnLength = CVector.Substract(p,b).length;
 			}
 			else
 			{
-				ac.scaleBy(scale);
-				returnLength=ac.subtract(ap).length;
+				CVector.Scale(ac,scale);
+				returnLength=CVector.Substract(ac,ap).length;
 			}
+			ap.back();
+			ab.back();
 			return returnLength;
 		}
 		/**
@@ -71,34 +78,41 @@ package cloud.core.singleton
 		 * @return Number	夹角
 		 * 
 		 */		
-		public function calculateRotationByAxis(dir:Vector3D,axis:Vector3D,isDegreeORRadian:Boolean=true):Number
+		public function calculateRotationByAxis(dir:CVector,axis:CVector,isDegreeORRadian:Boolean=true):Number
 		{
 			var angle:Number;
-			var len:Number = dir.length;
-			var dot:Number = dir.dotProduct(axis);
-			var cosValue:Number = dot / len;
-			var nor:Vector3D=dir.crossProduct(axis);
-			if(nor.dotProduct(NEGATIVE_Z_AXIS)<0)
-				angle=isDegreeORRadian ? MathUtil.instance.toDegrees(Math.acos(cosValue))*-1 : Math.acos(cosValue)*-1;
+			var cosValue:Number = CVector.DotValue(dir,axis) / dir.length;
+			var nor:CVector=CVector.CrossValue(dir,axis);
+			if(CVector.DotValue(nor,CVector.NEG_Z_AXIS)<0)
+				angle=isDegreeORRadian ? CMathUtil.instance.toDegrees(Math.acos(cosValue))*-1 : Math.acos(cosValue)*-1;
 			else
-				angle=isDegreeORRadian ? MathUtil.instance.toDegrees(Math.acos(cosValue)) : Math.acos(cosValue);
+				angle=isDegreeORRadian ? CMathUtil.instance.toDegrees(Math.acos(cosValue)) : Math.acos(cosValue);
+			nor.back();
 			return angle;
+		}
+		/**
+		 * 通过旋转角度,计算平行于地面的方向 
+		 * @param rotation
+		 * @param isDegreeOrRadian
+		 * @return CVector
+		 * 
+		 */		
+		public function calculateDirectionByRotation(rotation:Number,outPut:CVector,isDegreeOrRadian:Boolean=true):void
+		{
+			var radian:Number=isDegreeOrRadian?CMathUtil.instance.toRadians(rotation):rotation;
+			CVector.SetTo(outPut,Math.cos(radian),Math.sin(radian),0);
 		}
 		/**
 		 * 将2D点坐标转换成3D点坐标
 		 * @param roundPoints
-		 * @return Vector.<Vector3D>
+		 * @return Vector.<CVector>
 		 * 
 		 */		
-		public function transformPointsToVector3Ds(roundPoints:Array):Vector.<Vector3D>
+		public function transformPointsToVector3Ds(roundPoints:Array):CVector3DContainer
 		{
-			var len:int=roundPoints.length;
-			var points:Vector.<Vector3D>=new Vector.<Vector3D>(len);
-			for(var i:int=0; i<len; i++)
-			{
-				points[i]=new Vector3D(roundPoints[i].x,roundPoints[i].y,0);
-			}
-			return points;
+			var container:CVector3DContainer=CVector3DContainer.CreateOneInstance();
+			container.add(roundPoints);
+			return container;
 		}
 
 	}

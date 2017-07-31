@@ -31,6 +31,18 @@ package cloud.core.interfaces
 		 */		
 		function set parentID(value:String):void;
 		/**
+		 * 获取父数据对象的类型 
+		 * @return uint
+		 * 
+		 */		
+		function get parentType():uint;
+		/**
+		 * 设置父数据对象的类型 
+		 * @param value
+		 * 
+		 */		
+		function set parentType(value:uint):void;
+		/**
 		 * 获取对象数据类型属性 
 		 * @return uint
 		 * 
@@ -42,6 +54,30 @@ package cloud.core.interfaces
 		 * 
 		 */		
 		function set type(value:uint):void;
+		/**
+		 * 获取名字 
+		 * @return String
+		 * 
+		 */		
+		function get name():String;
+		/**
+		 * 设置名字 
+		 * @param value
+		 * 
+		 */		
+		function set name(value:String):void;
+		/**
+		 * 获取数据是否生存
+		 * @return Boolean
+		 * 
+		 */		
+		function get isLife():Boolean;
+		/**
+		 * 设置数据是否生存 
+		 * @param value
+		 * 
+		 */		
+		function set isLife(value:Boolean):void;
 		/**
 		 * 比较大小 
 		 * @param source

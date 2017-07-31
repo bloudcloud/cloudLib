@@ -4,9 +4,9 @@ package cloud.core.singleton
 	
 	import avmplus.getQualifiedClassName;
 	
-	import cloud.core.dataStruct.map.CHashMap;
-	import cloud.core.dataStruct.pool.CObjectPool;
-	import cloud.core.dataStruct.pool.ICObjectPool;
+	import cloud.core.data.map.CHashMap;
+	import cloud.core.data.pool.CObjectPool;
+	import cloud.core.data.pool.ICObjectPool;
 	
 	import ns.singleton;
 
@@ -17,11 +17,11 @@ package cloud.core.singleton
 	 */
 	public class CPoolsManager
 	{
-		private static var _instance:CPoolsManager;
+		private static var _Instance:CPoolsManager;
 		
-		public static function get instance():CPoolsManager
+		public static function get Instance():CPoolsManager
 		{
-			return _instance ||= new CPoolsManager(new SingletonEnforce());
+			return _Instance ||= new CPoolsManager(new SingletonEnforce());
 		}
 		
 		private var _poolMap:CHashMap;
@@ -31,12 +31,13 @@ package cloud.core.singleton
 			_poolMap=new CHashMap();
 		}
 		/**
-		 *  注册缓冲池
-		 * @param cls	缓冲池的缓冲对象类型
-		 * @param params	缓冲池的缓冲对象类型的实例化参数表
+		 * 注册缓存池
+		 * @param cls	缓存池的缓存对象类型
+		 * @param size 缓存池的缓存对象的个数
+		 * @param params	缓存池的缓存对象类型的实例化参数表 
 		 * 
-		 */		
-		public function registPool(cls:*,...params):void
+		 */			
+		public function registPool(cls:*,size:int,...params):void
 		{
 			var realCls:String;
 			var typeCls:Class;
@@ -50,9 +51,28 @@ package cloud.core.singleton
 				realCls=getQualifiedClassName(cls as Class);
 				typeCls=cls as Class;
 			}
-			if(_poolMap.containsKey(realCls)) return;
 			//执行注册
-			_poolMap.put(realCls,CClassFactory.instance.funcs[3-1].call(null,CObjectPool,[typeCls, params, 5]));
+			_poolMap.put(realCls,CClassFactory.instance.funcs[3-1].call(null,CObjectPool,[typeCls, params, size]));
+		}
+		/**
+		 * 移除注册的缓冲池 
+		 * @param cls
+		 * 
+		 */		
+		public function unRegistPool(cls:*):void
+		{
+			var realCls:String;
+			if(cls is String)
+			{
+				realCls=cls;
+			}
+			else if(cls is Class)
+			{
+				realCls=getQualifiedClassName(cls as Class);
+			}
+			var pool:ICObjectPool=_poolMap.remove(realCls) as ICObjectPool;
+			pool.flush();
+			pool.dispose();
 		}
 		/**
 		 * 根据缓冲对象类型，获取缓冲池对象 

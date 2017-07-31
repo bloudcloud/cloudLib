@@ -17,18 +17,18 @@ package cloud.core.singleton
 	{
 		public static const QUICK_SORT:int = 1;	
 		
-		private static var _instance:CSort;
+		private static var _Instance:CSort;
 		
 		public function CSort(enforcer:SingletonEnforce)
 		{
 			
 		}
 
-		public static function get instance():CSort
+		public static function get Instance():CSort
 		{
-			if(!_instance)
-				_instance = new CSort(new SingletonEnforce());
-			return _instance;
+			if(!_Instance)
+				_Instance = new CSort(new SingletonEnforce());
+			return _Instance;
 		}
 		/**
 		 * 排序 

@@ -3,7 +3,8 @@ package cloud.core.utils
 	import flash.geom.Matrix3D;
 	import flash.geom.Vector3D;
 	
-	import cloud.core.dataStruct.CTransform3D;
+	import cloud.core.data.CTransform3D;
+	import cloud.core.data.CVector;
 
 	/**
 	 *  3D网格工具
@@ -18,7 +19,7 @@ package cloud.core.utils
 			return _instance ||= new Geometry3DUtil(new SingletonEnforce());
 		}
 		
-		private const _vector3d:Vector3D=new Vector3D();
+		private const _vector3d:CVector=new CVector();
 		private const _matrix3d:Matrix3D=new Matrix3D();
 		private const _transform3d:CTransform3D=new CTransform3D();
 		private const _inverseTransform3d:CTransform3D=new CTransform3D();
@@ -38,6 +39,7 @@ package cloud.core.utils
 		{
 			if(_invalidPosition)
 			{
+				_invalidPosition=false;
 				updateTransform();
 			}
 			return _inverseTransform3d;
@@ -46,6 +48,7 @@ package cloud.core.utils
 		{
 			if(_invalidPosition)
 			{
+				_invalidPosition=false;
 				updateTransform();
 			}
 			return _transform3d;
@@ -164,13 +167,12 @@ package cloud.core.utils
 		}
 		private function updateTransform():void
 		{
-			_invalidPosition=false;
-			var cosX:Number = Math.cos(MathUtil.instance.toRadians(_rotationX));
-			var sinX:Number = Math.sin(MathUtil.instance.toRadians(_rotationX));
-			var cosY:Number = Math.cos(MathUtil.instance.toRadians(_rotationY));
-			var sinY:Number = Math.sin(MathUtil.instance.toRadians(_rotationY));
-			var cosZ:Number = Math.cos(MathUtil.instance.toRadians(_rotationZ));
-			var sinZ:Number = Math.sin(MathUtil.instance.toRadians(_rotationZ));
+			var cosX:Number = Math.cos(CMathUtil.instance.toRadians(_rotationX));
+			var sinX:Number = Math.sin(CMathUtil.instance.toRadians(_rotationX));
+			var cosY:Number = Math.cos(CMathUtil.instance.toRadians(_rotationY));
+			var sinY:Number = Math.sin(CMathUtil.instance.toRadians(_rotationY));
+			var cosZ:Number = Math.cos(CMathUtil.instance.toRadians(_rotationZ));
+			var sinZ:Number = Math.sin(CMathUtil.instance.toRadians(_rotationZ));
 			var cosZsinY:Number = cosZ*sinY;
 			var sinZsinY:Number = sinZ*sinY;
 			var cosYscaleX:Number = cosY*_scaleX;
@@ -214,9 +216,9 @@ package cloud.core.utils
 		 * @param px
 		 * @param py
 		 * @param pz
-		 * @param rx
-		 * @param ry
-		 * @param rz
+		 * @param rx	绕x轴方向的角度
+		 * @param ry	绕y轴方向的角度
+		 * @param rz	绕z轴方向的角度
 		 * @param sx
 		 * @param sy
 		 * @param sz
@@ -235,13 +237,7 @@ package cloud.core.utils
 			scaleX=sx;
 			scaleY=sy;
 			scaleZ=sz;
-			var tmp:CTransform3D=transform3d;
-			if(isNew)
-			{
-				tmp=new CTransform3D();
-				tmp.copy(_transform3d);
-			}
-			return tmp;
+			return isNew ? transform3d.clone() as CTransform3D : transform3d;
 		}
 		/**
 		 * 生成逆转换的Tansform3D对象 
@@ -269,13 +265,7 @@ package cloud.core.utils
 			scaleX=sx;
 			scaleY=sy;
 			scaleZ=sz;
-			var tmp:CTransform3D=inverseTransform3d;
-			if(isNew)
-			{
-				tmp=new CTransform3D();
-				tmp.copy(_inverseTransform3d);
-			}
-			return tmp;
+			return isNew ? inverseTransform3d.clone() as CTransform3D : inverseTransform3d;
 		}
 		/**
 		 * CTransform3D对象转换成Matrix3D对象 
@@ -302,21 +292,21 @@ package cloud.core.utils
 		 * @return Boolean 是否相交
 		 * 
 		 */		
-		public function intersectPlaneByRay(ray:Ray3D,planePos:Vector3D,planeNormal:Vector3D,intersectPos:Vector3D):Boolean
+		public function intersectPlaneByRay(ray:Ray3D,planePos:CVector,planeNormal:CVector,intersectPos:CVector):Boolean
 		{
 			var tmpVec:Vector3D;
-			var rp2cp:Vector3D=planePos.subtract(ray.originPos);
-			var normalDir:Vector3D=ray.direction.clone();
-			normalDir.normalize();
-			var t:Number=planeNormal.dotProduct(rp2cp)/planeNormal.dotProduct(normalDir);
+			var rp2cp:CVector=CVector.Substract(planePos,ray.originPos);
+			var normalDir:CVector=ray.direction.clone() as CVector;
+			CVector.Normalize(normalDir);
+			var t:Number=CVector.DotValue(planeNormal,rp2cp)/CVector.DotValue(planeNormal,normalDir);
 			if(t>=0)
 			{
-				normalDir.scaleBy(t);
-				tmpVec=ray.originPos.add(normalDir);
-				intersectPos.copyFrom(tmpVec);
-				return true;
+				CVector.Scale(normalDir,t);
+				CVector.SetTo(intersectPos,ray.originPos.x+normalDir.x,ray.originPos.y+normalDir.y,ray.originPos.z+normalDir.z);
 			}
-			return false;
+			rp2cp.back();
+			normalDir.back();
+			return t>=0;
 		}
 
 		/**
@@ -329,7 +319,7 @@ package cloud.core.utils
 		 * @return Vector3D
 		 * 
 		 */		
-		public function transformVector(vec:Vector3D,x:Number,y:Number,z:Number,rotation:Number,isNew:Boolean=true):Vector3D
+		public function transformVector(vec:CVector,x:Number,y:Number,z:Number,rotation:Number,isNew:Boolean=true):CVector
 		{
 			posX=x;
 			posY=y;
@@ -338,19 +328,23 @@ package cloud.core.utils
 			return transformVectorByCTransform3D(vec,transform3d,isNew);
 		}
 		/**
-		 * 通过CTransform3D对象转换Vector3D对象,返回转换后的新Vector3D对象
-		 * @param vec
-		 * @param transform
-		 * @return Vector3D
+		 * 通过CTransform3D对象转换3D向量对象 
+		 * @param vec	3D向量对象
+		 * @param transform	线性变换对象（3*4矩阵）
+		 * @param isNew	是否返回一个新的3D向量对象
+		 * @return *
 		 * 
 		 */		
-		public function transformVectorByCTransform3D(vec:Vector3D,transform:CTransform3D,isNew:Boolean=true):Vector3D
+		public function transformVectorByCTransform3D(vec:*,transform:CTransform3D,isNew:Boolean=true):*
 		{
-			_vector3d.x=transform.a*vec.x+transform.b*vec.y+transform.c*vec.z+transform.d;
-			_vector3d.y=transform.e*vec.x+transform.f*vec.y+transform.g*vec.z+transform.h;
-			_vector3d.z=transform.i*vec.x+transform.j*vec.y+transform.k*vec.z+transform.l;
-			_vector3d.w=0;
-			return isNew ? _vector3d.clone() : _vector3d;
+			var newVec:*=isNew ? vec.clone() : vec;
+			var x:Number=vec.x;
+			var y:Number=vec.y;
+			var z:Number=vec.z;
+			newVec.x=transform.a*x+transform.b*y+transform.c*z+transform.d;
+			newVec.y=transform.e*x+transform.f*y+transform.g*z+transform.h;
+			newVec.z=transform.i*x+transform.j*y+transform.k*z+transform.l;
+			return newVec;
 		}
 
 	}
