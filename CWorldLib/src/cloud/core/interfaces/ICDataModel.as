@@ -7,11 +7,11 @@ package cloud.core.interfaces
 	public interface ICDataModel
 	{
 		/**
-		 * 添加数据 
+		 * 添加共享数据 
 		 * @param data
 		 * 
 		 */		
-		function addData(data:ICData):void;
+		function addShareData(data:ICData):void;
 		/**
 		 * 添加缓存数据
 		 * @param data
@@ -19,20 +19,31 @@ package cloud.core.interfaces
 		 */		
 		function addCacheData(data:ICData):void;
 		/**
-		 * 移除数据 
+		 * 移除缓存数据 
 		 * @param data
 		 * 
 		 */		
 		function removeCacheData(data:ICData):void;
+		/**
+		 * 移除同一个类型的共享数据 
+		 * @param type
+		 * 
+		 */		
+		function removeShareDataByType(type:uint):void;
 		/**
 		 * 清除所有存储数据 
 		 * 
 		 */		
 		function clearAll():void;
 		/**
+		 * 清理所有共享数据 
+		 * 
+		 */		
+		function clearAllShareData():void
+		/**
 		 * 清理所有缓存数据 
 		 * 
 		 */		
-		function clearCache():void;
+		function clearAllCache():void;
 	}
 }
