@@ -29,6 +29,9 @@ package cloud.core.model.paramVos
 		protected var _x:Number;
 		protected var _y:Number;
 		protected var _z:Number;
+		protected var _centerX:Number;
+		protected var _centerY:Number;
+		protected var _centerZ:Number;
 		protected var _scaleLength:Number;
 		protected var _scaleWidth:Number;
 		protected var _scaleHeight:Number;
@@ -61,6 +64,8 @@ package cloud.core.model.paramVos
 		private var _numChildren:Number;
 		private var _children:ICObject3D ;
 		private var _next:ICObject3D;
+		
+		public var moduleType:uint;
 		
 		cloudLib var _parent:ICObject3D;
 		cloudLib var _invalidParent:Boolean;
@@ -444,6 +449,7 @@ package cloud.core.model.paramVos
 		public function CBaseObject3DVO(clsName:String="CBaseObject3DVO")
 		{
 			_className=clsName;
+			_name=clsName;
 			_position=CVector.CreateOneInstance();
 			_direction=CVector.X_AXIS.clone() as CVector;
 			_globalRotation=CVector.CreateOneInstance();
@@ -454,12 +460,12 @@ package cloud.core.model.paramVos
 			_roundPoints=CVector3DContainer.CreateOneInstance();
 			
 			_length=_width=_height=_rotationLength=_rotationWidth=_rotationHeight=0;
-			_x=_y=_z=0;
+			_x=_y=_z=_centerX=_centerY=_centerZ=0;
 			_offLeft=_offBack=_offGround=0;
 			_scaleLength=_scaleWidth=_scaleHeight=1;
 			_isLife=true;
 			_invalidTransform=true;
-			_invalidPosition=true;
+//			_invalidPosition=true;
 		}
 		private function doUpdateSize():void
 		{
