@@ -8,6 +8,7 @@ package cloud.core.model.paramVos
 	import cloud.core.interfaces.ICObject3D;
 	import cloud.core.interfaces.ICSerialization;
 	import cloud.core.interfaces.ICSize;
+	import cloud.core.singleton.CVector3DUtil;
 	import cloud.core.utils.CDebug;
 	
 	import ns.cloudLib;
@@ -48,6 +49,9 @@ package cloud.core.model.paramVos
 		protected var _minSize:CVector;
 		protected var _maxSize:CVector;
 		
+		private var _originX:Number;
+		private var _originY:Number;
+		private var _originZ:Number;
 		private var _refCount:int;
 		private var _name:String;
 		private var _uniqueID:String;
@@ -64,6 +68,7 @@ package cloud.core.model.paramVos
 		private var _numChildren:Number;
 		private var _children:ICObject3D ;
 		private var _next:ICObject3D;
+		
 		
 		public var moduleType:uint;
 		
@@ -474,8 +479,8 @@ package cloud.core.model.paramVos
 
 		private function doUpdateTransform():void
 		{
-			CTransform3D.Compose(_transform,x,y,z,rotationLength,rotationWidth,rotationHeight,scaleLength,scaleWidth,scaleHeight);
-			CTransform3D.ComposeInverse(_inverseTransform,x,y,z,rotationLength,rotationWidth,rotationHeight,scaleLength,scaleWidth,scaleHeight);
+			CTransform3D.Compose(_transform,rotationLength,rotationWidth,rotationHeight,scaleLength,scaleWidth,scaleHeight,x,y,z);
+			CTransform3D.ComposeInverse(_inverseTransform,rotationLength,rotationWidth,rotationHeight,scaleLength,scaleWidth,scaleHeight,x,y,z);
 			_position.x=x;
 			_position.y=y;
 			_position.z=z;
@@ -490,15 +495,20 @@ package cloud.core.model.paramVos
 			{
 				doUpdatePositionByOffset();
 			}
-			_position.x=x;
-			_position.y=y;
-			_position.z=z;
+			_position.x=_originX;
+			_position.y=_originY;
+			_position.z=_originZ;
 		}
 		protected function doUpdatePositionByXYZ():void
 		{
-			x+=parent.x;
-			y+=parent.y;
-			z+=parent.z;
+			var dir:CVector=CVector.CreateOneInstance();
+			CVector3DUtil.Instance.calculateDirectionByRotation(globalRotation.z,dir);
+			var toward:CVector=CVector.CrossValue(dir,CVector.Z_AXIS);
+			CVector.Scale(toward,parent.width+2+offBack);
+			_originX=_x+toward.x;
+			_originY=_y+toward.y;
+			_originZ=_z+toward.z;
+			toward.back();
 		}
 		protected function doUpdatePositionByOffset():void
 		{
@@ -508,9 +518,9 @@ package cloud.core.model.paramVos
 			CVector.Scale(dir,-parent.length*.5+this.length*.5+offLeft);
 			CVector.Scale(toward,parent.width+2+offBack);
 			CVector.Scale(zAxis,-parent.height*.5+this.height*.5+offGround);
-			x=dir.x+toward.x+zAxis.x;
-			y=dir.y+toward.y+zAxis.y;
-			z=dir.z+toward.z+zAxis.z;
+			_originX=dir.x+toward.x+zAxis.x;
+			_originY=dir.y+toward.y+zAxis.y;
+			_originZ=dir.z+toward.z+zAxis.z;
 			dir.back();
 			toward.back();
 			zAxis.back();

@@ -133,7 +133,7 @@ package cloud.core.data
 		 * @param scaleZ
 		 * 
 		 */		
-		public static function Compose(transform:CTransform3D,x:Number=0, y:Number=0, z:Number=0, rotationX:Number=0, rotationY:Number=0, rotationZ:Number=0, scaleX:Number=1, scaleY:Number=1, scaleZ:Number=1, isDegree:Boolean=true):void {
+		public static function Compose(transform:CTransform3D,rotationX:Number=0,rotationY:Number=0,rotationZ:Number=0,scaleX:Number=1,scaleY:Number=1,scaleZ:Number=1,x:Number=0,y:Number=0,z:Number=0,isDegree:Boolean=true):void {
 			var rotaX:Number=isDegree?CMathUtil.instance.toRadians(rotationX):rotationX;
 			var rotaY:Number=isDegree?CMathUtil.instance.toRadians(rotationY):rotationY;
 			var rotaZ:Number=isDegree?CMathUtil.instance.toRadians(rotationZ):rotationZ;
@@ -164,7 +164,7 @@ package cloud.core.data
 			transform.l = z;
 		}
 		
-		public static function ComposeInverse(transform:CTransform3D,x:Number, y:Number, z:Number, rotationX:Number, rotationY:Number, rotationZ:Number, scaleX:Number, scaleY:Number, scaleZ:Number, isDegree:Boolean=true):void {
+		public static function ComposeInverse(transform:CTransform3D,rotationX:Number=0,rotationY:Number=0,rotationZ:Number=0,scaleX:Number=1,scaleY:Number=1,scaleZ:Number=1,x:Number=0,y:Number=0,z:Number=0,isDegree:Boolean=true):void {
 			var rotaX:Number=isDegree?CMathUtil.instance.toRadians(rotationX):rotationX;
 			var rotaY:Number=isDegree?CMathUtil.instance.toRadians(rotationY):rotationY;
 			var rotaZ:Number=isDegree?CMathUtil.instance.toRadians(rotationZ):rotationZ;
