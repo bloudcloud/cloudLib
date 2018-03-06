@@ -55,18 +55,6 @@ package cloud.core.interfaces
 		 */		
 		function set type(value:uint):void;
 		/**
-		 * 获取名字 
-		 * @return String
-		 * 
-		 */		
-		function get name():String;
-		/**
-		 * 设置名字 
-		 * @param value
-		 * 
-		 */		
-		function set name(value:String):void;
-		/**
 		 * 获取数据是否生存
 		 * @return Boolean
 		 * 

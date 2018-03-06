@@ -1,7 +1,7 @@
 package cloud.core.collections
 {
 	import cloud.core.interfaces.ICData;
-	import cloud.core.utils.CDebug;
+	import cloud.core.utils.CDebugUtil;
 	
 	import ns.cloudLib;
 
@@ -134,7 +134,7 @@ package cloud.core.collections
 		 */		
 		protected function removeNode(node:IDoubleNode):void
 		{
-			if(node==null || node.nodeData==null) CDebug.instance.throwError("DoubleList","removeNode","node",String(node)+" 有问题！");
+			if(node==null || node.nodeData==null) CDebugUtil.Instance.throwError("DoubleList","removeNode","node",String(node)+" 有问题！");
 			var nextNode:IDoubleNode=node.next;
 			var prevNode:IDoubleNode=node.prev;
 			node.unlink();

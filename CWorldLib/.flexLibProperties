@@ -1,15 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <flexLibProperties includeAllClasses="true" useMultiPlatformConfig="false" version="3">
   <includeClasses>
-    <classEntry path="cloud.core.data.CTransform3D"/>
     <classEntry path="cloud.core.event.CDataEvent"/>
     <classEntry path="cloud.core.data.CVector"/>
-    <classEntry path="cloud.core.data.BaseResource"/>
     <classEntry path="cloud.core.model.paramVos.CBaseObject3DVO"/>
     <classEntry path="cloud.core.dict.SerializeFormate"/>
     <classEntry path="cloud.ecs.entity.ICEntity"/>
     <classEntry path="cloud.ecs.system.ICSystem"/>
-    <classEntry path="cloud.ecs.component.ICComponent"/>
     <classEntry path="cloud.ecs.ICWorld"/>
   </includeClasses>
   <includeResources/>

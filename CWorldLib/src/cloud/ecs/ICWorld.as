@@ -1,6 +1,6 @@
 package cloud.ecs
 {
-	import cloud.core.data.map.CHashMap;
+	import cloud.core.datas.maps.CHashMap;
 	import cloud.ecs.component.ICComponent;
 	import cloud.ecs.system.ICSystem;
 

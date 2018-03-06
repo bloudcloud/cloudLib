@@ -1,8 +1,8 @@
 package cloud.core.interfaces
 {
-	import cloud.core.data.CTransform3D;
-	import cloud.core.data.CVector;
-	import cloud.core.data.container.CVector3DContainer;
+	import cloud.core.datas.base.CTransform3D;
+	import cloud.core.datas.base.CVector;
+	import cloud.core.datas.containers.CVectorContainer;
 
 	/**
 	 *  3D对象数据
@@ -178,13 +178,13 @@ package cloud.core.interfaces
 		 * @return CVector3DContainer
 		 * 
 		 */		
-		function get roundPoints():CVector3DContainer;
+		function get roundPoints():CVectorContainer;
 		/**
 		 * 设置3D物体围点数据容器对象 
 		 * @param value
 		 * 
 		 */		
-		function set roundPoints(value:CVector3DContainer):void;
+		function set roundPoints(value:CVectorContainer):void;
 		/**
 		 * 获取父对象 
 		 * @return ICObject3D

@@ -1,6 +1,6 @@
 package cloud.core.interfaces
 {
-	import cloud.core.data.CVector;
+	import cloud.core.datas.base.CVector;
 	
 	/**
 	 *  家具列表数据类

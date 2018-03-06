@@ -7,6 +7,18 @@ package cloud.core.interfaces
 	public interface ICResource
 	{
 		/**
+		 * 获取资源名称 
+		 * @return String
+		 * 
+		 */		
+		function get name():String;
+		/**
+		 * 设置资源名称 
+		 * @param value
+		 * 
+		 */		
+		function set name(value:String):void;
+		/**
 		 * 获取引用计数  
 		 * @return uint
 		 * 
