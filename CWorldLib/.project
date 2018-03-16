@@ -19,7 +19,7 @@
 		<link>
 			<name>bin-debug</name>
 			<type>2</type>
-			<location>F:/work/flash/lejiaSVN/Lejia3DBuild/cloud/selfLibs</location>
+			<locationURI>DOCUMENTS/L3DLibrary</locationURI>
 		</link>
 	</linkedResources>
 	<variableList>

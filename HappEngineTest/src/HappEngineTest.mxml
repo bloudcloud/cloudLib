@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			   xmlns:s="library://ns.adobe.com/flex/spark" 
+			   xmlns:mx="library://ns.adobe.com/flex/mx"
+			   minWidth="800"
+			   minHeight="600"
+			   width = "1200"
+			   height = "800"
+			   xmlns:local="*"
+			   backgroundAlpha="0" backgroundColor="0x888888"
+			   creationComplete="application1_creationCompleteHandler(event)"
+			   >
+	<fx:Script>
+		<![CDATA[
+			import mx.events.FlexEvent;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+			
+			import core.L3DLibraryWebService;
+			import core.ListenerExtend;
+			import core.print;
+			import core.datas.L3DMaterialInformations;
+			import core.events.L3DLibraryEvent;
+			
+			import resources.manager.GlobalManager;
+			
+
+//			private var _engineProxy:HEngineProxy;
+			
+			protected function application1_creationCompleteHandler(event:FlexEvent):void
+			{
+				//初始化框架代理
+//				_engineProxy=new HEngineProxy();
+				L3DLibraryWebService.SetupWebService();
+				L3DLibraryWebService.dispatcher.addEventListener(Event.COMPLETE,onWebServiceStarted);
+			}
+			
+			private function onWebServiceStarted(evt:Event):void
+			{
+				L3DLibraryWebService.dispatcher.removeEventListener(Event.COMPLETE,onWebServiceStarted);
+				GlobalManager.Instance.serviceMGR.addRequestTask("GetViewDetailBufferFromCode");
+				
+			}
+			
+			private function onSearchMaterialInforDataResult(evt:ResultEvent):void
+			{
+				var buffer:ByteArray = evt.result as ByteArray;
+				if(buffer == null || buffer.length == 0)
+				{
+					return;
+				}
+				var listener:ListenerExtend = new ListenerExtend();
+				var materialInfo:L3DMaterialInformations = new L3DMaterialInformations(buffer,"");
+				GlobalManager.Instance.resourceMGR.addInformationURL(materialInfo.url,materialInfo);
+				materialInfo.addEventListener(L3DLibraryEvent.LoadPreview,onLoadPreviewResult);
+				materialInfo.LoadPreview();
+			}
+			private function onSearchMaterialInfoDataFault(evt:FaultEvent):void
+			{
+				print(evt.toString());
+			}
+			
+			private function onLoadPreviewResult(evt:L3DLibraryEvent):void
+			{
+				evt.currentTarget.removeEventListener(evt.type,onLoadPreviewResult);
+				if(evt.currentTarget.linkedDataUrl && evt.currentTarget.linkedDataUrl.length)
+				{
+					//lrj 2017/12/7 
+					GlobalManager.Instance.serviceMGR.addRequestTask("Download");
+					GlobalManager.Instance.serviceMGR.download(onLoadLinkedDataResult, onLoadLinkedDataFault, evt.currentTarget.linkedDataUrl);
+				}
+			}
+			
+			private function onLoadLinkedDataResult(evt:ResultEvent):void
+			{
+				var buffer:ByteArray = evt.result as ByteArray;
+				if(buffer == null || buffer.length == 0)
+				{
+					print(evt.currentTarget.linkedDataUrl+",下载成功但是没有数据！");
+					return;
+				}
+				buffer.position=0;
+				evt.currentTarget.xml= XML(buffer);
+			}
+			
+			private function onLoadLinkedDataFault(evt:FaultEvent):void
+			{
+				print(evt.toString());
+			}
+		]]>
+	</fx:Script>
+</s:Application>

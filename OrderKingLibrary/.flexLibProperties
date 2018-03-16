@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<flexLibProperties includeAllClasses="true" useMultiPlatformConfig="false" version="3">
+  <includeClasses>
+    <classEntry path="core.a3d.CBitmapTextureResource"/>
+    <classEntry path="core.ListenerExtend"/>
+    <classEntry path="core.HashMap"/>
+    <classEntry path="core.datas.L3DMaterialInformations"/>
+    <classEntry path="core.dict.CL3DConstDict"/>
+    <classEntry path="core.a3d.ICNameResource"/>
+    <classEntry path="core.a3d.CTextureResource"/>
+    <classEntry path="resources.status.consts.StatusConst"/>
+    <classEntry path="resources.manager.WebAPIMGR"/>
+    <classEntry path="resources.loader.L3DRPCLoader"/>
+    <classEntry path="resources.status.RenderMGStatus"/>
+    <classEntry path="resources.task.L3DRPCRequestTaskData"/>
+    <classEntry path="resources.loader.IL3DLoader"/>
+    <classEntry path="resources.task.ILoaderTaskData"/>
+    <classEntry path="resources.manager.GlobalManager"/>
+    <classEntry path="resources.manager.LibraryResouceMGR"/>
+    <classEntry path="resources.manager.StatusMGR"/>
+    <classEntry path="resources.loader.LoadType"/>
+    <classEntry path="resources.task.L3DRPCLoadTaskData"/>
+    <classEntry path="resources.loader.LibraryLoaderMGR"/>
+    <classEntry path="resources.task.IRPCRequestTaskData"/>
+    <classEntry path="resources.manager.LocalStorageMGR"/>
+    <classEntry path="resources.manager.ServiceMGR"/>
+    <classEntry path="resources.status.IStatus"/>
+    <classEntry path="core.events.L3DLibraryEvent"/>
+    <classEntry path="core.L3DLibraryWebService"/>
+    <classEntry path="ns.cloud_lejia"/>
+    <classEntry path="utils.OrderKingBaseUtil"/>
+  </includeClasses>
+  <includeResources/>
+  <namespaceManifests/>
+</flexLibProperties>

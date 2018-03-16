@@ -7,7 +7,6 @@
     <classEntry path="cloud.core.dict.SerializeFormate"/>
     <classEntry path="cloud.ecs.entity.ICEntity"/>
     <classEntry path="cloud.ecs.system.ICSystem"/>
-    <classEntry path="cloud.ecs.ICWorld"/>
   </includeClasses>
   <includeResources/>
   <namespaceManifests/>

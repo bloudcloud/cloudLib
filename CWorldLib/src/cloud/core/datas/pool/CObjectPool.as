@@ -64,6 +64,7 @@ package cloud.core.datas.pool
 			}
 		}
 		
+		
 		public function push(o:ICPoolObject):void{
 			if(_curIndex==0 || _cache[_curIndex]==null ) 
 			{
