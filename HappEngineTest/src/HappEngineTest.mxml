@@ -38,8 +38,8 @@
 			private function onWebServiceStarted(evt:Event):void
 			{
 				L3DLibraryWebService.dispatcher.removeEventListener(Event.COMPLETE,onWebServiceStarted);
-				GlobalManager.Instance.serviceMGR.addRequestTask("GetViewDetailBufferFromCode");
-				
+				GlobalManager.Instance.serviceMGR.addRequestTask(onSearchMaterialInforDataResult,onSearchMaterialInfoDataFault,"GetViewDetailBufferFromCode","D-6",0);
+				GlobalManager.Instance.serviceMGR.excuteRequestTask();
 			}
 			
 			private function onSearchMaterialInforDataResult(evt:ResultEvent):void
@@ -66,8 +66,8 @@
 				if(evt.currentTarget.linkedDataUrl && evt.currentTarget.linkedDataUrl.length)
 				{
 					//lrj 2017/12/7 
-					GlobalManager.Instance.serviceMGR.addRequestTask("Download");
-					GlobalManager.Instance.serviceMGR.download(onLoadLinkedDataResult, onLoadLinkedDataFault, evt.currentTarget.linkedDataUrl);
+					GlobalManager.Instance.serviceMGR.addRequestTask(onLoadLinkedDataResult,onLoadLinkedDataFault,"Download",evt.currentTarget.linkedDataUrl);
+					GlobalManager.Instance.serviceMGR.excuteRequestTask();
 				}
 			}
 			

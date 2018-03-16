@@ -6,6 +6,7 @@ package resources.manager
 	import mx.rpc.Responder;
 	import mx.rpc.events.FaultEvent;
 	import mx.rpc.events.ResultEvent;
+	import mx.rpc.soap.Operation;
 	import mx.rpc.soap.WebService;
 	
 	import core.L3DLibraryWebService;
@@ -35,7 +36,8 @@ package resources.manager
 		
 		private function doRequest(taskData:L3DRPCRequestTaskData):void
 		{
-			var atObj:AsyncToken = webService[taskData.requestName].apply(null,taskData.requestParams);
+			var op:Operation = webService[taskData.requestName]
+			var atObj:AsyncToken = op.send.apply(null,taskData.requestParams);
 			var rpObj:Responder = responder(onRequessSuccessCallback, onRequessFaultCallback);
 			atObj.addResponder(rpObj);
 		}
@@ -44,7 +46,7 @@ package resources.manager
 			var taskData:L3DRPCRequestTaskData=_serviceDatasQueue.pop() as L3DRPCRequestTaskData;
 			if(taskData.successCallback!=null)
 			{
-				taskData.successCallback(reObj.result);
+				taskData.successCallback(reObj);
 			}
 			taskData.clear();
 			if(_serviceDatasQueue.length>0)
@@ -58,7 +60,7 @@ package resources.manager
 			var taskData:L3DRPCRequestTaskData=_serviceDatasQueue[_serviceDatasQueue.length-1] as L3DRPCRequestTaskData;
 			if(taskData.faultCallback!=null)
 			{
-				taskData.faultCallback();
+				taskData.faultCallback(feObj);
 			}
 			doRequest(taskData);
 		}
