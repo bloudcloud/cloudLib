@@ -28,7 +28,8 @@
     <classEntry path="core.events.L3DLibraryEvent"/>
     <classEntry path="core.L3DLibraryWebService"/>
     <classEntry path="ns.cloud_lejia"/>
-    <classEntry path="utils.OrderKingBaseUtil"/>
+    <classEntry path="utils.OKBaseUtil"/>
+    <classEntry path="utils.OKResourceUtil"/>
   </includeClasses>
   <includeResources/>
   <namespaceManifests/>

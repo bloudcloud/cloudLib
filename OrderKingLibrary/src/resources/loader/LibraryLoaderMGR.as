@@ -10,7 +10,7 @@ package resources.loader
 	import resources.task.ILoaderTaskData;
 	import resources.task.L3DRPCLoadTaskData;
 	
-	import utils.OrderKingBaseUtil;
+	import utils.OKBaseUtil;
 
 	[Event(name="LibraryLoader_LoadAllComplete",type="utils.DatasEvent")]
 	[Event(name="LibraryLoader_LoadComplete", type="utils.DatasEvent")]
@@ -187,7 +187,7 @@ package resources.loader
 			if(_backQueue.length>0)
 			{
 				//下载执行中若临时下载队列不为空，则打包成一整个队列任务缓存到下载任务哈希图中
-				tmpQueueID=OrderKingBaseUtil.Instance.createUID();
+				tmpQueueID=OKBaseUtil.Instance.createUID();
 				_loadQueueMap.add(tmpQueueID,_backQueue);
 				_backQueue=new Vector.<ILoaderTaskData>();
 			}
@@ -243,7 +243,7 @@ package resources.loader
 			if(_loadQueue==null)
 			{
 				_loadQueue=_backQueue;
-				_loadQueueID=OrderKingBaseUtil.Instance.createUID();
+				_loadQueueID=OKBaseUtil.Instance.createUID();
 				_loadQueueMap.add(_loadQueueID,_backQueue);
 				_backQueue=new Vector.<ILoaderTaskData>();
 			}
@@ -267,7 +267,7 @@ package resources.loader
 			if(_loadQueue==null)
 			{
 				_loadQueue=_backQueue;
-				_loadQueueID=OrderKingBaseUtil.Instance.createUID();
+				_loadQueueID=OKBaseUtil.Instance.createUID();
 				_loadQueueMap.add(_loadQueueID,_backQueue);
 				_backQueue=new Vector.<ILoaderTaskData>();
 			}
@@ -290,7 +290,7 @@ package resources.loader
 			if(_loadQueue==null)
 			{
 				_loadQueue=_backQueue;
-				_loadQueueID=OrderKingBaseUtil.Instance.createUID();
+				_loadQueueID=OKBaseUtil.Instance.createUID();
 				_loadQueueMap.add(_loadQueueID,_backQueue);
 				_backQueue=new Vector.<ILoaderTaskData>();
 			}

@@ -4,7 +4,7 @@ package resources.task
 	
 	import resources.loader.LoadType;
 	
-	import utils.OrderKingBaseUtil;
+	import utils.OKBaseUtil;
 
 	use namespace cloud_lejia
 	/**
@@ -96,7 +96,7 @@ package resources.task
 			_successCallback=sCallback;
 			_faultCallback=fCallback;
 			this.rpcType=rpcType;
-			_uniqueID=OrderKingBaseUtil.Instance.createUID();
+			_uniqueID=OKBaseUtil.Instance.createUID();
 			switch(_type)
 			{
 				case LoadType.RPCLOADDATA_URL:

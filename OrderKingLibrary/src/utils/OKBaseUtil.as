@@ -8,13 +8,13 @@ package utils
 	 * @author cloud
 	 * @2018-3-15
 	 */
-	public class OrderKingBaseUtil
+	public class OKBaseUtil
 	{
-		private static var _Instance:OrderKingBaseUtil;
+		private static var _Instance:OKBaseUtil;
 		
-		public static function get Instance():OrderKingBaseUtil
+		public static function get Instance():OKBaseUtil
 		{
-			return _Instance ||= new OrderKingBaseUtil();
+			return _Instance ||= new OKBaseUtil();
 		}
 		
 		/**
