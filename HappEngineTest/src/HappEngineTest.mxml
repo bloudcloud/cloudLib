@@ -13,16 +13,12 @@
 	<fx:Script>
 		<![CDATA[
 			import mx.events.FlexEvent;
-			import mx.rpc.events.FaultEvent;
-			import mx.rpc.events.ResultEvent;
 			
 			import core.L3DLibraryWebService;
-			import core.ListenerExtend;
 			import core.print;
 			import core.datas.L3DMaterialInformations;
-			import core.events.L3DLibraryEvent;
 			
-			import resources.manager.GlobalManager;
+			import utils.OKResourceUtil;
 			
 
 //			private var _engineProxy:HEngineProxy;
@@ -38,55 +34,20 @@
 			private function onWebServiceStarted(evt:Event):void
 			{
 				L3DLibraryWebService.dispatcher.removeEventListener(Event.COMPLETE,onWebServiceStarted);
-				GlobalManager.Instance.serviceMGR.addRequestTask(onSearchMaterialInforDataResult,onSearchMaterialInfoDataFault,"GetViewDetailBufferFromCode","D-6",0);
-				GlobalManager.Instance.serviceMGR.excuteRequestTask();
+				OKResourceUtil.Instance.getL3DMaterialInfoResource("D-6",null,onGetMaterialInfoSuccess,onGetMaterialInfoFault);
+//				GlobalManager.Instance.serviceMGR.addRequestTask(onSearchMaterialInforDataResult,onSearchMaterialInfoDataFault,"GetViewDetailBufferFromCode","D-6",0);
+//				GlobalManager.Instance.serviceMGR.excuteRequestTask();
 			}
 			
-			private function onSearchMaterialInforDataResult(evt:ResultEvent):void
+			private function onGetMaterialInfoSuccess(resourceID:String,materialInfo:L3DMaterialInformations):void
 			{
-				var buffer:ByteArray = evt.result as ByteArray;
-				if(buffer == null || buffer.length == 0)
-				{
-					return;
-				}
-				var listener:ListenerExtend = new ListenerExtend();
-				var materialInfo:L3DMaterialInformations = new L3DMaterialInformations(buffer,"");
-				GlobalManager.Instance.resourceMGR.addInformationURL(materialInfo.url,materialInfo);
-				materialInfo.addEventListener(L3DLibraryEvent.LoadPreview,onLoadPreviewResult);
-				materialInfo.LoadPreview();
+				trace(materialInfo.toString());
 			}
-			private function onSearchMaterialInfoDataFault(evt:FaultEvent):void
+			private function onGetMaterialInfoFault(resourceID:String,message:String):void
 			{
-				print(evt.toString());
+				print(resourceID+"_"+message);
 			}
 			
-			private function onLoadPreviewResult(evt:L3DLibraryEvent):void
-			{
-				evt.currentTarget.removeEventListener(evt.type,onLoadPreviewResult);
-				if(evt.currentTarget.linkedDataUrl && evt.currentTarget.linkedDataUrl.length)
-				{
-					//lrj 2017/12/7 
-					GlobalManager.Instance.serviceMGR.addRequestTask(onLoadLinkedDataResult,onLoadLinkedDataFault,"Download",evt.currentTarget.linkedDataUrl);
-					GlobalManager.Instance.serviceMGR.excuteRequestTask();
-				}
-			}
-			
-			private function onLoadLinkedDataResult(evt:ResultEvent):void
-			{
-				var buffer:ByteArray = evt.result as ByteArray;
-				if(buffer == null || buffer.length == 0)
-				{
-					print(evt.currentTarget.linkedDataUrl+",下载成功但是没有数据！");
-					return;
-				}
-				buffer.position=0;
-				evt.currentTarget.xml= XML(buffer);
-			}
-			
-			private function onLoadLinkedDataFault(evt:FaultEvent):void
-			{
-				print(evt.toString());
-			}
 		]]>
 	</fx:Script>
 </s:Application>
