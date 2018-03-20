@@ -11,7 +11,7 @@ package prefabs.components
 	 * @author cloud
 	 * @2018-3-12
 	 */
-	public class CommodityComponent extends BaseHComponent
+	public class CommodityBasicComponent extends BaseHComponent
 	{
 		public var code:String;
 
@@ -25,7 +25,6 @@ package prefabs.components
 		public var remark:String;
 		public var description:String;
 		
-		public var previewBuffer:ByteArray;
 		public var offGround:Number;
 		
 		public var url:String;
@@ -45,7 +44,7 @@ package prefabs.components
 		public var parentCode:String;
 		public var linkCDDataUrl:String;
 		
-		public function CommodityComponent()
+		public function CommodityBasicComponent()
 		{
 			super(TypeDict.COMMODITY_COMPONENT_CLSNAME);
 		}
@@ -61,7 +60,6 @@ package prefabs.components
 			spec=_resource.spec;
 			remark=_resource.remark;
 			description=_resource.description;
-			previewBuffer=_resource.previewBuffer;
 			offGround=_resource.offGround;
 			url=_resource.url;
 			combo=_resource.combo;

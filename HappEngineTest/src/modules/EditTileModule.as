@@ -5,7 +5,7 @@ package modules
 	import prefabs.TypeDict;
 	import prefabs.components.BaseObjectComponent;
 	import prefabs.components.CauclateComponent;
-	import prefabs.components.CommodityComponent;
+	import prefabs.components.CommodityBasicComponent;
 	import prefabs.components.MaterialComponent;
 	import prefabs.components.PlanComponent;
 	import prefabs.components.RegionComponent;
@@ -47,7 +47,7 @@ package modules
 		override protected function doInstall():void
 		{
 			GlobalManager.Instance.resourceMGR.registClass(TypeDict.BASEOBJECT_COMPONENT_CLSNAME,BaseObjectComponent);
-			GlobalManager.Instance.resourceMGR.registClass(TypeDict.COMMODITY_COMPONENT_CLSNAME,CommodityComponent);
+			GlobalManager.Instance.resourceMGR.registClass(TypeDict.COMMODITY_COMPONENT_CLSNAME,CommodityBasicComponent);
 			GlobalManager.Instance.resourceMGR.registClass(TypeDict.MATERIAL_COMPONENT_CLSNAME,MaterialComponent);
 			GlobalManager.Instance.resourceMGR.registClass(TypeDict.REGION_COMPONENT_CLSNAME,RegionComponent);
 			GlobalManager.Instance.resourceMGR.registClass(TypeDict.PLAN_COMPONENT_CLSNAME,PlanComponent);
@@ -97,26 +97,21 @@ package modules
 		override protected function doCreateSystems():void
 		{
 			_commandSys=new CommandSystem();
-			_systems.push(_commandSys);
+			addSystem(_commandSys);
 			_show2dSys=new Show2DSystem();
-			_systems.push(_show2dSys);
+			addSystem(_show2dSys);
 			_show3dSys=new Show3DSystem();
-			_systems.push(_show3dSys);
+			addSystem(_show3dSys);
 			_edit2dSys=new Edit2DSystem();
-			_systems.push(_edit2dSys);
+			addSystem(_edit2dSys);
 			_edit3dSys=new Edit3DSystem();
-			_systems.push(_edit3dSys);
+			addSystem(_edit3dSys);
 			_rollbackSys=new RollbackSystem();
-			_systems.push(_rollbackSys);
+			addSystem(_rollbackSys);
 			_calculateSys=new CalculateSystem();
-			_systems.push(_calculateSys);
+			addSystem(_calculateSys);
 		}
-		
-		public function excuteDownLoad(urls:Array,callback:Function):Boolean
-		{
-//			_commandSys
-		}
-		
+
 		
 	}
 }
