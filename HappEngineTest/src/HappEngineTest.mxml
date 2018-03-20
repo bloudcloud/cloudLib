@@ -20,13 +20,15 @@
 			
 			import utils.OKResourceUtil;
 			
-
-//			private var _engineProxy:HEngineProxy;
+			import worlds.HouseWorld;
+			
+			private var _houseWorld:HouseWorld;
 			
 			protected function application1_creationCompleteHandler(event:FlexEvent):void
 			{
 				//初始化框架代理
-//				_engineProxy=new HEngineProxy();
+				_houseWorld=new HouseWorld();
+				_houseWorld.create();
 				L3DLibraryWebService.SetupWebService();
 				L3DLibraryWebService.dispatcher.addEventListener(Event.COMPLETE,onWebServiceStarted);
 			}
@@ -35,18 +37,19 @@
 			{
 				L3DLibraryWebService.dispatcher.removeEventListener(Event.COMPLETE,onWebServiceStarted);
 				OKResourceUtil.Instance.getL3DMaterialInfoResource("D-6",null,onGetMaterialInfoSuccess,onGetMaterialInfoFault);
-//				GlobalManager.Instance.serviceMGR.addRequestTask(onSearchMaterialInforDataResult,onSearchMaterialInfoDataFault,"GetViewDetailBufferFromCode","D-6",0);
-//				GlobalManager.Instance.serviceMGR.excuteRequestTask();
 			}
 			
 			private function onGetMaterialInfoSuccess(resourceID:String,materialInfo:L3DMaterialInformations):void
 			{
-				trace(materialInfo.toString());
+				print(materialInfo.toString());
+				
 			}
+			
 			private function onGetMaterialInfoFault(resourceID:String,message:String):void
 			{
 				print(resourceID+"_"+message);
 			}
+			
 			
 		]]>
 	</fx:Script>

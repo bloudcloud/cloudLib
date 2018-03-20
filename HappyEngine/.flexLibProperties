@@ -20,7 +20,6 @@
     <classEntry path="happyECS.resources.pool.ICPool"/>
     <classEntry path="happyECS.utils.ECSUtil"/>
     <classEntry path="happyECS.world.IHWorld"/>
-    <classEntry path="happyECS.world.BaseWorld"/>
     <classEntry path="happyECS.module.BaseHModule"/>
   </includeClasses>
   <includeResources/>

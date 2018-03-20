@@ -9,7 +9,7 @@ package prefabs.components
 	 * @author cloud
 	 * @2018-3-14
 	 */
-	public class AsyncRequestComponent extends BaseHComponent
+	public class RequestComponent extends BaseHComponent
 	{
 		/**
 		 * 请求名称 
@@ -28,11 +28,19 @@ package prefabs.components
 		 */		
 		public var faultCallback:Function;
 		
-		public function AsyncRequestComponent()
+		public function RequestComponent()
 		{
 			super(TypeDict.BASEOBJECT_COMPONENT_CLSNAME);
 		}
 		
+		override protected function doUpdateComponent():void
+		{
+			requestName=_resource.requestName;
+			requestParams=_resource.requestParams;
+			successCallback=_resource.successCallback;
+			faultCallback=_resource.faultCallback;
+		}
+		 
 		override public function dispose():void
 		{
 			super.dispose();

@@ -22,7 +22,18 @@ package happyECS.ecs.component
 		/**
 		 * 外部资源对象的引用 
 		 */		
-		private var _resource:*;
+		protected var _resource:*;
+
+		private var _invalidResource:Boolean;
+		/**
+		 *  获取组件资源是否失效
+		 * @return Boolean
+		 * 
+		 */		
+		public function get invalidResource():Boolean
+		{
+			return _invalidResource;
+		}
 
 		happy_ecs var _refCount:uint;
 		
@@ -31,9 +42,48 @@ package happyECS.ecs.component
 			_clsName=refName;
 			doInitialization();
 		}
+		/**
+		 * 执行组件初始化 
+		 * 
+		 */		
 		protected function doInitialization():void
 		{
 		}
+		/**
+		 * 执行更新组件 
+		 */		
+		protected function doUpdateComponent():void
+		{
+		}
+		/**
+		 * 更新资源引用 
+		 * @param resource
+		 * 
+		 */		
+		public function updateResource(resource:*):void
+		{
+			if(_resource!=resource)
+			{
+				_invalidResource=true;
+				_resource=resource;
+			}
+		}
+		/**
+		 * 更新组件 
+		 * 
+		 */		
+		public function updateComponent():void
+		{
+			if(_invalidResource)
+			{
+				_invalidResource=false;
+				if(_resource!=null)
+				{
+					doUpdateComponent();
+				}
+			}
+		}
+		
 		public function get owner():IHEntity
 		{
 			return _entity;

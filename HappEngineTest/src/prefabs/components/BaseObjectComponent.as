@@ -1,8 +1,7 @@
 package prefabs.components
 {
-	import cloud.core.utils.CUtil;
-	
 	import happyECS.ecs.component.BaseHComponent;
+	import happyECS.utils.ECSUtil;
 	
 	import prefabs.TypeDict;
 
@@ -28,13 +27,24 @@ package prefabs.components
 
 		public function get uniqueID():String
 		{
-			_uniqueID;
+			return _uniqueID;
 		}
 		
 		public function BaseObjectComponent()
 		{
-			_uniqueID=CUtil.Instance.createUID();
 			super(TypeDict.BASEOBJECT_COMPONENT_CLSNAME);
+		}
+		
+		override protected function doInitialization():void
+		{
+			_uniqueID=ECSUtil.Instance.createUID();
+		}
+		
+		override protected function doUpdateComponent():void
+		{
+			_uniqueID=_resource.uniqueID;
+			type=_resource.type;
+			name=_resource.name;
 		}
 	}
 }

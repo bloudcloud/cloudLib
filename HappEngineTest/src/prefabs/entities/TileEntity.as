@@ -1,11 +1,11 @@
 package prefabs.entities
 {
-	import resources.LJResourceRegist;
-	
 	import happyECS.ecs.component.BaseHComponent;
 	import happyECS.ecs.entity.BaseHEntity;
 	
 	import prefabs.TypeDict;
+	
+	import resources.manager.GlobalManager;
 	
 	import utils.HappyEngineUtil;
 	
@@ -23,12 +23,12 @@ package prefabs.entities
 		override protected function doInitialization():void
 		{
 			var component:BaseHComponent;
-			component=HappyEngineUtil.Instance.getECSInstance(LJResourceRegist.Instance.getClassByKey(TypeDict.BASEOBJECT_COMPONENT_CLSNAME));
+			component=HappyEngineUtil.Instance.getECSInstance(GlobalManager.Instance.resourceMGR.getClassByKey(TypeDict.BASEOBJECT_COMPONENT_CLSNAME));
 			addComponent(TypeDict.BASEOBJECT_COMPONENT_CLSNAME,HappyEngineUtil.Instance.getComponentRef(component));
-			component=HappyEngineUtil.Instance.getECSInstance(LJResourceRegist.Instance.getClassByKey(TypeDict.COMMODITY_COMPONENT_CLSNAME));
-			addComponent(TypeDict.BASEOBJECT_COMPONENT_CLSNAME,HappyEngineUtil.Instance.getComponentRef(component));
-//			component=HappyEngineUtil.Instance.getECSInstance(LJResourceRegist.Instance.getClassByKey(TypeDict.MESH_COMPONENT));
-//			addComponent(TypeDict.BASEOBJECT_COMPONENT_CLSNAME,HappyEngineUtil.Instance.getComponentRef(component));
+			component=HappyEngineUtil.Instance.getECSInstance(GlobalManager.Instance.resourceMGR.getClassByKey(TypeDict.COMMODITY_COMPONENT_CLSNAME));
+			addComponent(TypeDict.COMMODITY_COMPONENT_CLSNAME,HappyEngineUtil.Instance.getComponentRef(component));
+			component=HappyEngineUtil.Instance.getECSInstance(GlobalManager.Instance.resourceMGR.getClassByKey(TypeDict.MATERIAL_COMPONENT_CLSNAME));
+			addComponent(TypeDict.MATERIAL_COMPONENT_CLSNAME,HappyEngineUtil.Instance.getComponentRef(component));
 		}
 	}
 }

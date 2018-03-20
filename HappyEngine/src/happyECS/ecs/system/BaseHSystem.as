@@ -11,9 +11,11 @@ package happyECS.ecs.system
 	 */
 	public class BaseHSystem extends EventDispatcher implements IHSystem
 	{
-		public function BaseHSystem()
+		private var _clsName:String;
+		
+		public function BaseHSystem(clsRefName:String="BaseHSystem")
 		{
-			super();
+			_clsName=clsRefName;
 		}
 		
 		public function update(timeStep:uint):void

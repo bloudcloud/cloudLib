@@ -14,13 +14,15 @@ package happyECS.module
 	 */
 	public class BaseHModule implements IHModule
 	{
+		private var _clsName:String;
 		private var _isInstalled:Boolean;
 		
-		protected var _entityMap:CHashMap;
-		protected var _systems:Vector.<IHSystem>;
+		private var _entityMap:CHashMap;
+		private var _systems:Vector.<IHSystem>;
 		
-		public function BaseHModule()
+		public function BaseHModule(clsRefName:String="BaseHModule")
 		{
+			_clsName=clsRefName;
 		}
 		
 		protected function doInstall():void
@@ -34,6 +36,30 @@ package happyECS.module
 		}
 		protected function doCreateSystems():void
 		{
+		}
+		
+		public function addEntity(entity:IHEntity):void
+		{
+			_entityMap.put(entity.entityID,entity);
+		}
+		
+		public function removeEntity(entity:IHEntity):void
+		{
+			_entityMap.remove(entity.entityID);
+		}
+		
+		public function addSystem(system:IHSystem):void
+		{
+			_systems.push(system);
+		}
+		
+		public function removeSystem(system:IHSystem):void
+		{
+			var idx:int=_systems.indexOf(system);
+			if(idx>=0)
+			{
+				_systems.removeAt(idx);
+			}
 		}
 		
 		public function get isInstalled():Boolean
@@ -51,7 +77,7 @@ package happyECS.module
 			ECSUtil.Instance.clearECSHashMap(_entityMap);
 			for each(var entity:IHEntity in value)
 			{
-				_entityMap.put(entity.entityID,entity);
+				addEntity(entity);
 			}
 		}
 		
@@ -65,13 +91,25 @@ package happyECS.module
 		
 		public function install():void
 		{
-			_isInstalled=true
+			_isInstalled=true;
 			doInstall();
+			doCreateEntities();
+			doCreateSystems();
 		}
 		public function uninstall():void
 		{
 			_isInstalled=false;
 			doUninstall();
+			
+			for each(var key:String in _entityMap.keys)
+			{
+				(_entityMap.get(key) as IHEntity).dispose();
+				_entityMap.remove(key);
+			}
+			_entityMap=null;
+			_systems.length=0;
+			_systems=null;
 		}
+
 	}
 }

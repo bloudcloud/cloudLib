@@ -1,5 +1,7 @@
 package prefabs.components
 {
+	import flash.geom.Point;
+	
 	import happyECS.ecs.component.BaseHComponent;
 	
 	import prefabs.TypeDict;
@@ -14,12 +16,31 @@ package prefabs.components
 		/**
 		 * 围点数组 
 		 */		
-		public var points:Array;
-		
+		private var _points:Array;
+		/**
+		 * 中心点坐标 
+		 */		
+		private var _mPoint:Point;
 		
 		public function RegionComponent()
 		{
 			super(TypeDict.REGION_COMPONENT_CLSNAME);
+		}
+		/**
+		 * 更新组件时执行该方法
+		 * 
+		 */		
+		override protected function doUpdateComponent():void
+		{
+			_points=_resource.points;
+			_mPoint=_resource.mPoint;
+		}
+		
+		override public function dispose():void
+		{
+			super.dispose();
+			_points=null;
+			_mPoint=null;
 		}
 	}
 }

@@ -5,7 +5,7 @@ package utils
 	import resources.manager.GlobalManager;
 
 	/**
-	 * 
+	 * OrderKing资源库代码工具类
 	 * @author cloud
 	 * @2018-3-16
 	 */
