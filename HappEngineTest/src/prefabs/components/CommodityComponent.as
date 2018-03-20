@@ -49,5 +49,35 @@ package prefabs.components
 		{
 			super(TypeDict.COMMODITY_COMPONENT_CLSNAME);
 		}
+		
+		override protected function doUpdateComponent():void
+		{
+			code=_resource.code;
+			classCode=_resource.classCode;
+			className=_resource.className;
+			price=_resource.price;
+			cost=_resource.cost;
+			catalog=_resource.catalog;
+			spec=_resource.spec;
+			remark=_resource.remark;
+			description=_resource.description;
+			previewBuffer=_resource.previewBuffer;
+			offGround=_resource.offGround;
+			url=_resource.url;
+			combo=_resource.combo;
+			brand=_resource.brand;
+			style=_resource.style;
+			series=_resource.series;
+			subSeries=_resource.subSeries;
+			linkedDataUrl=_resource.linkedDataUrl;
+			family=_resource.family;
+			isPolyMode=_resource.isPolyMode;
+			offBoard=_resource.offBoard;
+			orgCode=_resource.orgCode;
+			orgName=_resource.orgName;
+			linkVRDataUrl=_resource.linkVRDataUrl;
+			parentCode=_resource.parentCode;
+			linkCDDataUrl=_resource.linkCDDataUrl;
+		}
 	}
 }

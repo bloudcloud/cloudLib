@@ -32,6 +32,7 @@ package happyECS.ecs.entity
 			
 			doInitialization();
 		}
+
 		protected function doInitialization():void
 		{
 		}

@@ -5,7 +5,7 @@ package utils
 	import resources.manager.GlobalManager;
 
 	/**
-	 * 
+	 * OrderKing资源库代码工具类
 	 * @author cloud
 	 * @2018-3-16
 	 */
@@ -29,7 +29,7 @@ package utils
 		 * @return L3DMaterialInformations
 		 * 
 		 */		
-		public static function GetL3DMaterialInfoResource(code:String,url:String,successCallback:Function=null,faultCallback:Function=null,rpcType:int=0):L3DMaterialInformations
+		public function getL3DMaterialInfoResource(code:String,url:String,successCallback:Function=null,faultCallback:Function=null,rpcType:int=0):L3DMaterialInformations
 		{
 			//cloud 2017.12.25 调整下载结构，code资源库和url资源库都要检测是否有目标资源
 			var result:L3DMaterialInformations;
@@ -43,7 +43,7 @@ package utils
 					result=GlobalManager.Instance.resourceMGR.getInformation(code);
 					if(!result)
 					{
-						if(IsRPCUrl(url))
+						if(isRPCUrl(url))
 						{
 							GlobalManager.Instance.loaderMGR.addInfomationByUrl(url,successCallback,faultCallback,rpcType);
 						}
@@ -71,7 +71,7 @@ package utils
 		 * @return Boolean
 		 * 
 		 */		
-		public static function IsRPCUrl(url:String):Boolean
+		public function isRPCUrl(url:String):Boolean
 		{
 			var str:String=url.slice(0,1);
 			return str=="L" || str=="U";
