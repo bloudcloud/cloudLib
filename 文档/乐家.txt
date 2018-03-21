@@ -1,0 +1,41 @@
+192.168.1.220/zx.html
+192.168.1.220/mc.html  门窗版
+
+zj
+密码zj2017
+
+http://192.168.1.71:9090/r/bearas.git
+http://192.168.1.71:9090/r/L3DBuildGeometry.git
+
+https://PC-20160618ZYXE/svn/Lejia3DBuild
+https://PC-20160618ZYXE/svn/LejiaMaterial
+zj  zj753951
+
+你个人的仓库http://192.168.1.107/BonoboGitServer/zhangjian_coder.git
+帐号zhangjian
+密码ftM2nAVIi2yE
+
+禅道地址：http://192.168.1.107:88/zentao/user-login.html
+禅道帐号：zj_coder
+禅道密码：zj456852
+
+编辑器中材料规格：
+对应护墙板模型的值是：高度 X 宽度（长度） X 厚度
+
+报价参数格式：
+tilename_:String, source_:Object, mode_:String, price_:Number, quanlity_:Number, area_:String,
+
+https://PC-20160618ZYXE/svn/Lejia3DMain2.0 
+
+https://PC-20160618ZYXE/svn/Lejia3DDoorWindow2.0 
+
+https://PC-20160618ZYXE/svn/Lejia3DTiling2.0 
+
+https://PC-20160618ZYXE/svn/Lejia3DView2.0 
+
+https://PC-20160618ZYXE/svn/Lejia3DBuild2.0 
+
+https://PC-20160618ZYXE/svn/Lejia3DShare2.0 
+ 
+
+荣耀9解锁码：QM060D0TG65KGYHO
