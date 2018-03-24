@@ -9,6 +9,7 @@ http://192.168.1.71:9090/r/L3DBuildGeometry.git
 
 https://PC-20160618ZYXE/svn/Lejia3DBuild
 https://PC-20160618ZYXE/svn/LejiaMaterial
+https://pc-20160618zyxe/svn/LejiaDocuments
 zj  zj753951
 
 Äã¸öÈËµÄ²Ö¿âhttp://192.168.1.107/BonoboGitServer/zhangjian_coder.git

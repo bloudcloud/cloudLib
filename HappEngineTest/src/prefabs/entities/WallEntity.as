@@ -2,7 +2,7 @@ package prefabs.entities
 {
 	import happyECS.ecs.entity.BaseHEntity;
 	
-	import prefabs.TypeDict;
+	import dict.PrefabTypeDict;
 	
 	/**
 	 * 墙面实体类
@@ -13,7 +13,7 @@ package prefabs.entities
 	{
 		public function WallEntity()
 		{
-			super(TypeDict.WALL_ENTITY_CLSNAME);
+			super(PrefabTypeDict.WALL_ENTITY_CLSNAME);
 		}
 	}
 }

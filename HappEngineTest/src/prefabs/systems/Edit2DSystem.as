@@ -1,8 +1,9 @@
 package prefabs.systems
 {
-	import happyECS.ecs.system.BaseHSystem;
+	import dict.PrefabTypeDict;
 	
-	import prefabs.TypeDict;
+	import happyECS.ecs.events.ECSEvent;
+	import happyECS.ecs.system.BaseHSystem;
 	
 	/**
 	 * 2D编辑系统类
@@ -13,7 +14,23 @@ package prefabs.systems
 	{
 		public function Edit2DSystem()
 		{
-			super(TypeDict.EDIT2D_SYSTEM_CLSNAME);
+			super(PrefabTypeDict.EDIT2D_SYSTEM_CLSNAME);
+//			this.addEventListener(EventTypeDict.TILEPLAN_SERIALIZE_EVENT,onTilePlanSerializeDataHandler);
+//			this.addEventListener(EventTypeDict.TILEPLAN_DESERIALIZE_EVENT,onTilePlanDeserializeDataHandler);
+		}
+		
+		private function onTilePlanSerializeDataHandler(evt:ECSEvent):void
+		{
+			
+		}
+		
+		private function onTilePlanDeserializeDataHandler(evt:ECSEvent):void
+		{
+			
+		}
+		public function excuteTile():void
+		{
+			
 		}
 	}
 }

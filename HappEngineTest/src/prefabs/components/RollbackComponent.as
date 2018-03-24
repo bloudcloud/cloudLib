@@ -2,7 +2,7 @@ package prefabs.components
 {
 	import happyECS.ecs.component.BaseHComponent;
 	
-	import prefabs.TypeDict;
+	import dict.PrefabTypeDict;
 	
 	/**
 	 * 回退组件类
@@ -13,7 +13,7 @@ package prefabs.components
 	{
 		public function RollbackComponent()
 		{
-			super(TypeDict.ROLLBACK_COMPONENT_CLSNAME);
+			super(PrefabTypeDict.ROLLBACK_COMPONENT_CLSNAME);
 		}
 	}
 }

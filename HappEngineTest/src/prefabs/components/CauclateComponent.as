@@ -2,7 +2,7 @@ package prefabs.components
 {
 	import happyECS.ecs.component.BaseHComponent;
 	
-	import prefabs.TypeDict;
+	import dict.PrefabTypeDict;
 	
 	/**
 	 * 统计组件类
@@ -14,7 +14,7 @@ package prefabs.components
 		
 		public function CauclateComponent()
 		{
-			super(TypeDict.CAUCLATE_COMPONENT_CLSNAME);
+			super(PrefabTypeDict.CAUCLATE_COMPONENT_CLSNAME);
 		}
 		
 		override protected function doInitialization():void

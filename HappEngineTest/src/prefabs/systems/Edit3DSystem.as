@@ -2,7 +2,7 @@ package prefabs.systems
 {
 	import happyECS.ecs.system.BaseHSystem;
 	
-	import prefabs.TypeDict;
+	import dict.PrefabTypeDict;
 	
 	/**
 	 * 3D编辑系统类
@@ -13,7 +13,7 @@ package prefabs.systems
 	{
 		public function Edit3DSystem()
 		{
-			super(TypeDict.EDIT3D_SYSTEM_CLSNAME);
+			super(PrefabTypeDict.EDIT3D_SYSTEM_CLSNAME);
 		}
 	}
 }

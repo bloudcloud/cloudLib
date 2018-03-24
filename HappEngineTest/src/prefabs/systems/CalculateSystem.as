@@ -2,7 +2,7 @@ package prefabs.systems
 {
 	import happyECS.ecs.system.BaseHSystem;
 	
-	import prefabs.TypeDict;
+	import dict.PrefabTypeDict;
 	
 	/**
 	 * 统计系统类
@@ -13,7 +13,7 @@ package prefabs.systems
 	{
 		public function CalculateSystem()
 		{
-			super(TypeDict.CALCULATE_SYSTEM_CLSNAME);
+			super(PrefabTypeDict.CALCULATE_SYSTEM_CLSNAME);
 		}
 	}
 }

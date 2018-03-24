@@ -4,7 +4,7 @@ package prefabs.components
 	
 	import happyECS.ecs.component.BaseHComponent;
 	
-	import prefabs.TypeDict;
+	import dict.PrefabTypeDict;
 	
 	/**
 	 * 区域组件类
@@ -24,7 +24,7 @@ package prefabs.components
 		
 		public function RegionComponent()
 		{
-			super(TypeDict.REGION_COMPONENT_CLSNAME);
+			super(PrefabTypeDict.REGION_COMPONENT_CLSNAME);
 		}
 		/**
 		 * 更新组件时执行该方法

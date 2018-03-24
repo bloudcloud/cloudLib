@@ -2,7 +2,7 @@ package prefabs.components
 {
 	import happyECS.ecs.component.BaseHComponent;
 	
-	import prefabs.TypeDict;
+	import dict.PrefabTypeDict;
 
 	/**
 	 * 异步请求组件类
@@ -30,7 +30,7 @@ package prefabs.components
 		
 		public function RequestComponent()
 		{
-			super(TypeDict.BASEOBJECT_COMPONENT_CLSNAME);
+			super(PrefabTypeDict.BASEOBJECT_COMPONENT_CLSNAME);
 		}
 		
 		override protected function doUpdateComponent():void

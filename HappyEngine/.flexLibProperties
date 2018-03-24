@@ -21,6 +21,7 @@
     <classEntry path="happyECS.utils.ECSUtil"/>
     <classEntry path="happyECS.world.IHWorld"/>
     <classEntry path="happyECS.module.BaseHModule"/>
+    <classEntry path="happyECS.ecs.events.ECSEvent"/>
   </includeClasses>
   <includeResources/>
   <namespaceManifests/>

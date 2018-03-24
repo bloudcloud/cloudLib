@@ -1,73 +1,77 @@
-package prefabs
+package dict
 {
 	/**
 	 * 类型定义类
 	 * @author cloud
 	 * @2018-3-12
 	 */
-	public class TypeDict
+	public class PrefabTypeDict
 	{
 		//////////////////////////////////////	 组件		/////////////////////////////////////////
 		/**
-		 * 基础对象组件类型 
+		 * 基础对象组件类型
 		 */		
 		public static const BASEOBJECT_COMPONENT_CLSNAME:String = "baseObjectComponent";
 		/**
-		 * 商品组件类型 
+		 * 商品组件类型
 		 */		
-		public static const COMMODITY_COMPONENT_CLSNAME:String="commodityComponent";
+		public static const COMMODITY_BASIC_COMPONENT_CLSNAME:String="commodityBasicComponent";
 		/**
-		 * 材质组件类型 
+		 * 商品数据模型组件类型
+		 */		
+		public static const COMMODITY_MODEL_COMPONENT_CLSNAME:String="commodityModelComponent";
+		/**
+		 * 材质组件类型
 		 */		
 		public static const MATERIAL_COMPONENT_CLSNAME:String = "materialComponent";
 		/**
-		 * 模型组件类型 
+		 * 模型组件类型
 		 */		
 		public static const MESH_COMPONENT:String = "meshComponent";
 		/**
-		 * 计划组件类型 
+		 * 砖块计划组件类型
 		 */		
-		public static const PLAN_COMPONENT_CLSNAME:String = "planComponent";
+		public static const TILEPLAN_COMPONENT_CLSNAME:String = "tilePlanComponent";
 		/**
-		 * 区域组件类型 
+		 * 区域组件类型
 		 */		
 		public static const REGION_COMPONENT_CLSNAME:String = "regionComponent";
 		/**
-		 * 请求组件类型 
+		 * 请求组件类型
 		 */		
 		public static const REQUEST_COMPONENT_CLSNAME:String = "requestComponent";
 		/**
-		 * 回退组件类型 
+		 * 回退组件类型
 		 */		
 		public static const ROLLBACK_COMPONENT_CLSNAME:String = "rollbackComponent";
 		/**
-		 * 统计组件类型 
+		 * 统计组件类型
 		 */		
 		public static const CAUCLATE_COMPONENT_CLSNAME:String = "cauclateComponent";
 		//////////////////////////////////////	 实体 	/////////////////////////////////////////
 		/**
-		 * 地面实体类型 
+		 * 地面实体类型
 		 */		
 		public static const FLOOR_ENTITY_CLSNAME:String = "floorEntity";
 		/**
-		 * 墙面实体类型 
+		 * 墙面实体类型
 		 */		
 		public static const WALL_ENTITY_CLSNAME:String = "wallEntity";
 		/**
-		 * 砖块实体类型 
+		 * 砖块实体类型
 		 */		
 		public static const TILE_ENTITY_CLSNAME:String = "tileEntity";
 		//////////////////////////////////////	 系统 	/////////////////////////////////////////
 		/**
-		 * 命令系统类型 
+		 * 命令系统类型
 		 */		
 		public static const COMMAND_SYSTEM_CLSNAME:String = "commandSystem";
 		/**
-		 * 2D显示系统类型 
+		 * 2D显示系统类型
 		 */		
 		public static const SHOW2D_SYSTEM_CLSNAME:String = "show2dSystem";
 		/**
-		 * 3D显示系统类型 
+		 * 3D显示系统类型
 		 */		
 		public static const SHOW3D_SYSTEM_CLSNAME:String = "show3dSystem";
 		/**
@@ -75,15 +79,15 @@ package prefabs
 		 */		
 		public static const EDIT2D_SYSTEM_CLSNAME:String = "edit2dSystem";
 		/**
-		 * 3D编辑系统类型 
+		 * 3D编辑系统类型
 		 */		
 		public static const EDIT3D_SYSTEM_CLSNAME:String = "edit3dSystem";
 		/**
-		 * 回退系统类型 
+		 * 回退系统类型
 		 */		
 		public static const ROLLBACK_SYSTEM_CLSNAME:String = "rollbackSystem";
 		/**
-		 * 报价系统类型 
+		 * 报价系统类型
 		 */		
 		public static const QUATO_SYSTEM_CLSNAME:String = "quatoSystem";
 		/**

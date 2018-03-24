@@ -4,7 +4,7 @@ package worlds
 	
 	import modules.EditTileModule;
 	
-	import prefabs.TypeDict;
+	import dict.PrefabTypeDict;
 	
 	import utils.HappyEngineUtil;
 
@@ -19,7 +19,7 @@ package worlds
 		
 		public function HouseWorld()
 		{
-			super(TypeDict.HOUSE_WORLD_CLSNAME);
+			super(PrefabTypeDict.HOUSE_WORLD_CLSNAME);
 		}
 		override protected function doCreated():void
 		{

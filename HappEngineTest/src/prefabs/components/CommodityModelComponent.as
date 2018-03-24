@@ -5,6 +5,8 @@ package prefabs.components
 	
 	import happyECS.ecs.component.BaseHComponent;
 	
+	import dict.PrefabTypeDict;
+	
 	public class CommodityModelComponent extends BaseHComponent
 	{
 		/**
@@ -17,12 +19,12 @@ package prefabs.components
 		public var box2d:Rectangle;
 		/**
 		 * 中心点坐标
-		 */		
+		 */
 		public var position:Vector3D;
 		
-		public function CommodityModelComponent(refName:String="BaseHComponent")
+		public function CommodityModelComponent()
 		{
-			super(refName);
+			super(PrefabTypeDict.COMMODITY_MODEL_COMPONENT_CLSNAME);
 		}
 		override protected function doInitialization():void
 		{

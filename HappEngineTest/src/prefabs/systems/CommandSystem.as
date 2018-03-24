@@ -3,7 +3,7 @@ package prefabs.systems
 	import happyECS.ecs.component.IHComponent;
 	import happyECS.ecs.system.BaseHSystem;
 	
-	import prefabs.TypeDict;
+	import dict.PrefabTypeDict;
 	
 	/**
 	 * 命令系统类
@@ -14,7 +14,7 @@ package prefabs.systems
 	{
 		public function CommandSystem()
 		{
-			super(TypeDict.COMMAND_SYSTEM_CLSNAME);
+			super(PrefabTypeDict.COMMAND_SYSTEM_CLSNAME);
 		}
 		
 		public function postAsynRequest(commandComponent:IHComponent):void

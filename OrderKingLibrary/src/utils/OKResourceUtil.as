@@ -76,5 +76,6 @@ package utils
 			var str:String=url.slice(0,1);
 			return str=="L" || str=="U";
 		}
+		
 	}
 }

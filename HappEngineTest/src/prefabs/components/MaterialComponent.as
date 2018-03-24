@@ -4,7 +4,7 @@ package prefabs.components
 	
 	import happyECS.ecs.component.BaseHComponent;
 	
-	import prefabs.TypeDict;
+	import dict.PrefabTypeDict;
 	
 	/**
 	 * 材质组件类
@@ -21,7 +21,7 @@ package prefabs.components
 		
 		public function MaterialComponent()
 		{
-			super(TypeDict.MATERIAL_COMPONENT_CLSNAME);
+			super(PrefabTypeDict.MATERIAL_COMPONENT_CLSNAME);
 		}
 		
 		override protected function doUpdateComponent():void

@@ -42,7 +42,6 @@
 			private function onGetMaterialInfoSuccess(resourceID:String,materialInfo:L3DMaterialInformations):void
 			{
 				print(materialInfo.toString());
-				
 			}
 			
 			private function onGetMaterialInfoFault(resourceID:String,message:String):void

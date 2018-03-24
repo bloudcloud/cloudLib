@@ -2,7 +2,7 @@ package prefabs.entities
 {
 	import happyECS.ecs.entity.BaseHEntity;
 	
-	import prefabs.TypeDict;
+	import dict.PrefabTypeDict;
 	
 	/**
 	 * 地面实体类
@@ -13,7 +13,7 @@ package prefabs.entities
 	{
 		public function FloorEntity()
 		{
-			super(TypeDict.FLOOR_ENTITY_CLSNAME);
+			super(PrefabTypeDict.FLOOR_ENTITY_CLSNAME);
 		}
 	}
 }

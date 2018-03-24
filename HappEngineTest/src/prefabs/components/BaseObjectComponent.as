@@ -3,7 +3,7 @@ package prefabs.components
 	import happyECS.ecs.component.BaseHComponent;
 	import happyECS.utils.ECSUtil;
 	
-	import prefabs.TypeDict;
+	import dict.PrefabTypeDict;
 
 	/**
 	 *  基础对象组件
@@ -32,7 +32,7 @@ package prefabs.components
 		
 		public function BaseObjectComponent()
 		{
-			super(TypeDict.BASEOBJECT_COMPONENT_CLSNAME);
+			super(PrefabTypeDict.BASEOBJECT_COMPONENT_CLSNAME);
 		}
 		
 		override protected function doInitialization():void

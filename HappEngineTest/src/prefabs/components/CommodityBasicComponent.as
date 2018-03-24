@@ -1,10 +1,8 @@
 package prefabs.components
 {
-	import flash.utils.ByteArray;
-	
 	import happyECS.ecs.component.BaseHComponent;
 	
-	import prefabs.TypeDict;
+	import dict.PrefabTypeDict;
 	
 	/**
 	 * 商品组件
@@ -46,7 +44,7 @@ package prefabs.components
 		
 		public function CommodityBasicComponent()
 		{
-			super(TypeDict.COMMODITY_COMPONENT_CLSNAME);
+			super(PrefabTypeDict.COMMODITY_BASIC_COMPONENT_CLSNAME);
 		}
 		
 		override protected function doUpdateComponent():void

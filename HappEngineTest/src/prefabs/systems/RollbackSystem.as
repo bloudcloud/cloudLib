@@ -2,7 +2,7 @@ package prefabs.systems
 {
 	import happyECS.ecs.system.BaseHSystem;
 	
-	import prefabs.TypeDict;
+	import dict.PrefabTypeDict;
 	
 	/**
 	 * 回退系统类
@@ -13,7 +13,7 @@ package prefabs.systems
 	{
 		public function RollbackSystem()
 		{
-			super(TypeDict.ROLLBACK_SYSTEM_CLSNAME);
+			super(PrefabTypeDict.ROLLBACK_SYSTEM_CLSNAME);
 		}
 	}
 }
