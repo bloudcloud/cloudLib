@@ -7,6 +7,8 @@
     <classEntry path="cloud.core.dict.SerializeFormate"/>
     <classEntry path="cloud.ecs.entity.ICEntity"/>
     <classEntry path="cloud.ecs.system.ICSystem"/>
+    <classEntry path="cloud.ds.CSortUtil"/>
+    <classEntry path="cloud.ds.iterators.CIteratorsFactory"/>
   </includeClasses>
   <includeResources/>
   <namespaceManifests/>
