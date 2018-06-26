@@ -1,29 +1,6 @@
-ï»¿//æ–°ç‰ˆ
-<TilePlan code="null" url="" type="1" name="æ³•å¸ƒç¦è¯º-æ³¢æ‰“çº¿" gap="0" gapColor="0x000000" locate="0" texture="assets/plan/b1.jpg" point2Ds="0,0" originx="" originy="" originz="">
-	<Tile code="GIA-PT-G3S2607-01-3" url="" point2Ds="0,0," />
-	<Transform rotation="0" scale="1" offsetU="0_-0.5" offsetV="0_0" />
-	<Tile code="GIA-PT-G3S2607-01-2" point2Ds="0,0," />
-	<Transform rotation="0" scale="1" offsetU="0_-0.5" offsetV="0_0" />
-</TilePlan>
-<TilePlan code="GIA-26-PT-03" type="0" name="æ³•å¸ƒç¦è¯ºé“ºè´´æ–¹æ¡ˆ" gap="0" gapColor="0x000000" locate="4" texture="assets/plan/2.jpg" originx="" originy="" originz="">
-	<Tile code="GIA-PT-G3S2607-01-3" point2Ds="0,0" />
-	<Transform rotation="0" scale="1" offsetU="0" offsetV="0" />
-</TilePlan>
-
-
-
-
-
-
-
-
-
-
-
-//æ—§ç‰ˆ
 <CombinePlan>
   <Wave>
-    <TilePlan code="null" type="1" name="æ³•å¸ƒç¦è¯º-æ³¢æ‰“çº¿" gap="0" locate="0" rotate="0" texture="assets/plan/b1.jpg" planType="2" parentGuid="0">
+    <TilePlan code="null" type="1" name="·¨²¼çùÅµ-²¨´òÏß" gap="0" locate="0" rotate="0" texture="assets/plan/b1.jpg" planType="2" parentGuid="0">
       <phy>
         <Tile code="A" codeNum="GIA-PT-G3S2607-01-2" length="800" width="200"/>
         <Tile code="B" codeNum="GIA-PT-G3S2607-01-3" length="200" width="200"/>
@@ -35,7 +12,7 @@
     </TilePlan>
   </Wave>
   <Tile>
-    <TilePlan code="GIA-26-PT-03" type="0" name="æ³•å¸ƒç¦è¯ºé“ºè´´æ–¹æ¡ˆ" gap="0" locate="4" rotate="0" texture="assets/plan/2.jpg">
+    <TilePlan code="GIA-26-PT-03" type="0" name="·¨²¼çùÅµÆÌÌù·½°¸" gap="0" locate="4" rotate="0" texture="assets/plan/2.jpg">
       <symbol key="WA" value="800"/>
       <symbol key="LA" value="800"/>
       <phy>
