@@ -1,7 +1,6 @@
 package cloud.core.utils
 {
-	import flash.utils.Dictionary;
-	
+	import cloud.core.datas.maps.CHashMap;
 	import cloud.core.interfaces.ICData;
 	
 	import ns.cloudLib;
@@ -18,33 +17,82 @@ package cloud.core.utils
 			return _Instance ||= new CDataManager(new SingletonEnforce());
 		}
 		
-		private var _dataCacheDic:Dictionary;
-		private var _dataShareDic:Dictionary;
+		private var _dataCacheMap:CHashMap;
+		private var _dataShareMap:CHashMap;
 		
 		public function CDataManager(enforcer:SingletonEnforce)
 		{
-			_dataCacheDic=new Dictionary();
-			_dataShareDic=new Dictionary();
+			_dataCacheMap=new CHashMap();
+			_dataShareMap=new CHashMap();
 		}
 		
 		public function addCacheData(data:ICData,mark:String=null):void
 		{
-			_dataCacheDic[data.type] ||= new Vector.<ICData>();
-			if((_dataCacheDic[data.type] as Vector.<ICData>).indexOf(data)<0)
-				_dataCacheDic[data.type].push(data);
+			var datas:Array;
+			var isSearch:Boolean;
+			if(_dataCacheMap.containsKey(data.type))
+			{
+				datas=_dataCacheMap.get(data.type) as Array;
+				for(var saveData:ICData in datas)
+				{
+					if(saveData.uniqueID==data.uniqueID)
+					{
+						isSearch=true;
+						break;
+					}
+				}
+			}
+			else
+			{
+				datas=[];
+				_dataCacheMap.put(data.type,datas);
+			}
+			if(!isSearch)
+			{
+				datas.push(data);
+			}
 		}
 		public function addShareData(data:ICData):void
 		{
-			_dataShareDic[data.type] ||= new Vector.<ICData>();
-			if((_dataShareDic[data.type] as Vector.<ICData>).indexOf(data)<0)
-				_dataShareDic[data.type].push(data);
+			var datas:Array;
+			var isSearch:Boolean;
+			if(_dataShareMap.containsKey(data.type))
+			{
+				datas=_dataShareMap.get(data.type) as Array;
+				for(var i:int=datas.length-1; i>=0; i--)
+				{
+					if(datas[i].uniqueID==data.uniqueID)
+					{
+						isSearch=true;
+						break;
+					}
+				}
+			}
+			else
+			{
+				datas=[];
+				_dataShareMap.put(data.type,datas);
+			}
+			if(!isSearch)
+			{
+				datas.push(data);
+			}
 		}
 		public function removeCacheData(cache:ICData):void
 		{
-			var caches:Vector.<ICData>=_dataCacheDic[cache.type] as Vector.<ICData>;
-			if(caches)
+			var caches:Array;
+			var index:int=-1;
+			if(_dataCacheMap.containsKey(cache.type))
 			{
-				var index:int=caches.indexOf(cache);
+				caches=_dataCacheMap.get(cache.type) as Array;
+				for(var i:int=caches.length-1; i>=0; i--)
+				{
+					if(caches[i].uniqueID==cache.uniqueID)
+					{
+						index=i;
+						break;
+					}
+				}
 				if(index>=0)
 				{
 					caches[index].clear();
@@ -59,9 +107,10 @@ package cloud.core.utils
 		 */		
 		public function removeShareDataByType(type:uint):void
 		{
-			var datas:Vector.<ICData>=_dataShareDic[type] as Vector.<ICData>;
-			if(datas)
+			var datas:Array;
+			if(_dataShareMap.containsKey(type))
 			{
+				datas=_dataShareMap.get(type) as Array;
 				for each(var data:ICData in datas)
 				{
 					data.clear();
@@ -71,10 +120,19 @@ package cloud.core.utils
 		}
 		public function removeShareData(data:ICData):void
 		{
-			var datas:Vector.<ICData>=_dataShareDic[data.type] as Vector.<ICData>;
-			if(datas)
+			var index:int=-1;
+			var datas:Array;
+			if(_dataShareMap.containsKey(data.type))
 			{
-				var index:int=datas.indexOf(data);
+				datas=_dataShareMap.get(data.type) as Array;
+				for(var i:int=datas.length-1; i>=0; i--)
+				{
+					if(datas[i].uniqueID==data.uniqueID)
+					{
+						index=i;
+						break;
+					}
+				}
 				if(index>=0)
 				{
 					datas[index].clear();
@@ -84,8 +142,7 @@ package cloud.core.utils
 		}
 		public function getCacheDatasByType(type:uint):Vector.<ICData>
 		{
-			_dataCacheDic[type] ||= new Vector.<ICData>();
-			return _dataCacheDic[type];
+			return _dataCacheMap.containsKey(type) ? Vector.<ICData>(_dataCacheMap.get(type)) : null;
 		}
 		/**
 		 * 根据数据类型，获取数据对象集合
@@ -95,8 +152,7 @@ package cloud.core.utils
 		 */		
 		public function getShareDatasByType(type:uint):Vector.<ICData>
 		{
-			_dataShareDic[type] ||= new Vector.<ICData>();
-			return _dataShareDic[type];
+			return _dataShareMap.containsKey(type) ? Vector.<ICData>(_dataShareMap.get(type)) : null;
 		}
 		/**
 		 * 根据数据类型和父数据对象的唯一ID，获取数据对象集合 
@@ -107,18 +163,26 @@ package cloud.core.utils
 		 */		
 		public function getShareDatasByTypeAndParentID(type:uint,parentID:String):Vector.<ICData>
 		{
-			var datas:Vector.<ICData>=_dataShareDic[type] as Vector.<ICData>;
-			if(parentID!=null)
+			var datas:Array;
+			
+			if(_dataShareMap.containsKey(type))
 			{
-				var returnDatas:Vector.<ICData>=new Vector.<ICData>();
-				for(var i:int=0; i<datas.length; i++)
+				datas=_dataShareMap.get(type) as Array;
+				if(parentID!=null)
 				{
-					if(datas[i].parentID==parentID)
-						returnDatas.push(datas[i]);
+					var returnDatas:Vector.<ICData>=new Vector.<ICData>();
+					var len:int=datas.length;
+					for(var i:int=0; i<len; i++)
+					{
+						if(datas[i].parentID==parentID)
+						{
+							returnDatas.push(datas[i]);
+						}
+					}
+					return returnDatas.length>0 ? returnDatas : null;
 				}
-				return returnDatas.length>0 ? returnDatas : null;
 			}
-			return datas;
+			return null;
 		}
 		/**
 		 * 根据数据对象的父ID，获取数据对象集合 
@@ -129,12 +193,23 @@ package cloud.core.utils
 		public function getShareDatasByParentID(parentID:String):Vector.<ICData>
 		{
 			var returnDatas:Vector.<ICData>=new Vector.<ICData>();
-			for each(var datas:Vector.<ICData> in _dataShareDic)
+			var datas:Array;
+			var len:int;
+			
+			for(var i:int=_dataShareMap.keys.length-1; i>=0; i--)
 			{
-				for each(var data:ICData in datas)
+				if(!_dataShareMap.containsKey(_dataShareMap.keys[i]))
 				{
-					if(data.parentID==parentID)
-						returnDatas.push(data);
+					continue;
+				}
+				datas=_dataShareMap.get(_dataShareMap.keys[i]) as Array;
+				len=datas.length;
+				for(var j:int=0; j<len; j++)
+				{
+					if(datas[j].parentID==parentID)
+					{
+						returnDatas.push(datas[j]);
+					}
 				}
 			}
 			return returnDatas.length==0 ? null : returnDatas;
@@ -147,8 +222,16 @@ package cloud.core.utils
 		 */		
 		public function getShareDataByUniqueID(uniqueID:String):ICData
 		{
-			for each(var datas:Vector.<ICData> in _dataShareDic)
+			var datas:Array;
+			
+			for(var i:int=_dataShareMap.keys.length-1; i>=0; i--)
 			{
+				if(!_dataShareMap.containsKey(_dataShareMap.keys[i]))
+				{
+					continue;
+				}
+				datas=_dataShareMap.get(_dataShareMap.keys[i]) as Array;
+				
 				for each(var data:ICData in datas)
 				{
 					if(data.uniqueID==uniqueID)
@@ -168,12 +251,16 @@ package cloud.core.utils
 		 */		
 		public function getShareDataByTypeAndID(type:uint, uniqueID:String):ICData
 		{
-			var datas:Vector.<ICData>=_dataShareDic[type] as Vector.<ICData>;
-			for each(var data:ICData in datas)
+			var datas:Array;
+			if(_dataShareMap.containsKey(type))
 			{
-				if(data.uniqueID==uniqueID)
+				datas=_dataShareMap.get(type) as Array;
+				for each(var data:ICData in datas)
 				{
-					return data;
+					if(data.uniqueID==uniqueID)
+					{
+						return data;
+					}
 				}
 			}
 			return null;
@@ -193,16 +280,19 @@ package cloud.core.utils
 		 */		
 		public function clearShareData():void
 		{
-			for(var key:* in _dataShareDic)
+			var datas:Array;
+			for(var i:int=_dataShareMap.keys.length-1; i>=0; i--)
 			{
-				var datas:Vector.<ICData>=_dataShareDic[key] as Vector.<ICData>;
+				datas =_dataShareMap.get(_dataShareMap.keys[i]) as Array;
 				for each(var data:ICData in datas)
 				{
 					if(data.isLife)
+					{
 						data.clear();
+					}
 				}
 				datas.length=0;
-				delete _dataShareDic[key];
+				_dataShareMap.remove(_dataShareMap.keys[i]);
 			}
 		}
 		/**
@@ -211,16 +301,19 @@ package cloud.core.utils
 		 */		
 		public function clearCache():void
 		{
-			for(var key:* in _dataCacheDic)
+			var datas:Array;
+			for(var i:int=_dataCacheMap.keys.length-1; i>=0; i--)
 			{
-				var datas:Vector.<ICData>=_dataCacheDic[key] as Vector.<ICData>;
+				datas =_dataCacheMap.get(_dataCacheMap.keys[i]) as Array;
 				for each(var data:ICData in datas)
 				{
 					if(data.isLife)
+					{
 						data.clear();
+					}
 				}
 				datas.length=0;
-				delete _dataCacheDic[key];
+				_dataCacheMap.remove(_dataCacheMap.keys[i]);
 			}
 		}
 	}

@@ -14,11 +14,11 @@ package cloud.core.dict
 		/**
 		 * 弧度值转角度值
 		 */		
-		public static const RADIANS_TO_DEGREES:Number = 180/Math.PI;
+		public static const RADIANS_TO_DEGREES:Number = 180/3.1415926;
 		/**
 		 * 角度值转弧度值 
 		 */		
-		public static const DEGREES_TO_RADIANS:Number = Math.PI/180;
+		public static const DEGREES_TO_RADIANS:Number = 3.1415926/180;
 		/**
 		 * XML序列化 
 		 */		

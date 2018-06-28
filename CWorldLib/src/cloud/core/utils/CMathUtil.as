@@ -120,10 +120,10 @@ package cloud.core.utils
 		}
 		
 		/**
-		 * 计算两个向量的外积（叉乘）。可以根据结果的符号判断三个点的位置关系  
+		 * 计算两个2D向量的外积（叉乘）。可以根据结果的符号判断三个点的位置关系  
 		 * @param pa 起点
 		 * @param pb 终点
-		 * @param pc 直线ab外的一个点
+		 * @param pc 线段ab外的一个点
 		 * @return Number AC与向量CB的外积。如果结果为正数，表明点C在直线AB（直线方向为从A到B）的右侧； 
 		 * 如果结果为负数，表明点C在直线AB（直线方向为从A到B）的左侧；如果结果为0，表明点C在直线AB上。
 		 * 
@@ -132,6 +132,24 @@ package cloud.core.utils
 		public function crossByPointsXY(aX:Number,aY:Number,bX:Number,bY:Number,cX:Number,cY:Number):Number
 		{
 			return (cX - aX) * (bY - cY) - (cY - aY) * (bX - cX);
+		}
+		/**
+		 *  计算两个3D向量的内积（点乘）
+		 * @param aX	起点X坐标值
+		 * @param aY	起点Y坐标值
+		 * @param aZ	起点X坐标值
+		 * @param bX	终点X坐标值
+		 * @param bY	终点Y坐标值
+		 * @param bZ	终点Z坐标值
+		 * @param cX	线段ab外的点X坐标值
+		 * @param cY	线段ab外的点Y坐标值
+		 * @param cZ	线段ab外的点Z坐标值
+		 * @return Number	
+		 * 
+		 */		
+		public function dotByPosition3D(aX:Number,aY:Number,aZ:Number,bX:Number,bY:Number,bZ:Number,cX:Number,cY:Number,cZ:Number):Number
+		{
+			return (cX-aX)*(bX-cX)+(cY-aY)*(bY-cY)+(cZ-aZ)*(bZ-cZ);
 		}
 		/**
 		 * 比较两个值是否相似 
@@ -146,5 +164,6 @@ package cloud.core.utils
 		{
 			return Math.abs(a-b)<=.001;
 		}
+
 	}
 }

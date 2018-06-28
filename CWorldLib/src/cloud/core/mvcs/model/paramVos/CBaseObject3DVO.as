@@ -20,8 +20,6 @@ package cloud.core.mvcs.model.paramVos
 	 */
 	public class CBaseObject3DVO implements ICObject3D, ICSize, ICData, ICSerialization
 	{
-		private static const _TRANSFORM:CTransform3D=new CTransform3D();
-		
 		protected var _isXYZ:Boolean;
 		protected var _className:String;
 		protected var _length:Number;
@@ -43,11 +41,7 @@ package cloud.core.mvcs.model.paramVos
 		protected var _offBack:Number;
 		protected var _offGround:Number;
 		protected var _isLife:Boolean;
-		protected var _direction:CVector;
-		protected var _roundPoints:CVectorContainer;
-		protected var _globalRotation:CVector;
-		protected var _minSize:CVector;
-		protected var _maxSize:CVector;
+		
 		protected var _originX:Number;
 		protected var _originY:Number;
 		protected var _originZ:Number;
@@ -58,6 +52,11 @@ package cloud.core.mvcs.model.paramVos
 		private var _type:uint;
 		private var _parentID:String;
 		private var _parentType:uint;
+		private var _direction:CVector;
+		private var _roundPoints:CVectorContainer;
+		private var _globalRotation:CVector;
+		private var _minSize:CVector;
+		private var _maxSize:CVector;
 		private var _position:CVector;
 		private var _transform:CTransform3D;
 		private var _inverseTransform:CTransform3D;
@@ -165,6 +164,10 @@ package cloud.core.mvcs.model.paramVos
 		}
 		public function get direction():CVector
 		{
+			if(rotationHeight)
+			{
+				CVectorUtil.Instance.calculateDirectionByRotation(rotationHeight,_direction);
+			}
 			return _direction;
 		}	
 		public function get x():Number
@@ -316,6 +319,14 @@ package cloud.core.mvcs.model.paramVos
 		{
 			_isLife=value;
 		}
+		public function get maxSize():CVector
+		{
+			return _maxSize||=CVector.CreateOneInstance();
+		}
+		public function get minSize():CVector
+		{
+			return _minSize||=CVector.CreateOneInstance();
+		}
 		public function get position():CVector
 		{
 			if(_invalidTransform)
@@ -327,12 +338,15 @@ package cloud.core.mvcs.model.paramVos
 			{
 				_invalidPosition=false;
 				if(parent!=null)
+				{
 					doUpdatePosition();
+				}
 			}
-			return _position;
+			return _position||=CVector.CreateOneInstance();
 		}
 		public function get transform():CTransform3D
 		{
+			_transform||=CTransform3D.CreateOneInstance();
 			if(_invalidTransform)
 			{
 				_invalidTransform=false;
@@ -342,6 +356,7 @@ package cloud.core.mvcs.model.paramVos
 		}
 		public function get inverseTransform():CTransform3D
 		{
+			_inverseTransform||=CTransform3D.CreateOneInstance();
 			if(_invalidTransform)
 			{
 				_invalidTransform=false;
@@ -479,11 +494,9 @@ package cloud.core.mvcs.model.paramVos
 
 		private function doUpdateTransform():void
 		{
-			CTransform3D.Compose(_transform,rotationLength,rotationWidth,rotationHeight,scaleLength,scaleWidth,scaleHeight,x,y,z);
-			CTransform3D.ComposeInverse(_inverseTransform,rotationLength,rotationWidth,rotationHeight,scaleLength,scaleWidth,scaleHeight,x,y,z);
-			_position.x=x;
-			_position.y=y;
-			_position.z=z;
+			CTransform3D.Compose(transform,rotationLength,rotationWidth,rotationHeight,scaleLength,scaleWidth,scaleHeight,x,y,z);
+			CTransform3D.ComposeInverse(inverseTransform,rotationLength,rotationWidth,rotationHeight,scaleLength,scaleWidth,scaleHeight,x,y,z);
+			CVector.SetTo(position,x,y,z);
 		}
 		private function doUpdatePosition():void
 		{
@@ -495,9 +508,7 @@ package cloud.core.mvcs.model.paramVos
 			{
 				doUpdatePositionByOffset();
 			}
-			_position.x=_x;
-			_position.y=_y;
-			_position.z=_z;
+			CVector.SetTo(position,_x,_y,_z);
 		}
 		protected function doUpdatePositionByXYZ():void
 		{
@@ -686,42 +697,70 @@ package cloud.core.mvcs.model.paramVos
 		}
 		public function localToGlobal(vec:CVector,outPut:CVector):void
 		{
-			CTransform3D.Copy(_TRANSFORM,transform);
+			var tmpTransform:CTransform3D=transform.clone() as CTransform3D;
 			var root:ICObject3D = this;
 			while (root.parent != null) {
 				root = root.parent;
-				CTransform3D.Append(_TRANSFORM,root.transform);
+				CTransform3D.Append(tmpTransform,root.transform);
 			}
-			outPut.x = _TRANSFORM.a*vec.x + _TRANSFORM.b*vec.y + _TRANSFORM.c*vec.z + _TRANSFORM.d;
-			outPut.y = _TRANSFORM.e*vec.x + _TRANSFORM.f*vec.y + _TRANSFORM.g*vec.z + _TRANSFORM.h;
-			outPut.z = _TRANSFORM.i*vec.x + _TRANSFORM.j*vec.y + _TRANSFORM.k*vec.z + _TRANSFORM.l;
+			outPut.x = tmpTransform.a*vec.x + tmpTransform.b*vec.y + tmpTransform.c*vec.z + tmpTransform.d;
+			outPut.y = tmpTransform.e*vec.x + tmpTransform.f*vec.y + tmpTransform.g*vec.z + tmpTransform.h;
+			outPut.z = tmpTransform.i*vec.x + tmpTransform.j*vec.y + tmpTransform.k*vec.z + tmpTransform.l;
 		}
 		public function globalToLocal(vec:CVector,outPut:CVector):void {
-			CTransform3D.Copy(_TRANSFORM,inverseTransform);
+			var tmpTransform:CTransform3D=transform.clone() as CTransform3D;
+			CTransform3D.Copy(tmpTransform,inverseTransform);
 			var root:ICObject3D = this;
 			while (root.parent != null) {
 				root = root.parent;
-				CTransform3D.Prepend(_TRANSFORM,root.inverseTransform);
+				CTransform3D.Prepend(tmpTransform,root.inverseTransform);
 			}
-			outPut.x = _TRANSFORM.a*vec.x + _TRANSFORM.b*vec.y + _TRANSFORM.c*vec.z + _TRANSFORM.d;
-			outPut.y = _TRANSFORM.e*vec.x + _TRANSFORM.f*vec.y + _TRANSFORM.g*vec.z + _TRANSFORM.h;
-			outPut.z = _TRANSFORM.i*vec.x + _TRANSFORM.j*vec.y + _TRANSFORM.k*vec.z + _TRANSFORM.l;
+			outPut.x = tmpTransform.a*vec.x + tmpTransform.b*vec.y + tmpTransform.c*vec.z + tmpTransform.d;
+			outPut.y = tmpTransform.e*vec.x + tmpTransform.f*vec.y + tmpTransform.g*vec.z + tmpTransform.h;
+			outPut.z = tmpTransform.i*vec.x + tmpTransform.j*vec.y + tmpTransform.k*vec.z + tmpTransform.l;
 		}
 		public function clear():void
 		{
-			_position.back();
-			_direction.back();
-			_transform.back();
-			_inverseTransform.back();
-			_roundPoints.back();
-			_globalRotation.back();
-			_minSize.back();
-			_maxSize.back();
-			_position=null;
-			_direction=null;
-			_transform=null;
-			_inverseTransform=null;
-			_roundPoints=null;
+			if(_position)
+			{
+				_position.back();
+				_position=null;
+			}
+			if(_direction)
+			{
+				_direction.back();
+				_direction=null;
+			}
+			if(_transform)
+			{
+				_transform.back();
+				_transform=null;
+			}
+			if(_inverseTransform)
+			{
+				_inverseTransform.back();
+				_inverseTransform=null;
+			}
+			if(_roundPoints)
+			{
+				_roundPoints.back();
+				_roundPoints=null;
+			}
+			if(_globalRotation)
+			{
+				_globalRotation.back();
+				_globalRotation=null;
+			}
+			if(_minSize)
+			{
+				_minSize.back();
+				_minSize=null;
+			}
+			if(_maxSize)
+			{
+				_maxSize.back();
+				_maxSize=null;
+			}
 			_isLife=false;
 			if(parent)
 				parent.removeChild(this);
@@ -733,6 +772,17 @@ package cloud.core.mvcs.model.paramVos
 				child.next = null;
 			}
 			_children=null;
+			
+			_invalidTransform=_invalidPosition=_invalidParent=_invalidSize=false;
+			_numChildren=0;
+			_length=_width=_height=_rotationLength=_rotationWidth=_rotationHeight=0;
+			_x=_y=_z=_centerX=_centerY=_centerZ=0;
+			_offLeft=_offBack=_offGround=0;
+			_scaleLength=_scaleWidth=_scaleHeight=1;
+		}
+		public function clone():ICData
+		{
+			return null;
 		}
 	}
 }

@@ -69,6 +69,7 @@ package cloud.core.datas.containers
 		
 		public function clear():void
 		{
+			_invalidSize=true;
 			_container.length=0;
 		}
 	

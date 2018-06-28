@@ -79,6 +79,11 @@ package cloud.core.interfaces
 		 * 
 		 */		
 		function toString():String;
-
+		/**
+		 * 克隆 
+		 * @return ICData
+		 * 
+		 */	
+		function clone():ICData;
 	}
 }
