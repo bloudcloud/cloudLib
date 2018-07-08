@@ -1,6 +1,7 @@
 package cloud.core.collections
 {
 	import cloud.core.interfaces.ICData;
+	import cloud.core.interfaces.ICNodeData;
 	import cloud.core.utils.CDebugUtil;
 	
 	import ns.cloudLib;
@@ -27,7 +28,7 @@ package cloud.core.collections
 		{
 		}
 		
-		protected function initList(nodeData:ICData):void
+		protected function initList(nodeData:ICNodeData):void
 		{
 			var node:IDoubleNode=createNode(nodeData);
 			node.hasIn=true;
@@ -40,7 +41,7 @@ package cloud.core.collections
 		 * @param vo		反生改变的节点数据
 		 * 
 		 */		
-		cloudLib function addChangedVo(vo:ICData):void
+		cloudLib function addChangedVo(vo:ICNodeData):void
 		{
 			if(changedVos.indexOf(vo)<0)
 				changedVos.push(vo);
@@ -51,7 +52,7 @@ package cloud.core.collections
 		 * @return IDoubleNode
 		 * 
 		 */		
-		protected function createNode(nodeData:ICData):IDoubleNode
+		protected function createNode(nodeData:ICNodeData):IDoubleNode
 		{
 			return new DoubleNode(nodeData);
 		}
@@ -61,7 +62,7 @@ package cloud.core.collections
 		 * @param node	找到的当前节点
 		 * 
 		 */			
-		protected function addNodeBefore(opreateData:ICData,node:IDoubleNode):void
+		protected function addNodeBefore(opreateData:ICNodeData,node:IDoubleNode):void
 		{
 			var opreateNode:IDoubleNode=createNode(opreateData);
 			node.addBefore(opreateNode);
@@ -78,7 +79,7 @@ package cloud.core.collections
 		 * @param node	找到的当前节点
 		 * 
 		 */				 
-		protected function addNodeAfter(opreateData:ICData,node:IDoubleNode):void
+		protected function addNodeAfter(opreateData:ICNodeData,node:IDoubleNode):void
 		{
 			var opreateNode:IDoubleNode=createNode(opreateData);
 			node.addAfter(opreateNode);
@@ -96,7 +97,7 @@ package cloud.core.collections
 		 * @param isNext
 		 * 
 		 */
-		protected function doAddNode(opreateData:ICData,node:IDoubleNode):Boolean
+		protected function doAddNode(opreateData:ICNodeData,node:IDoubleNode):Boolean
 		{
 			var isNext:Boolean;
 			if(node==null)
@@ -123,7 +124,7 @@ package cloud.core.collections
 		 * @param opreateData
 		 * 
 		 */
-		protected function doRemoveNode(opreateData:ICData):void
+		protected function doRemoveNode(opreateData:ICNodeData):void
 		{
 			removeNode(searchFromNowByCondition(opreateData,equalByIDCondition));
 		}
@@ -176,7 +177,7 @@ package cloud.core.collections
 			return _numberChildren;
 		}
 
-		public function add(nodeData:ICData):Vector.<ICData>
+		public function add(nodeData:ICNodeData):Vector.<ICData>
 		{
 			var isNext:Boolean;
 			if(_currentNode!=null)
@@ -192,7 +193,7 @@ package cloud.core.collections
 			updateList(isNext);
 			return changedVos.length>0?changedVos:null;
 		}
-		public function remove(nodeData:ICData):Vector.<ICData>
+		public function remove(nodeData:ICNodeData):Vector.<ICData>
 		{
 			var index:int=changedVos.indexOf(nodeData);
 			if(index>=0)
@@ -202,7 +203,7 @@ package cloud.core.collections
 			return changedVos.length>0?changedVos:null;
 		}
 		
-		public function getDataByID(uniqueID:String):ICData
+		public function getDataByID(uniqueID:String):ICNodeData
 		{
 			for(var child:IDoubleNode=startNode; child!=null; child=child.next)
 			{
@@ -227,7 +228,7 @@ package cloud.core.collections
 		 * @return IDoubleNode	最优节点对象
 		 * 
 		 */		
-		protected function bestCondition(currentNode:IDoubleNode,sourceData:ICData,compareResult:Number):IDoubleNode
+		protected function bestCondition(currentNode:IDoubleNode,sourceData:ICNodeData,compareResult:Number):IDoubleNode
 		{
 			var targetNode:IDoubleNode
 			var otherNode:IDoubleNode=compareResult>0?currentNode.next:currentNode.prev;
@@ -254,7 +255,7 @@ package cloud.core.collections
 		 * @return IDoubleNode
 		 * 
 		 */		
-		protected function equalByIDCondition(currentNode:IDoubleNode,sourceData:ICData,...param):IDoubleNode
+		protected function equalByIDCondition(currentNode:IDoubleNode,sourceData:ICNodeData,...param):IDoubleNode
 		{
 			var targetNode:IDoubleNode;
 			if(currentNode.nodeData.uniqueID==sourceData.uniqueID)
@@ -268,7 +269,7 @@ package cloud.core.collections
 		 * @return IDoubleNode	目标节点
 		 * 
 		 */		
-		protected function searchFromNowByCondition(nodeData:ICData,condition:Function):IDoubleNode
+		protected function searchFromNowByCondition(nodeData:ICNodeData,condition:Function):IDoubleNode
 		{
 			if(condition==null) return _currentNode;
 			var distance:Number;

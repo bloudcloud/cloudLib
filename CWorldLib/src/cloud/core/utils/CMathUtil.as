@@ -159,7 +159,6 @@ package cloud.core.utils
 		 * @return Boolean
 		 * 
 		 */	
-		[Inline]
 		public function equalByValue(a:Number,b:Number,tolerance:Number=.001):Boolean
 		{
 			return Math.abs(a-b)<=.001;

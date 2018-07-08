@@ -1,6 +1,6 @@
 package cloud.core.collections
 {
-	import cloud.core.interfaces.ICData;
+	import cloud.core.interfaces.ICNodeData;
 	
 	/**
 	 *  双向单循环链表节点类
@@ -8,7 +8,7 @@ package cloud.core.collections
 	 */
 	public class DoubleListNode extends DoubleList implements ICycleDoubleNode
 	{
-		protected var _data:ICData;
+		protected var _data:ICNodeData;
 		protected var _next:IDoubleNode;
 		protected var _prev:IDoubleNode;
 		protected var _hasIn:Boolean;
@@ -18,7 +18,7 @@ package cloud.core.collections
 			return _currentNode==null;
 		}
 		
-		public function DoubleListNode(sourceVo:ICData)
+		public function DoubleListNode(sourceVo:ICNodeData)
 		{
 			_data=sourceVo;
 			super();
@@ -69,12 +69,12 @@ package cloud.core.collections
 			_prev = value;
 		}
 		
-		public function get nodeData():ICData
+		public function get nodeData():ICNodeData
 		{
 			return _data;
 		}
 		
-		public function set nodeData(value:ICData):void
+		public function set nodeData(value:ICNodeData):void
 		{
 			_data = value;
 		}

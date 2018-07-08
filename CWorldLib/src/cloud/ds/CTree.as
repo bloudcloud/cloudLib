@@ -1,19 +1,19 @@
-package ds
+package cloud.ds
 {
-	import ds.iterators.DListIterator;
-	import ds.iterators.TreeIterator;
+	import cloud.ds.iterators.CListIterator;
+	import cloud.ds.iterators.CTreeIterator;
 	
-	public class Tree
+	public class CTree
 	{
-		public var node:Tree;
-		public var children:DLinkedList;
-		public var parent:Tree;
+		public var node:CTree;
+		public var children:CLinkedList;
+		public var parent:CTree;
 		public var data:*;
 		
-		public function Tree(Obj:* , Parent:Tree = null)
+		public function CTree(Obj:* , Parent:CTree = null)
 		{
 			data = Obj;
-			children = new DLinkedList();
+			children = new CLinkedList();
 			parent = Parent;
 			if(parent)
 				parent.children.push(this);
@@ -36,7 +36,7 @@ package ds
 		{
 			if (!parent) return 0;
 			
-			var node:Tree = this, c:int = 0;
+			var node:CTree = this, c:int = 0;
 			while (node.parent)
 			{
 				c++;
@@ -52,11 +52,11 @@ package ds
 		public function get length():uint
 		{
 			var c:uint = 1;
-			var itr:DListIterator = this.children.getIterator();
+			var itr:CListIterator = this.children.getIterator();
 				
 			while(itr.valid())
 			{				
-				c += Tree(itr.node.data).length;
+				c += CTree(itr.node.data).length;
 				itr.next();
 			}
 			return c;
@@ -65,13 +65,13 @@ package ds
 		/**
 		 * 前序遍历
 		 */
-		public function preorder(Node:Tree,Process:Function):void
+		public function preorder(Node:CTree,Process:Function):void
 		{
 			Process(Node);
-			var itr:DListIterator = Node.children.getIterator();
+			var itr:CListIterator = Node.children.getIterator();
 			while(itr.valid())
 			{
-				preorder(Tree(itr.node.data), Process);
+				preorder(CTree(itr.node.data), Process);
 				itr.next();
 			}
 		}
@@ -80,12 +80,12 @@ package ds
 		/**
 		 * 后序遍历
 		 */
-		public function postorder(Node:Tree,Process:Function):void
+		public function postorder(Node:CTree,Process:Function):void
 		{
-			var itr:DListIterator =  Node.children.getIterator();
+			var itr:CListIterator =  Node.children.getIterator();
 			while(itr.valid())
 			{
-				postorder(Tree(itr.node.data), Process)
+				postorder(CTree(itr.node.data), Process)
 				itr.next();
 			}
 			Process(Node);
@@ -116,7 +116,7 @@ package ds
 		 * 	递归实现，感谢madcloudsong   http://madcloudsong.com/articles/110
 		 * @return 输出的xml能直接赋值给Flex的Tree组件的dataProvider属性
 		 */
-		public function toXML(Node:Tree = null):XML
+		public function toXML(Node:CTree = null):XML
 		{
 			if (!Node)
 				Node = this;
@@ -126,8 +126,8 @@ package ds
 			
 			if (Node.children.length > 0)
 			{
-				for ( var itr:DListIterator = Node.children.getIterator(); itr.valid(); itr.next())
-					xml.appendChild( Tree(itr.data).toXML());
+				for ( var itr:CListIterator = Node.children.getIterator(); itr.valid(); itr.next())
+					xml.appendChild( CTree(itr.data).toXML());
 			}
 			return xml;
 		}
@@ -141,7 +141,7 @@ package ds
 		public function dump():String
 		{
 			var s:String = "";
-			this.preorder(this, function(node:Tree):void
+			this.preorder(this, function(node:CTree):void
 			{
 				var d:int = node.depth;
 				
@@ -161,9 +161,9 @@ package ds
 		/**
 		 *  Get iterator
 		 */
-		public function getIterator():TreeIterator 
+		public function getIterator():CTreeIterator 
 		{
-			return new TreeIterator(this);
+			return new CTreeIterator(this);
 		}
 	}
 }

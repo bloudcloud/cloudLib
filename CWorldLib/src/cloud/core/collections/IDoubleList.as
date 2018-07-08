@@ -1,6 +1,7 @@
 package cloud.core.collections
 {
 	import cloud.core.interfaces.ICData;
+	import cloud.core.interfaces.ICNodeData;
 	
 	public interface IDoubleList
 	{
@@ -14,27 +15,27 @@ package cloud.core.collections
 		/**
 		 * 添加数据 
 		 * @param nodeData
-		 * @return Vector.<ICData>		返回发生改变的数据集合
+		 * @return Vector.<ICNodeData>		返回发生改变的数据集合
 		 * 
 		 */			
-		function add(nodeData:ICData):Vector.<ICData>;
+		function add(nodeData:ICNodeData):Vector.<ICData>;
 		/**
 		 * 移除数据 
 		 * @param nodeData
-		 * @return Vector.<ICData> 	返回发生改变的数据集合
+		 * @return Vector.<ICNodeData> 	返回发生改变的数据集合
 		 * 
 		 */			
-		function remove(nodeData:ICData):Vector.<ICData>;
+		function remove(nodeData:ICNodeData):Vector.<ICData>;
 		/**
 		 * 获取 
 		 * @param uniqueID
-		 * @return ICData
+		 * @return ICNodeData
 		 * 
 		 */		
-		function getDataByID(uniqueID:String):ICData;
+		function getDataByID(uniqueID:String):ICNodeData;
 		/**
 		 * 根据遍历顺序，遍历所有节点并执行回调 
-		 * @param callback	回调函数，回调函数的格式：function callback(data:ICData):void
+		 * @param callback	回调函数，回调函数的格式：function callback(data:ICNodeData):void
 		 * @param isNext	是否向下遍历
 		 * 
 		 */			

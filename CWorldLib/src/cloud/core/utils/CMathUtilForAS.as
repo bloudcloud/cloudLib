@@ -3,7 +3,6 @@ package cloud.core.utils
 	import flash.geom.Matrix3D;
 	import flash.geom.Point;
 	import flash.geom.Vector3D;
-	import flash.system.Capabilities;
 	
 	import cloud.core.datas.base.CTransform3D;
 
@@ -1077,6 +1076,41 @@ package cloud.core.utils
 			result.x=transform.a*target.x+transform.b*target.y+transform.c*target.z+transform.d;
 			result.y=transform.e*target.x+transform.f*target.y+transform.g*target.z+transform.h;
 			result.y=transform.i*target.x+transform.j*target.y+transform.k*target.z+transform.l;
+			return result;
+		}
+		/**
+		 * 获取点在线段上的投影点，返回是否超出投影距离限制以及投影点的3D坐标值
+		 * @param projectDisLimit	投影距离限制
+		 * @param segmentStart	线段起点坐标
+		 * @param segmentEnd	线段终点坐标
+		 * @param originPoint	原点坐标
+		 * @return Array	
+		 * 
+		 */		
+		public function getProjectPoint3DAtSegment(projectDisLimit:Number,segmentStart:Vector3D,segmentEnd:Vector3D,originPoint:Vector3D):Array
+		{
+			var result:Array;
+			var dir:Vector3D;
+			var dirLength:Number,distance:Number;
+			var projectPoint:Vector3D;
+			
+			result=[];
+			dir=segmentEnd.subtract(segmentStart);
+			dir.normalize();
+			dirLength=originPoint.subtract(segmentStart).dotProduct(dir);
+			projectPoint=new Vector3D(segmentStart.x+dir.x*dirLength,segmentStart.y+dir.y*dirLength,segmentStart.z+dir.z*dirLength);
+			distance=CMathUtil.Instance.getDistanceByXYZ(originPoint.x,originPoint.y,originPoint.z,projectPoint.x,projectPoint.y,projectPoint.z);
+			if(distance<=projectDisLimit && segmentStart.subtract(originPoint).dotProduct(segmentEnd.subtract(originPoint))<=0)
+			{
+				result[0]=1;
+			}
+			else
+			{
+				result[0]=0;
+			}
+			result[1]=projectPoint.x;
+			result[2]=projectPoint.y;
+			result[3]=projectPoint.z;
 			return result;
 		}
 	}

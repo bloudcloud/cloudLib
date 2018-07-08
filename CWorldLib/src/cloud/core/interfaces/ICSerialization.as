@@ -25,5 +25,6 @@ package cloud.core.interfaces
 		 * 
 		 */			
 		function serialize(formate:String):*;
+
 	}
 }

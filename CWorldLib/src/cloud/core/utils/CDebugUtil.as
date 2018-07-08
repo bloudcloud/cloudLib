@@ -35,7 +35,7 @@ package cloud.core.utils
 					else
 						returnStr+=param[i].toString()+" ";
 				}
-				trace(returnStr+=getTimer());
+//				trace(returnStr+=getTimer());
 			}
 		}
 		/**
