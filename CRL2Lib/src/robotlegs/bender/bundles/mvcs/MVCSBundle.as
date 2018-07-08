@@ -48,9 +48,9 @@ package robotlegs.bender.bundles.mvcs
 			context.logLevel = LogLevel.DEBUG;
 
 			context.install(
-				TraceLoggingExtension,
-				VigilanceExtension,
-				InjectableLoggerExtension,
+//				TraceLoggingExtension,
+//				VigilanceExtension,
+//				InjectableLoggerExtension,
 				ContextViewExtension,
 				EventDispatcherExtension,
 				ModularityExtension,
