@@ -7,6 +7,7 @@ package cloud.core.mvcs.model.paramVos
 	import cloud.core.interfaces.ICData;
 	import cloud.core.interfaces.ICNodeData;
 	import cloud.core.interfaces.ICObject3D;
+	import cloud.core.interfaces.ICResource;
 	import cloud.core.interfaces.ICSerialization;
 	import cloud.core.interfaces.ICSize;
 	import cloud.core.utils.CDebugUtil;
@@ -19,7 +20,7 @@ package cloud.core.mvcs.model.paramVos
 	 * 基础参数化对象数据类
 	 * @author cloud
 	 */
-	public class CBaseObject3DVO implements ICObject3D, ICSize, ICNodeData, ICSerialization
+	public class CBaseObject3DVO implements ICObject3D, ICSize, ICNodeData, ICSerialization,ICResource
 	{
 		protected var _isXYZ:Boolean;
 		protected var _className:String;

@@ -4,6 +4,7 @@ package  cloud.core.datas.maps
 	
 	import cloud.core.interfaces.ICData;
 	import cloud.core.interfaces.ICMap;
+	import cloud.core.interfaces.ICResource;
 
 	/**
 	 * Classname : public class HashMap implements IMap
@@ -126,8 +127,8 @@ package  cloud.core.datas.maps
 			var len:int=_keys.length;
 			for(var i:int=0; i<len; i++)
 			{
-				if(_props[_keys[i]] is ICData)
-					(_props[_keys[i]] as ICData).clear();
+				if(_props[_keys[i]] is ICResource)
+					(_props[_keys[i]] as ICResource).clear();
 				delete _props[_keys[i]];
 				_keys[i]=null;
 			}

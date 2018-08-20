@@ -9,8 +9,8 @@ package cloud.core.collections
 	public class DoubleListNode extends DoubleList implements ICycleDoubleNode
 	{
 		protected var _data:ICNodeData;
-		protected var _next:IDoubleNode;
-		protected var _prev:IDoubleNode;
+		protected var _next:ICDoubleNode;
+		protected var _prev:ICDoubleNode;
 		protected var _hasIn:Boolean;
 		
 		public function get isEmpty():Boolean
@@ -31,7 +31,7 @@ package cloud.core.collections
 		 */		
 		public function foreachForOnce(callback:Function):void
 		{
-			var child:IDoubleNode;
+			var child:ICDoubleNode;
 			for(child=this.next; child!=this; child=this.next)
 			{
 				if(child is ICycleDoubleNode && callback!=null)
@@ -49,22 +49,22 @@ package cloud.core.collections
 			_hasIn=value;
 		}
 		
-		public function get next():IDoubleNode
+		public function get next():ICDoubleNode
 		{
 			return _next;
 		}
 		
-		public function set next(value:IDoubleNode):void
+		public function set next(value:ICDoubleNode):void
 		{
 			_next = value;
 		}
 		
-		public function get prev():IDoubleNode
+		public function get prev():ICDoubleNode
 		{
 			return _prev;
 		}
 		
-		public function set prev(value:IDoubleNode):void
+		public function set prev(value:ICDoubleNode):void
 		{
 			_prev = value;
 		}
@@ -79,7 +79,16 @@ package cloud.core.collections
 			_data = value;
 		}
 		
-		public function addAfter(node:IDoubleNode):void
+		public function get nodeLength():uint
+		{
+			var cursor:ICDoubleNode; 
+			var length:uint = 1;
+			for (cursor = _prev; cursor != null; cursor = cursor.prev) { 
+				length++; 
+			} 
+			return length;
+		}
+		public function addAfter(node:ICDoubleNode):void
 		{
 			if(node.next==null)
 				node.next = _next; 
@@ -91,7 +100,7 @@ package cloud.core.collections
 			node.hasIn=true; 
 		}
 		
-		public function addBefore(node:IDoubleNode):void
+		public function addBefore(node:ICDoubleNode):void
 		{
 			node.next = this; 
 			if(node.prev==null)

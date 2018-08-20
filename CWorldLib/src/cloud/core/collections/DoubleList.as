@@ -16,9 +16,9 @@ package cloud.core.collections
 		protected var _invalidChildren:Boolean;
 		protected var _isFullState:Boolean;
 		
-		protected var _currentNode:IDoubleNode;
-		cloudLib var startNode:IDoubleNode;
-		cloudLib var endNode:IDoubleNode;
+		protected var _currentNode:ICDoubleNode;
+		cloudLib var startNode:ICDoubleNode;
+		cloudLib var endNode:ICDoubleNode;
 		//需要更新的位置的节点数据集合
 		cloudLib var changedVos:Vector.<ICData> = new Vector.<ICData>();
 		
@@ -30,7 +30,7 @@ package cloud.core.collections
 		
 		protected function initList(nodeData:ICNodeData):void
 		{
-			var node:IDoubleNode=createNode(nodeData);
+			var node:ICDoubleNode=createNode(nodeData);
 			node.hasIn=true;
 			startNode=node;
 			endNode=node;
@@ -52,9 +52,9 @@ package cloud.core.collections
 		 * @return IDoubleNode
 		 * 
 		 */		
-		protected function createNode(nodeData:ICNodeData):IDoubleNode
+		protected function createNode(nodeData:ICNodeData):ICDoubleNode
 		{
-			return new DoubleNode(nodeData);
+			return new CDoubleNode(nodeData);
 		}
 		/**
 		 * 将节点添加到当前节点之前 
@@ -62,9 +62,9 @@ package cloud.core.collections
 		 * @param node	找到的当前节点
 		 * 
 		 */			
-		protected function addNodeBefore(opreateData:ICNodeData,node:IDoubleNode):void
+		protected function addNodeBefore(opreateData:ICNodeData,node:ICDoubleNode):void
 		{
-			var opreateNode:IDoubleNode=createNode(opreateData);
+			var opreateNode:ICDoubleNode=createNode(opreateData);
 			node.addBefore(opreateNode);
 			_currentNode=opreateNode;
 			if(node==startNode)
@@ -79,9 +79,9 @@ package cloud.core.collections
 		 * @param node	找到的当前节点
 		 * 
 		 */				 
-		protected function addNodeAfter(opreateData:ICNodeData,node:IDoubleNode):void
+		protected function addNodeAfter(opreateData:ICNodeData,node:ICDoubleNode):void
 		{
-			var opreateNode:IDoubleNode=createNode(opreateData);
+			var opreateNode:ICDoubleNode=createNode(opreateData);
 			node.addAfter(opreateNode);
 			_currentNode=opreateNode;
 			if(node==endNode)
@@ -97,7 +97,7 @@ package cloud.core.collections
 		 * @param isNext
 		 * 
 		 */
-		protected function doAddNode(opreateData:ICNodeData,node:IDoubleNode):Boolean
+		protected function doAddNode(opreateData:ICNodeData,node:ICDoubleNode):Boolean
 		{
 			var isNext:Boolean;
 			if(node==null)
@@ -133,11 +133,11 @@ package cloud.core.collections
 		 * @param node
 		 * 
 		 */		
-		protected function removeNode(node:IDoubleNode):void
+		protected function removeNode(node:ICDoubleNode):void
 		{
 			if(node==null || node.nodeData==null) CDebugUtil.Instance.throwError("DoubleList","removeNode","node",String(node)+" 有问题！");
-			var nextNode:IDoubleNode=node.next;
-			var prevNode:IDoubleNode=node.prev;
+			var nextNode:ICDoubleNode=node.next;
+			var prevNode:ICDoubleNode=node.prev;
 			node.unlink();
 			//更新节点
 			if(_currentNode==node)
@@ -182,7 +182,7 @@ package cloud.core.collections
 			var isNext:Boolean;
 			if(_currentNode!=null)
 			{
-				var node:IDoubleNode=searchFromNowByCondition(nodeData,bestCondition);
+				var node:ICDoubleNode=searchFromNowByCondition(nodeData,bestCondition);
 				isNext=doAddNode(nodeData,node);
 			}
 			else
@@ -205,16 +205,16 @@ package cloud.core.collections
 		
 		public function getDataByID(uniqueID:String):ICNodeData
 		{
-			for(var child:IDoubleNode=startNode; child!=null; child=child.next)
+			for(var child:ICDoubleNode=startNode; child!=null; child=child.next)
 			{
 				if(child.nodeData.uniqueID==uniqueID)
 					return child.nodeData;
 			}
 			return null;
 		}
-		protected function mapFromNode(node:IDoubleNode,callback:Function,isNext:Boolean):void
+		protected function mapFromNode(node:ICDoubleNode,callback:Function,isNext:Boolean):void
 		{
-			for(var child:IDoubleNode=node; child!=null; child=isNext?child.next:child.prev)
+			for(var child:ICDoubleNode=node; child!=null; child=isNext?child.next:child.prev)
 			{
 				if(callback!=null)
 					callback.call(null,child);
@@ -228,10 +228,10 @@ package cloud.core.collections
 		 * @return IDoubleNode	最优节点对象
 		 * 
 		 */		
-		protected function bestCondition(currentNode:IDoubleNode,sourceData:ICNodeData,compareResult:Number):IDoubleNode
+		protected function bestCondition(currentNode:ICDoubleNode,sourceData:ICNodeData,compareResult:Number):ICDoubleNode
 		{
-			var targetNode:IDoubleNode
-			var otherNode:IDoubleNode=compareResult>0?currentNode.next:currentNode.prev;
+			var targetNode:ICDoubleNode
+			var otherNode:ICDoubleNode=compareResult>0?currentNode.next:currentNode.prev;
 			var curDistance:Number=sourceData.compare(currentNode.nodeData);
 			if(otherNode==null)
 			{
@@ -255,9 +255,9 @@ package cloud.core.collections
 		 * @return IDoubleNode
 		 * 
 		 */		
-		protected function equalByIDCondition(currentNode:IDoubleNode,sourceData:ICNodeData,...param):IDoubleNode
+		protected function equalByIDCondition(currentNode:ICDoubleNode,sourceData:ICNodeData,...param):ICDoubleNode
 		{
-			var targetNode:IDoubleNode;
+			var targetNode:ICDoubleNode;
 			if(currentNode.nodeData.uniqueID==sourceData.uniqueID)
 				targetNode=currentNode;
 			return targetNode;
@@ -269,12 +269,12 @@ package cloud.core.collections
 		 * @return IDoubleNode	目标节点
 		 * 
 		 */		
-		protected function searchFromNowByCondition(nodeData:ICNodeData,condition:Function):IDoubleNode
+		protected function searchFromNowByCondition(nodeData:ICNodeData,condition:Function):ICDoubleNode
 		{
 			if(condition==null) return _currentNode;
 			var distance:Number;
-			var targetNode:IDoubleNode;
-			for(var child:IDoubleNode=_currentNode; child!=null; child=distance>0 ? child.next : child.prev)
+			var targetNode:ICDoubleNode;
+			for(var child:ICDoubleNode=_currentNode; child!=null; child=distance>0 ? child.next : child.prev)
 			{
 				distance=nodeData.compare(_currentNode.nodeData);
 				targetNode=condition.call(null,child,nodeData,distance);

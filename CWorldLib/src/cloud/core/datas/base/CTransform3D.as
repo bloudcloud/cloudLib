@@ -101,6 +101,27 @@ package cloud.core.datas.base
 			return _Pool==null ? new CTransform3D() : _Pool.pop() as CTransform3D;
 		}
 		/**
+		 *  从行数据容器中，填充数据
+		 * @param transform	
+		 * @param vec	行数据容器
+		 * 
+		 */		
+		public static function CopyFromRowVector(transform:CTransform3D,vec:Vector.<Number>):void
+		{
+			transform.a=vec[0];
+			transform.b=vec[1];
+			transform.c=vec[2];
+			transform.d=vec[3];
+			transform.e=vec[4];
+			transform.f=vec[5];
+			transform.g=vec[6];
+			transform.h=vec[7];
+			transform.i=vec[8];
+			transform.j=vec[9];
+			transform.k=vec[10];
+			transform.l=vec[12];
+		}
+		/**
 		 * 单位化 
 		 * @param transform
 		 * 

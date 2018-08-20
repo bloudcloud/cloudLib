@@ -1,5 +1,6 @@
 package cloud.core.utils
 {
+	import cloud.core.datas.base.CTransform3D;
 	import cloud.core.dict.CConst;
 	
 	/**
@@ -138,18 +139,18 @@ package cloud.core.utils
 		 * @param aX	起点X坐标值
 		 * @param aY	起点Y坐标值
 		 * @param aZ	起点X坐标值
-		 * @param bX	终点X坐标值
-		 * @param bY	终点Y坐标值
-		 * @param bZ	终点Z坐标值
-		 * @param cX	线段ab外的点X坐标值
-		 * @param cY	线段ab外的点Y坐标值
-		 * @param cZ	线段ab外的点Z坐标值
+		 * @param bX	终点1X坐标值
+		 * @param bY	终点1Y坐标值
+		 * @param bZ	终点1Z坐标值
+		 * @param cX	终点2X坐标值
+		 * @param cY	终点2Y坐标值
+		 * @param cZ 	终点2Z坐标值
 		 * @return Number	
 		 * 
 		 */		
 		public function dotByPosition3D(aX:Number,aY:Number,aZ:Number,bX:Number,bY:Number,bZ:Number,cX:Number,cY:Number,cZ:Number):Number
 		{
-			return (cX-aX)*(bX-cX)+(cY-aY)*(bY-cY)+(cZ-aZ)*(bZ-cZ);
+			return (bX-aX)*(cX-aX)+(bY-aY)*(cY-aY)+(bZ-aZ)*(cZ-aZ);
 		}
 		/**
 		 * 比较两个值是否相似 
@@ -163,6 +164,109 @@ package cloud.core.utils
 		{
 			return Math.abs(a-b)<=.001;
 		}
-
+		/**
+		 * 计算两个向量的叉乘值，并更新输出向量
+		 * @param v1	向量1
+		 * @param v2	向量2
+		 * @param cross	叉乘向量
+		 * 
+		 */		
+		public function calculateCrossVector3D(v1:*,v2:*,cross:*):void
+		{
+			if(!v1||!v2||!cross)
+			{
+				return;
+			}
+			cross.x=v1.y*v2.z-v1.z*v2.y;
+			cross.y=v1.z*v2.x-v1.x*v2.z;
+			cross.z=v1.x*v2.y-v1.y*v2.x;
+		}
+		/**
+		 * 通过CTransform3D对象转换3D向量对象 
+		 * @param vec	3D向量对象
+		 * @param transform	线性变换对象（3*4矩阵）
+		 * @param isNew	是否返回一个新的3D向量对象
+		 * @return *
+		 * 
+		 */		
+		public function transformVectorByCTransform3D(vec:*,transform:CTransform3D,isNew:Boolean=true,isNeedInvert:Boolean=false):*
+		{
+			var realTransform:CTransform3D;
+			var newVec:*=isNew ? vec.clone() : vec;
+			var x:Number=vec.x;
+			var y:Number=vec.y;
+			var z:Number=vec.z;
+			if(isNeedInvert)
+			{
+				realTransform=CTransform3D.CreateOneInstance();
+				CTransform3D.Copy(realTransform,transform);
+				CTransform3D.Invert(realTransform);
+			}
+			else
+			{
+				realTransform=transform;
+			}
+			newVec.x=realTransform.a*x+realTransform.b*y+realTransform.c*z+realTransform.d;
+			newVec.y=realTransform.e*x+realTransform.f*y+realTransform.g*z+realTransform.h;
+			newVec.z=realTransform.i*x+realTransform.j*y+realTransform.k*z+realTransform.l;
+			return newVec;
+		}
+		/**
+		 * 计算3D线性变换对象的值 
+		 * @param transform
+		 * @param xAxis
+		 * @param yAxis
+		 * @param zAxis
+		 * @param position
+		 * @param isNew
+		 * @return CTransform3D
+		 * 
+		 */		
+		public function calculateTransform3D(transform:CTransform3D,xAxis:*,yAxis:*,zAxis:*,position:*,isNew:*=false):CTransform3D
+		{
+			var result:CTransform3D=isNew ? transform.clone() as CTransform3D : transform;
+			result.a=xAxis.x;
+			result.b=yAxis.x;
+			result.c=zAxis.x;
+			result.d=position.x;
+			result.e=xAxis.y;
+			result.f=yAxis.y;
+			result.g=zAxis.y;
+			result.h=position.y;
+			result.i=xAxis.z;
+			result.j=yAxis.z;
+			result.k=zAxis.z;
+			result.l=position.z;
+			return result;
+		}
+		/**
+		 * 解析3D线性变换对象 
+		 * @param transform
+		 * @param xAxis
+		 * @param yAxis
+		 * @param zAxis
+		 * @param position
+		 * 
+		 */		
+		public function decomposeTransform3D(transform,xAxis:*,yAxis:*,zAxis:*,position:*):void
+		{
+			if(!transform||!xAxis||!yAxis||!zAxis||!position)
+			{
+				return;
+			}
+			xAxis.x=transform.a;
+			yAxis.x=transform.b;
+			zAxis.x=transform.c;
+			position.x=transform.d;
+			xAxis.y=transform.e;
+			yAxis.y=transform.f;
+			zAxis.y=transform.g;
+			position.y=transform.h;
+			xAxis.z=transform.i;
+			yAxis.z=transform.j;
+			zAxis.z=transform.k;
+			position.z=transform.l;
+		}
+		
 	}
 }

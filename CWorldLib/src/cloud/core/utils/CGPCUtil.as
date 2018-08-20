@@ -159,7 +159,7 @@ package cloud.core.utils
 				{
 					cur2=j;
 					next2= j==rlen-1 ? 0 : j+1;
-					tmpPoints=CMathUtilForAS.Instance.lineSegmentIntersectByPoint(clipPoints[cur1],clipPoints[next1],regionPoints[cur2],regionPoints[next2]);
+					tmpPoints=CMathUtilForAS.Instance.calculateSegment2DIntersect(clipPoints[cur1],clipPoints[next1],regionPoints[cur2],regionPoints[next2]);
 					if(tmpPoints)
 					{
 						updateIntersectRegionPoints(intersectRegionPoints,tmpPoints,clipPoints);
@@ -355,7 +355,7 @@ package cloud.core.utils
 				for(j=len2-1; j>=0; j--)
 				{
 					next2= j==len2-1 ? 0 : j+1;
-					tmpPoints=CMathUtilForAS.Instance.lineSegmentIntersectByPoint(roundPoints1[i],roundPoints1[next1],roundPoints2[j],roundPoints2[next2]);
+					tmpPoints=CMathUtilForAS.Instance.calculateSegment2DIntersect(roundPoints1[i],roundPoints1[next1],roundPoints2[j],roundPoints2[next2]);
 					if(tmpPoints)
 					{
 						intersectPoints||=[];

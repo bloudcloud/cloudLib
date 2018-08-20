@@ -4,6 +4,7 @@ package cloud.core.utils
 	import flash.geom.Point;
 	import flash.geom.Vector3D;
 	
+	import cloud.core.datas.base.CBoundBox;
 	import cloud.core.datas.base.CTransform3D;
 
 	/**
@@ -14,6 +15,7 @@ package cloud.core.utils
 	public class CMathUtilForAS
 	{
 		private static const _CurrentPoint:Point=new Point();
+		private static const _ZERO:Vector3D=new Vector3D();
 		
 		private static var _Instance:CMathUtilForAS;
 		public static function get Instance():CMathUtilForAS
@@ -87,6 +89,27 @@ package cloud.core.utils
 			return result;
 		}
 		/**
+		 * 通过法线向量和方向向量，以及与方向向量的夹角角度值，获取对应的3D向量
+		 * @param nor	法线向量
+		 * @param right	右侧正向量
+		 * @param degree	方向向量与右侧向量的角度值
+		 * @return Vector3D
+		 * 
+		 */		
+		public function getVector3DByNormalAndDirection(nor:Vector3D,dir:Vector3D,degree:Number):Vector3D
+		{
+			nor.normalize();
+			dir.normalize();
+			var right:Vector3D=nor.crossProduct(dir);
+			var matrix:Matrix3D=new Matrix3D();
+			matrix.copyColumnFrom(0,dir);
+			matrix.copyColumnFrom(1,right);
+			matrix.copyColumnFrom(2,nor);
+			matrix.appendRotation(degree,nor);
+			var result:Vector3D=matrix.transformVector(right);
+			return result;
+		}
+		/**
 		 * a, b为一条线段两端点  c, d为另一条线段的两端点 相交返回true, 不相交返回false  
 		 * @param a	
 		 * @param b
@@ -130,7 +153,18 @@ package cloud.core.utils
 		 */		
 		public function isEqualVector3D(a:Vector3D,b:Vector3D,tolerance:Number=.001):Boolean
 		{
-			return Math.abs(a.x-b.x)<=tolerance && Math.abs(a.y-b.y)<=tolerance && Math.abs(a.z-b.z)<=tolerance;
+			return a&&b ? Math.abs(a.x-b.x)<=tolerance && Math.abs(a.y-b.y)<=tolerance && Math.abs(a.z-b.z)<=tolerance : false;
+		}
+		/**
+		 * 2D平面方向是否正向旋转 
+		 * @param firstDir
+		 * @param nextDir
+		 * @return Boolean
+		 * 
+		 */		
+		public function isPositiveRotation(firstDirX:Number,firstDirY:Number,nextDirX:Number,nextDirY:Number):Boolean
+		{
+			return firstDirX*nextDirY-firstDirY*nextDirX;
 		}
 		/**
 		 * 通过圆的极坐标公式，根据圆的半径和圆心角，获取圆弧上的点的坐标 
@@ -255,15 +289,79 @@ package cloud.core.utils
 			return CMathUtil.Instance.amendInt(angle)==360;
 		}
 		/**
+		 * 求两条3D线段的交点
+		 * @param a		线段1的a端点
+		 * @param b		线段1的b端点
+		 * @param c		线段2的c端点
+		 * @param d		线段2的d端点
+		 * @return Array	下标0的值为交点的位置类型，0：线段1和2不共线，1：线段1和2共线。后续下标的值为交点的3D向量坐标
+		 * 
+		 */		
+		public function calculateSegment3DIntersect(a:Vector3D,b:Vector3D,c:Vector3D,d:Vector3D):Array
+		{
+			var result:Array;
+			var intersectResult:Array;
+			var intersect:Vector3D=new Vector3D();
+			var zero:Vector3D=new Vector3D();
+			var ca:Number,cb:Number,cc:Number,cd:Number;
+			
+			//4个点全部检测是否相交
+			cc=crossByPosition3D(a.x,a.y,a.z,b.x,b.y,b.z,c.x,c.y,c.z).length;
+			cd=crossByPosition3D(a.x,a.y,a.z,b.x,b.y,b.z,d.x,d.y,d.z).length;
+			ca=crossByPosition3D(c.x,c.y,c.z,d.x,d.y,d.z,a.x,a.y,a.z).length;
+			cb=crossByPosition3D(c.x,c.y,c.z,d.x,d.y,d.z,b.x,b.y,b.z).length;
+			//不相交
+			if(cc*cd>0 || ca*cb>0)
+			{
+				return null;
+			}
+			result=[];
+			if(cc==0 && cd==0)
+			{
+				//共线
+				if(CMathUtil.Instance.dotByPosition3D(a.x,a.y,a.z,c.x,c.y,c.z,d.x,d.y,d.z)>=1 && CMathUtil.Instance.dotByPosition3D(b.x,b.y,b.z,c.x,c.y,c.z,d.x,d.y,d.z)>=1)
+				{
+					//共线不相交
+					return null;
+				}
+				result[0]=1;
+				if(CMathUtil.Instance.dotByPosition3D(a.x,a.y,a.z,c.x,c.y,c.z,d.x,d.y,d.z)<0)
+				{
+					result.push(a);
+				}
+				if(CMathUtil.Instance.dotByPosition3D(b.x,b.y,b.z,c.x,c.y,c.z,d.x,d.y,d.z)<0)
+				{
+					result.push(b);
+				}
+				if(CMathUtil.Instance.dotByPosition3D(c.x,c.y,c.z,a.x,a.y,a.z,b.x,b.y,b.z)<0)
+				{
+					result.push(c);
+				}
+				if(CMathUtil.Instance.dotByPosition3D(d.x,d.y,d.z,a.x,a.y,a.z,b.x,b.y,b.z)<0)
+				{
+					result.push(d);
+				}
+			}
+			else
+			{
+				result[0]=1;
+				cc=Math.abs(cc);
+				cd=Math.abs(cd);
+				result.push(new Vector3D((a.x*cd+b.x*cc)/(cc+cd),(a.y*cd+b.y*cc)/(cc+cd),(a.z*cd+b.z*cc)/(cc+cd)));
+			}
+			return result;
+		}
+
+		/**
 		 * 求任意两线段的交点（新）
 		 * @param s1 线段a 的起点
 		 * @param e1 线段a 的终点
 		 * @param s2 线段b 的起点
 		 * @param e2 线段b 的终点
-		 * @return Array 交点坐标数组（0号位置元素值为a与b平行时，a是否在b的右侧，其他元素为交点坐标，如果a与b重合，可返回2个交点）
+		 * @return Array 交点数组（如果a与b重合，可返回2个交点）
 		 * 
 		 */		
-		public function lineSegmentIntersectByPoint(s1:Point,e1:Point,s2:Point,e2:Point):Array{
+		public function calculateSegment2DIntersect(s1:Point,e1:Point,s2:Point,e2:Point):Array{
 			var results:Array;
 			var c1:Number = crossByPoint(s1,e1,s2);
 			var c2:Number = crossByPoint(s1,e1,e2);
@@ -1100,7 +1198,7 @@ package cloud.core.utils
 			dirLength=originPoint.subtract(segmentStart).dotProduct(dir);
 			projectPoint=new Vector3D(segmentStart.x+dir.x*dirLength,segmentStart.y+dir.y*dirLength,segmentStart.z+dir.z*dirLength);
 			distance=CMathUtil.Instance.getDistanceByXYZ(originPoint.x,originPoint.y,originPoint.z,projectPoint.x,projectPoint.y,projectPoint.z);
-			if(distance<=projectDisLimit && segmentStart.subtract(originPoint).dotProduct(segmentEnd.subtract(originPoint))<=0)
+			if(distance<=projectDisLimit)
 			{
 				result[0]=1;
 			}
@@ -1113,5 +1211,153 @@ package cloud.core.utils
 			result[3]=projectPoint.z;
 			return result;
 		}
+		/**
+		 * 通过3D线性变换对象，获取3D矩阵对象 
+		 * @param transform
+		 * @return 
+		 * 
+		 */		
+		public function getMatrix3DFromTransform3D(transform:CTransform3D):Matrix3D
+		{
+			var matrix:Matrix3D;
+			var vector3d:Vector.<Number>=Vector.<Number>([transform.a, transform.e, transform.i, 0, transform.b, transform.f, transform.j, 0, transform.c, transform.g, transform.k, 0, transform.d, transform.h, transform.l, 1]);
+			matrix=new Matrix3D(vector3d);
+			return matrix;
+		}
+		/**
+		 * 通过3D矩阵对象，获取3D线性变换对象 
+		 * @param matrix
+		 * @return CTransform3D
+		 * 
+		 */		
+		public function getTransform3DFromMatrix3D(matrix:Matrix3D):CTransform3D
+		{
+			var vec:Vector.<Number>=new Vector.<Number>();
+			var transform:CTransform3D = CTransform3D.CreateOneInstance();
+			matrix.copyRawDataTo(vec,0);
+			CTransform3D.CopyFromRowVector(transform,vec);
+			return transform;
+		}
+		/**
+		 * 根据3D截面围点坐标值集合，获取3D包围盒对象 
+		 * @param point3DValues		3D轮廓围点坐标值集合
+		 * @param thickness		厚度
+		 * @return CBoundBox
+		 * 
+		 */		
+		public function calculateCBoundBox3D(point3DValues:Vector.<Number>,transform:CTransform3D):CBoundBox
+		{
+			var i:int;
+			var minX:Number,minY:Number,minZ:Number,maxX:Number,maxY:Number,maxZ:Number;
+			var output:CBoundBox;
+			var tmpPosition:Vector3D;
+			
+			if(!point3DValues || !point3DValues.length || !transform)
+			{
+				return null;
+			}
+			tmpPosition=new Vector3D();
+			maxX=maxY=maxZ=int.MIN_VALUE;
+			minX=minY=minZ=int.MAX_VALUE;
+			for(i=point3DValues.length/3-1; i>=0; i--)
+			{
+				tmpPosition.setTo(point3DValues[i*3],point3DValues[i*3+1],point3DValues[i*3+2]);
+				CMathUtil.Instance.transformVectorByCTransform3D(tmpPosition,transform,false,true);
+				if(maxX<tmpPosition.x)
+				{
+					maxX=tmpPosition.x;
+				}
+				if(minX>tmpPosition.x)
+				{
+					minX=tmpPosition.x;
+				}
+				if(maxY<tmpPosition.y)
+				{
+					maxY=tmpPosition.y;
+				}
+				if(minY>tmpPosition.y)
+				{
+					minY=tmpPosition.y;
+				}
+				if(maxZ<tmpPosition.z)
+				{
+					maxZ=tmpPosition.z;
+				}
+				if(minZ>tmpPosition.z)
+				{
+					minZ=tmpPosition.z;
+				}
+			}
+			output=new CBoundBox();
+			output.maxX=maxX;
+			output.minX=minX;
+			output.maxY=maxY;
+			output.minY=minY;
+			output.maxZ=maxZ;
+			output.minZ=minZ;
+			return output;
+		}
+		/**
+		 *  计算闭合图形的面积 
+		 * @param roundPointValues	围点坐标值集合
+		 * @param step	坐标值集合的步长
+		 * @return Number
+		 * 
+		 */			
+		public function calculateClosureGraph3DArea(roundPointValues:Vector.<Number>,step:int):Number
+		{
+			if(!roundPointValues||!roundPointValues.length)
+			{
+				return 0;
+			}
+			var area:Number=0,num:Number=0;
+			var startResult:Array;
+			var index:int,next:int,count:int;
+			var cross:Vector3D;
+			var planNor:Vector3D;
+			
+			count=roundPointValues.length/step;
+			if(step==2)
+			{
+				startResult=getStartPosIndexByXYArray(roundPointValues);
+			}
+			else if(step==3)
+			{
+				startResult=getStartPosIndexByXYZArray(roundPointValues);
+			}
+			else
+			{
+				return 0;
+			}
+			planNor=crossByPosition3D(roundPointValues[step*startResult[1]],roundPointValues[step*startResult[1]+1],roundPointValues[step*startResult[1]+2]
+				,roundPointValues[step*startResult[2]],roundPointValues[step*startResult[2]+1],roundPointValues[step*startResult[2]+2]
+				,roundPointValues[step*startResult[0]],roundPointValues[step*startResult[0]+1],roundPointValues[step*startResult[0]+2]);
+			planNor.normalize();
+			index=startResult[0]==count-1?0:startResult[0]+1;
+			while(true)
+			{
+				next=index==count-1?0:index+1;
+				if(next==startResult[0])
+				{
+					break;
+				}
+				cross=crossByPosition3D(roundPointValues[step*startResult[0]],roundPointValues[step*startResult[0]+1],roundPointValues[step*startResult[0]+2]
+						,roundPointValues[step*next],roundPointValues[step*next+1],roundPointValues[step*next+2]
+						,roundPointValues[step*index],roundPointValues[step*index+1],roundPointValues[step*index+2]);
+				num=cross.normalize();
+				if(isEqualVector3D(cross,planNor))
+				{
+					area+=num;
+				}
+				else
+				{
+					area-=num;
+				}
+				index=next;
+			}
+			return area*.5;
+		}
+		
+		
 	}
 }

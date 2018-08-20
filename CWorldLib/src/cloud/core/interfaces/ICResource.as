@@ -19,6 +19,18 @@ package cloud.core.interfaces
 		 */		
 		function set name(value:String):void;
 		/**
+		 * 获取数据是否生存
+		 * @return Boolean
+		 * 
+		 */		
+		function get isLife():Boolean;
+		/**
+		 * 设置数据是否生存 
+		 * @param value
+		 * 
+		 */		
+		function set isLife(value:Boolean):void;
+		/**
 		 * 获取引用计数  
 		 * @return uint
 		 * 

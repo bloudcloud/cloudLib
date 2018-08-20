@@ -326,27 +326,27 @@ package cloud.core.utils
 			posY=y;
 			posZ=z;
 			rotationZ=rotation;
-			return transformVectorByCTransform3D(vec,transform3d,isNew);
+			return CMathUtil.Instance.transformVectorByCTransform3D(vec,transform3d,isNew);
 		}
-		/**
-		 * 通过CTransform3D对象转换3D向量对象 
-		 * @param vec	3D向量对象
-		 * @param transform	线性变换对象（3*4矩阵）
-		 * @param isNew	是否返回一个新的3D向量对象
-		 * @return *
-		 * 
-		 */		
-		public function transformVectorByCTransform3D(vec:*,transform:CTransform3D,isNew:Boolean=true):*
-		{
-			var newVec:*=isNew ? vec.clone() : vec;
-			var x:Number=vec.x;
-			var y:Number=vec.y;
-			var z:Number=vec.z;
-			newVec.x=transform.a*x+transform.b*y+transform.c*z+transform.d;
-			newVec.y=transform.e*x+transform.f*y+transform.g*z+transform.h;
-			newVec.z=transform.i*x+transform.j*y+transform.k*z+transform.l;
-			return newVec;
-		}
+//		/**
+//		 * 通过CTransform3D对象转换3D向量对象 
+//		 * @param vec	3D向量对象
+//		 * @param transform	线性变换对象（3*4矩阵）
+//		 * @param isNew	是否返回一个新的3D向量对象
+//		 * @return *
+//		 * 
+//		 */		
+//		public function transformVectorByCTransform3D(vec:*,transform:CTransform3D,isNew:Boolean=true):*
+//		{
+//			var newVec:*=isNew ? vec.clone() : vec;
+//			var x:Number=vec.x;
+//			var y:Number=vec.y;
+//			var z:Number=vec.z;
+//			newVec.x=transform.a*x+transform.b*y+transform.c*z+transform.d;
+//			newVec.y=transform.e*x+transform.f*y+transform.g*z+transform.h;
+//			newVec.z=transform.i*x+transform.j*y+transform.k*z+transform.l;
+//			return newVec;
+//		}
 
 	}
 }

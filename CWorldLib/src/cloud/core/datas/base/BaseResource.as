@@ -8,6 +8,7 @@ package cloud.core.datas.base
 	 */
 	public class BaseResource implements ICResource
 	{
+		private var _isLife:Boolean;
 		private var _refCount:int;
 		private var _name:String;
 		
@@ -26,6 +27,24 @@ package cloud.core.datas.base
 		public function get refCount():uint
 		{
 			return _refCount;
+		}
+		/**
+		 * 获取数据是否生存
+		 * @return Boolean
+		 * 
+		 */		
+		public function get isLife():Boolean
+		{
+			return _isLife;
+		}
+		/**
+		 * 设置数据是否生存 
+		 * @param value
+		 * 
+		 */		
+		public function set isLife(value:Boolean):void
+		{
+			_isLife=value;
 		}
 		public function set refCount(value:uint):void
 		{

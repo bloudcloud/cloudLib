@@ -4,7 +4,7 @@ package cloud.core.interfaces
 	 *  基础对象数据接口
 	 * @author cloud
 	 */
-	public interface ICData extends ICResource
+	public interface ICData
 	{
 		/**
 		 * 获取唯一ID 
@@ -12,12 +12,12 @@ package cloud.core.interfaces
 		 * 
 		 */		
 		function get uniqueID():String;
-		/**
-		 * 设置唯一ID 
-		 * @param value
-		 * 
-		 */		
-		function set uniqueID(value:String):void;
+//		/**
+//		 * 设置唯一ID 
+//		 * @param value
+//		 * 
+//		 */		
+//		function set uniqueID(value:String):void;
 //		/**
 //		 * 获取父数据对象的唯一ID
 //		 * @return String
@@ -54,18 +54,7 @@ package cloud.core.interfaces
 		 * 
 		 */		
 		function set type(value:uint):void;
-		/**
-		 * 获取数据是否生存
-		 * @return Boolean
-		 * 
-		 */		
-		function get isLife():Boolean;
-		/**
-		 * 设置数据是否生存 
-		 * @param value
-		 * 
-		 */		
-		function set isLife(value:Boolean):void;
+		
 		/**
 		 * 输出字符串格式 
 		 * @return String

@@ -2,6 +2,7 @@ package cloud.core.utils
 {
 	import cloud.core.datas.maps.CHashMap;
 	import cloud.core.interfaces.ICData;
+	import cloud.core.interfaces.ICResource;
 	
 	import ns.cloudLib;
 	
@@ -111,7 +112,7 @@ package cloud.core.utils
 			if(_dataShareMap.containsKey(type))
 			{
 				datas=_dataShareMap.get(type) as Array;
-				for each(var data:ICData in datas)
+				for each(var data:ICResource in datas)
 				{
 					data.clear();
 				}
@@ -284,7 +285,7 @@ package cloud.core.utils
 			for(var i:int=_dataShareMap.keys.length-1; i>=0; i--)
 			{
 				datas =_dataShareMap.get(_dataShareMap.keys[i]) as Array;
-				for each(var data:ICData in datas)
+				for each(var data:ICResource in datas)
 				{
 					if(data.isLife)
 					{
@@ -305,7 +306,7 @@ package cloud.core.utils
 			for(var i:int=_dataCacheMap.keys.length-1; i>=0; i--)
 			{
 				datas =_dataCacheMap.get(_dataCacheMap.keys[i]) as Array;
-				for each(var data:ICData in datas)
+				for each(var data:ICResource in datas)
 				{
 					if(data.isLife)
 					{
