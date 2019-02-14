@@ -3,8 +3,12 @@ package cloud.core.utils
 	import flash.geom.Point;
 	import flash.geom.Vector3D;
 	
+	import cloud.core.collections.CTreeNode;
+	import cloud.core.datas.base.CLine;
 	import cloud.core.datas.base.CRay;
 	import cloud.core.datas.base.CVector;
+	import cloud.core.datas.maps.CHashMap;
+	import cloud.core.interfaces.ICLine;
 
 	/**
 	 * 多边形处理方法工具类
@@ -411,5 +415,492 @@ package cloud.core.utils
 //			
 //			return uvs;
 //		}
+		/////////////////////////////////////		newGPC	//////////////////////////////////////////////////////
+		/**
+		 * 判断坐标点是否在多边形内部(用3D坐标)
+		 * @param polyValues	3D图形顶点坐标集合
+		 * @param px	目标点的X坐标
+		 * @param py	目标点的Y坐标
+		 * @param pz	目标点的Z坐标
+		 * @return Boolean
+		 * 
+		 */		
+		public function isIn3DPolyGon(polyValues:Vector.<Number>,px:Number,py:Number,pz:Number):Boolean
+		{
+			var i:int,len:int,next:int;
+			var curVec:Vector3D,lastVec:Vector3D;
+			var dotValue:Number;
+			var result:Boolean;
+			
+			result=true;
+			len=polyValues.length/3;
+			dotValue=1;
+			for(i=0; i<len; i++)
+			{
+				next=i==len-1?0:i+1;
+				curVec=CMathUtilForAS.Instance.crossByPosition3D(polyValues[i*3],polyValues[i*3+1],polyValues[i*3+2],polyValues[next*3],polyValues[next*3+1],polyValues[next*3+2],px,py,pz);
+				curVec.normalize();
+				if(lastVec)
+				{
+					dotValue*=curVec.dotProduct(lastVec);
+				}
+				if(dotValue<0)
+				{
+					result=false;
+					break;
+				}
+				else if(CMathUtilForAS.Instance.isEqualVector3D(curVec,CMathUtilForAS.ZERO) || dotValue==0)
+				{
+					if(CMathUtil.Instance.dotByPosition3D(px,py,pz,polyValues[i*3],polyValues[i*3+1],polyValues[i*3+2],polyValues[next*3],polyValues[next*3+1],polyValues[next*3+2])<=0)
+					{
+						break;
+					}
+				}
+				lastVec=curVec;
+			}
+			return result;
+		}
+		/**
+		 * 判断2D点a是否是凹角（前点b与后点c遵循正向旋转规则）
+		 * @param ax	
+		 * @param ay
+		 * @param bx
+		 * @param by
+		 * @param cx
+		 * @param cy
+		 * @param isClockwise		顺时针是正向
+		 * @return Boolean
+		 * 
+		 */		
+		public function is2DConcave(ax:Number,ay:Number,bx:Number,by:Number,cx:Number,cy:Number,isClockwise:Boolean=false):Boolean
+		{
+			//AS中，叉乘结果大于0代表的是逆时针旋转
+			var crossValue:Number=CMathUtil.Instance.crossByPointsXY(bx,by,cx,cy,ax,ay);
+			return crossValue>0?isClockwise:!isClockwise;
+		}
+		/**
+		 *  判断3D点a是否是凹角（前点b与后点c遵循正向旋转规则）
+		 * @param ax
+		 * @param ay
+		 * @param az
+		 * @param bx
+		 * @param by
+		 * @param bz
+		 * @param cx
+		 * @param cy
+		 * @param cz
+		 * @param clockwiseVec
+		 * @return Vector3D
+		 * 
+		 */		
+		public function is3DConcave(ax:Number,ay:Number,az:Number,bx:Number,by:Number,bz:Number,cx:Number,cy:Number,cz:Number,clockwiseVec:Vector3D):Boolean
+		{
+			var cross:Vector3D=CMathUtilForAS.Instance.crossByPosition3D(bx,by,bz,cx,cy,cz,ax,ay,az);
+			return cross.dotProduct(clockwiseVec)<0;
+		}
+		/**
+		 * 统计图形的点 
+		 * @param point3Ds	图形顶点集合
+		 * @param normal	图形的法向向量
+		 * @param convexIndice	凸角点索引集合
+		 * @param concaveIndice	凹角点索引集合
+		 * @param lobeIndice	耳朵角索引
+		 * @param isClockwise		顺时针是否遵循正向旋转规则（叉乘值大于0）
+		 * 
+		 */	
+		public function calculateGraphy3DPoints(point3Ds:Vector.<Number>,normal:Vector3D,convexIndice:Array,concaveIndice:Array,lobeIndice:Array,isClockwise:Boolean=false):void
+		{
+			var i:int,len:int,prev:int,next:int;
+			var triangle3DPoints:Vector.<Number>;
+			len=point3Ds.length/3;
+			for(i=0; i<len; i++)
+			{
+				//判断凹凸角，并缓存对应的索引
+//				doUpdateGraphy3DPoint(point3Ds,normal,i,len,convexIndice,concaveIndice,lobeIndice,isClockwise);
+				prev=i==0?len-1:i-1;
+				next=i==len-1?0:i+1;
+				if(!is3DConcave(point3Ds[i*3],point3Ds[i*3+1],point3Ds[i*3+2],point3Ds[prev*3],point3Ds[prev*3+1],point3Ds[prev*3+2],point3Ds[next*3],point3Ds[next*3+1],point3Ds[next*3+2],normal))
+				{
+					convexIndice.push(i);
+					triangle3DPoints=Vector.<Number>([point3Ds[i*3],point3Ds[i*3+1],point3Ds[i*3+2],point3Ds[next*3],point3Ds[next*3+1],point3Ds[next*3+2],point3Ds[prev*3],point3Ds[prev*3+1],point3Ds[prev*3+2]]);
+					if(CGPCUtil.Instance.isLobe(point3Ds,triangle3DPoints,next==len-1?0:next+1,prev))
+					{
+						lobeIndice.push(i);
+					}
+				}
+				else
+				{
+					concaveIndice.push(i);
+				}
+			}
+		
+		}
+//		/**
+//		 * 更新图形中的当前3D点的属性 
+//		 * @param point3Ds		图形中3D顶点坐标值集合
+//		 * @param normal		图形的3D法向向量
+//		 * @param curIndex		当前3D点在顶点集合中的索引
+//		 * @param len		图形中所有顶点的个数
+//		 * @param convexIndice	凸角索引集合
+//		 * @param concaveIndice		凹角索引集合
+//		 * @param isClockwise		顺时针方向是否是正向旋转方向
+//		 * 
+//		 */		
+//		private function doUpdateGraphy3DPoint(point3Ds:Vector.<Number>,normal:Vector3D,curIndex:int,len:int,convexIndice:Array,concaveIndice:Array,isClockwise:Boolean):void
+//		{
+//			var triangle3DPoints:Vector.<Number>;
+//			var prev:int,next:int;
+//			
+//			prev=curIndex==0?len-1:curIndex-1;
+//			next=curIndex==len-1?0:curIndex+1;
+//			if(!is3DConcave(point3Ds[curIndex*3],point3Ds[curIndex*3+1],point3Ds[curIndex*3+2],point3Ds[prev*3],point3Ds[prev*3+1],point3Ds[prev*3+2],point3Ds[next*3],point3Ds[next*3+1],point3Ds[next*3+2],normal))
+//			{
+//				convexIndice.push(curIndex);
+//				triangle3DPoints=Vector.<Number>([point3Ds[curIndex*3],point3Ds[curIndex*3+1],point3Ds[curIndex*3+2],point3Ds[next*3],point3Ds[next*3+1],point3Ds[next*3+2],point3Ds[prev*3],point3Ds[prev*3+1],point3Ds[prev*3+2]]);
+//				if(CGPCUtil.Instance.isLobe(point3Ds,triangle3DPoints,next==len-1?0:next+1,prev))
+//				{
+//					lobeIndice.push(index);
+//				}
+//			}
+//			else
+//			{
+//				concaveIndice.push(curIndex);
+//			}
+//		}
+		/**
+		 * 判断三角形中间角，在区域顶点集合中是否是耳尖角
+		 * @param area3DPoints	区域顶点3D坐标值集合
+		 * @param triangle3DPoints	三角形顶点3D坐标值集合
+		 * @param startIndex	区域顶点遍历的起点索引
+		 * @param endIndex		区域顶点遍历的终点索引
+		 * @return Boolean	返回是否是耳尖角
+		 * 
+		 */		
+		public function isLobe(area3DPoints:Vector.<Number>,triangle3DPoints:Vector.<Number>,startIndex:int,endIndex:int):Boolean
+		{
+			var bool:Boolean=true;
+			var len:int=area3DPoints.length/3;
+			var i:int=startIndex;
+			while(i!=endIndex)
+			{
+//				if(isIn3DPolyGon(triangle3DPoints,area3DPoints[i*3],area3DPoints[i*3+1],area3DPoints[i*3+2]))
+				if(CMathUtilForAS.Instance.judge3DPointInPolygon(area3DPoints[i*3],area3DPoints[i*3+1],area3DPoints[i*3+2],triangle3DPoints))
+				{
+					//有点在凸三角形中，不是耳尖角
+					bool=false;
+					break;
+				}
+				i=i==len-1?0:i+1;
+			}
+			return bool;
+		}
+		/**
+		 * 计算并返回裁切后的闭合区域围点集合
+		 * @param sourceArea	原始的闭合区域围点集合
+		 * @param clipArea
+		 * @return Vector.<Number>
+		 * 
+		 */	
+		public function calculateCloserAreaByClipArea(sourceArea:Vector.<Number>,clipArea:Vector.<Number>):Vector.<Number>
+		{
+			var result:Vector.<Number>;
+			var lineMap:CHashMap;
+			var i:int,j:int,next:int,len:int,clen:int,cnext:int;
+			var key:String,char:String;
+			var startLineArr:Array,endLineArr:Array;
+			var curS:Vector3D,curE:Vector3D,targetS:Vector3D,targetE:Vector3D,tmpPos:Vector3D;
+			var intersect:Array;
+			var intersectResult:Array;
+			var hasIntersected:Boolean;
+			var line:CLine;
+			var lineNode:CTreeNode;
+			
+			intersectResult=[];
+			//创建线条集合
+			lineMap=new CHashMap();
+			char=",";
+			len=sourceArea.length/3;
+			curS=new Vector3D();
+			curE=new Vector3D();
+			for(i=len-1; i>=0; i--)
+			{
+				next=i==len-1?0:i+1;
+				//起点
+				curS.setTo(sourceArea[i*3],sourceArea[i*3+1],sourceArea[i*3+2]);
+				curE.setTo(sourceArea[next*3],sourceArea[next*3+1],sourceArea[next*3+2]);
+				key=curS.toString();
+				startLineArr=lineMap.get(key) as Array;
+				line=new CLine();
+				line.start=curS;
+				line.end=curE;
+				lineNode=new CTreeNode(line);
+				if(!startLineArr)
+				{
+					startLineArr=[];
+					startLineArr.push(sourceArea[next*3],sourceArea[next*3+1],sourceArea[next*3+2]);
+					lineMap.put(key,startLineArr);
+				}
+				//终点
+				key=sourceArea[next*3]+char+sourceArea[next*3+1]+char+sourceArea[next*3+2];
+				endLineArr=lineMap.get(key) as Array;
+				if(!endLineArr)
+				{
+					endLineArr=[];
+					endLineArr.push(sourceArea[i*3],sourceArea[i*3+1],sourceArea[i*3+2]);
+					lineMap.put(key,endLineArr);
+				}
+				
+			}
+			//计算线条相交
+			len=clipArea.length/3;
+			curS=new Vector3D();
+			curE=new Vector3D();
+			targetS=new Vector3D();
+			targetE=new Vector3D();
+			tmpPos=new Vector3D();
+			for(i=len-1; i>=0; i--)
+			{
+				next=i==len-1?0:i+1;
+				targetS.setTo(clipArea[i*3],clipArea[i*3+1],clipArea[i*3+2]);
+				targetE.setTo(clipArea[next*3],clipArea[next*3+1],clipArea[next*3+2]);
+				clen=clipArea.length-1;
+				for(j=clen-1; j>=0; j--)
+				{
+					cnext=j==clen-1?0:j+1;
+					curS.setTo(clipArea[j*3],clipArea[j*3+1],clipArea[j*3+2]);
+					curE.setTo(clipArea[cnext*3],clipArea[cnext*3+1],clipArea[cnext*3+2]);
+					intersect=CMathUtilForAS.Instance.calculateSegment3DIntersect(curS,curE,targetS,targetE);
+					if(intersect && intersect[0]==0)
+					{
+						//遍历所有交点，创建新墙线
+						tmpPos=intersect[1];
+						//创建交点与两条线段的端点生成的墙线，共有4条。若交点与端点有重合，则不创建
+						key=tmpPos.x+char+tmpPos.y+char+tmpPos.z;
+						startLineArr=lineMap.get(key) as Array;
+						if(!startLineArr)
+						{
+							startLineArr=[];
+							startLineArr.push(tmpPos.x,tmpPos.y,tmpPos.z);
+							lineMap.put(key,startLineArr);
+						}
+						
+						key=curS.x+char+curS.y+char+curS.z;
+						endLineArr=lineMap.get(key) as Array;
+						if(!endLineArr)
+						{
+							endLineArr=[];
+							endLineArr.push(curS.x,curS.y,curS.z);
+							lineMap.put(key,endLineArr);
+						}
+						doCreateLine(tmpPos,curS,lineMap);
+						
+						key=curE.x+char+curE.y+char+curE.z;
+						if(!endLineArr)
+						{
+							endLineArr=[];
+							endLineArr.push(curE.x,curE.y,curE.z);
+							lineMap.put(key,endLineArr);
+						}
+						doCreateLine(tmpPos,curE,lineMap);
+
+						key=targetS.x+char+targetS.y+char+targetS.z;
+						endLineArr=lineMap.get(key) as Array;
+						if(!endLineArr)
+						{
+							endLineArr=[];
+							endLineArr.push(targetS.x,targetS.y,targetS.z);
+							lineMap.put(key,endLineArr);
+						}
+						doCreateLine(tmpPos,targetS,lineMap);
+						
+						key=targetE.x+char+targetE.y+char+targetE.z;
+						endLineArr=lineMap.get(key) as Array;
+						if(!endLineArr)
+						{
+							endLineArr=[];
+							endLineArr.push(targetE.x,targetE.y,targetE.z);
+							lineMap.put(key,endLineArr);
+						}
+						doCreateLine(tmpPos,targetE,lineMap);
+						
+						for each(var pt:Vector3D in intersectResult)
+						{
+							if(CMathUtilForAS.Instance.isEqualVector3D(pt,tmpPos))
+							{
+								hasIntersected=true;
+								break;
+							}
+						}
+						if(!hasIntersected)
+						{
+							intersectResult.push(tmpPos);
+						}
+					}
+				}
+				//与已有线段没有相交，直接添加两条
+				if(!intersectResult.length)
+				{
+					key=targetS.x+char+targetS.y+char+targetS.z;
+					startLineArr=lineMap.get(key) as Array;
+					if(!startLineArr)
+					{
+						startLineArr=[];
+						startLineArr.push(targetS.x,targetS.y,targetS.z);
+						lineMap.put(key,startLineArr);
+					}
+					
+					key=targetE.x+char+targetE.y+char+targetE.z;
+					endLineArr=lineMap.get(key) as Array;
+					if(!endLineArr)
+					{
+						endLineArr=[];
+						endLineArr.push(targetE.x,targetE.y,targetE.z);
+						lineMap.put(key,endLineArr);
+					}
+					doCreateLine(targetS,targetE,lineMap);
+				}
+			}
+			//搜索闭合区域
+			var areas:Array;
+			
+			areas=doSearchCloserAreas(lineMap);
+			return result;
+		}
+		
+		private function doCreateLine(start:Vector3D,end:Vector3D,lineMap:CHashMap):void
+		{
+			var i:int,len:int;
+			var tmpPos:Vector3D;
+			var hasLine:Boolean;
+			var line:CLine;
+			var lineNode:CTreeNode;
+			var group:Array;
+			var key:String;
+			//处理新起点的添加
+			tmpPos=new Vector3D();
+			key=start.toString();
+			group=lineMap.get(key) as Array;
+			if(!group)
+			{
+				group=[];
+				lineMap.put(key,group);
+			}
+			for each(lineNode in group)
+			{
+				if(CMathUtilForAS.Instance.isEqualVector3D(end,(lineNode.nodeData as ICLine).end))
+				{
+					hasLine=true;
+					break;
+				}
+			}
+			if(hasLine)
+			{
+				return;
+			}
+			//生成新的墙线数据
+			line=new CLine();
+			line.start=start;
+			line.end=end;
+			group.push(new CTreeNode(line));
+			//处理终点的添加
+			var dir:Vector3D=new Vector3D();
+			var curDir:Vector3D=new Vector3D();
+			dir.setTo(start.x-end.x,start.y-end.y,start.z-end.z);
+			key=end.toString();
+			group=lineMap.get(key) as Array;
+			if(!group)
+			{
+				group=[];
+				lineMap.put(key,group);
+			}
+			for each(lineNode in group)
+			{
+				tmpPos.setTo(group[i*3],group[i*3+1],group[i*3+2]);
+				curDir.setTo(tmpPos.x-end.x,tmpPos.y-end.y,tmpPos.z-end.z);
+				curDir.normalize();
+				if(CMathUtilForAS.Instance.isEqualVector3D(start,(lineNode.nodeData as ICLine).end))
+				{
+					hasLine=true;
+					break;
+				}
+				else if(CMathUtil.Instance.amendInt(dir.dotProduct(curDir))>=1)
+				{
+					//当前的线与要添加的交点线方向相同
+					(lineNode.nodeData as ICLine).end=start;
+					hasLine=true;
+					break;
+				}
+			}
+			if(hasLine)
+			{
+				return;
+			}
+			//生成新的墙线数据
+			line=new CLine();
+			line.start=end;
+			line.end=start;
+			group.push(new CTreeNode(line));
+		}
+		
+		private function doSearchCloserAreas(lineMap:CHashMap):Array
+		{
+			var i:int,j:int,len:int;
+			var key:String;
+			var markedMap:CHashMap;
+			var startLineArr:Array,startMarkedArr:Array;
+			var result:Array;
+			
+			markedMap=new CHashMap();
+			len=lineMap.keys.length;
+			for(i=0; i<len; i++)
+			{
+				key=lineMap.keys[i];
+				startLineArr=lineMap.get(key) as Array;
+				startMarkedArr=markedMap.get(key) as Array;
+				if(!startMarkedArr)
+				{
+					startMarkedArr=[];
+					markedMap.put(key,startMarkedArr);
+				}
+				//开始搜索一个闭合区域
+				result=doSearchCloserAreas(lineMap);
+			}
+			return result;
+		}
+		
+		private function doTraveLine(startKey:String,pos:Vector3D,lineMap:CHashMap,markedMap:CHashMap,outputArea:Vector.<Number>):Boolean
+		{
+			var lines:Array;
+			var key:String;
+			var char:String=",";
+			key=pos.x+char+pos.y+char+pos.z;
+			
+			lines=lineMap.get(key) as Array;
+			if(markedMap.containsKey(key))
+			{
+				if(key!=startKey)
+				{
+					//找到已标记过访问的点,当前查找失败，返回false
+					return false;
+				}
+				else
+				{
+					//找回到起始点，闭合区域搜索完成，结束搜索
+					var func:Function=function(pos:Vector3D,markedMap:CHashMap,outputArea:Vector.<Number>):void
+					{
+//						node.isMarked=true;
+//						outputArea.unshift(node.nodeData as CLine);
+//						if(node.parent)
+//						{
+//							func(node.parent);
+//						}
+					}
+					func(pos,markedMap,outputArea);
+					func=null;
+					return true;
+				}
+			}
+			return false;
+		}
 	}
 }

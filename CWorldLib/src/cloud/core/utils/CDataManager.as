@@ -34,7 +34,7 @@ package cloud.core.utils
 			if(_dataCacheMap.containsKey(data.type))
 			{
 				datas=_dataCacheMap.get(data.type) as Array;
-				for(var saveData:ICData in datas)
+				for each(var saveData:ICData in datas)
 				{
 					if(saveData.uniqueID==data.uniqueID)
 					{

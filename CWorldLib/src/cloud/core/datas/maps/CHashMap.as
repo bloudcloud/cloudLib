@@ -2,7 +2,6 @@ package  cloud.core.datas.maps
 {
 	import flash.utils.Dictionary;
 	
-	import cloud.core.interfaces.ICData;
 	import cloud.core.interfaces.ICMap;
 	import cloud.core.interfaces.ICResource;
 

@@ -11,10 +11,15 @@ package cloud.core.collections
 	{
 		private var _data:ICNodeData; 
 		private var _hasIN:Boolean=false; 
+		private var _invalidData:Boolean;
 		
 		protected var _prev:ICDoubleNode; 
-		protected var _next:ICDoubleNode; 
-		
+		protected var _next:ICDoubleNode;
+
+		public function get invalidData():Boolean
+		{
+			return _invalidData;
+		}
 		/**
 		 * 初始化节点 
 		 * @param source
@@ -87,6 +92,7 @@ package cloud.core.collections
 		 */		
 		public function set nodeData(newData:ICNodeData):void { 
 			_data = newData; 
+			_invalidData=true;
 		} 
 		/**
 		 * 在当前节点之后添加节点 

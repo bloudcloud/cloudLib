@@ -135,7 +135,7 @@ package cloud.core.utils
 			return (cX - aX) * (bY - cY) - (cY - aY) * (bX - cX);
 		}
 		/**
-		 *  计算两个3D向量的内积（点乘）
+		 *  计算两个3D向量的内积（ab点乘ac）
 		 * @param aX	起点X坐标值
 		 * @param aY	起点Y坐标值
 		 * @param aZ	起点X坐标值
@@ -224,7 +224,7 @@ package cloud.core.utils
 		 */		
 		public function calculateTransform3D(transform:CTransform3D,xAxis:*,yAxis:*,zAxis:*,position:*,isNew:*=false):CTransform3D
 		{
-			var result:CTransform3D=isNew ? transform.clone() as CTransform3D : transform;
+			var result:CTransform3D=isNew ? CTransform3D.CreateOneInstance() as CTransform3D : transform;
 			result.a=xAxis.x;
 			result.b=yAxis.x;
 			result.c=zAxis.x;
@@ -248,7 +248,7 @@ package cloud.core.utils
 		 * @param position
 		 * 
 		 */		
-		public function decomposeTransform3D(transform,xAxis:*,yAxis:*,zAxis:*,position:*):void
+		public function decomposeTransform3D(transform:*,xAxis:*,yAxis:*,zAxis:*,position:*):void
 		{
 			if(!transform||!xAxis||!yAxis||!zAxis||!position)
 			{
@@ -267,6 +267,7 @@ package cloud.core.utils
 			zAxis.z=transform.k;
 			position.z=transform.l;
 		}
+		
 		
 	}
 }

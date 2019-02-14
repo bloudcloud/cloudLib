@@ -1,6 +1,8 @@
 package cloud.core.collections
 {
 	import flash.geom.Vector3D;
+	
+	import cloud.core.interfaces.ICLine;
 
 	/**
 	 * 平面闭合区域结构接口
@@ -28,12 +30,6 @@ package cloud.core.collections
 		 */		
 		function get normal():Vector3D;
 		/**
-		 * 获取闭合区域的根节点 
-		 * @return ICDoubleNode
-		 * 
-		 */		
-		function get rootNode():ICDoubleNode;
-		/**
 		 * 获取是否是负向区域 
 		 * @return Boolean
 		 * 
@@ -41,9 +37,9 @@ package cloud.core.collections
 		function get isNegtive():Boolean;
 		/**
 		 * 初始化闭合区域结构 
-		 * @param root	根节点
+		 * @param lineDatas 区域边线集合
 		 * 
 		 */		
-		function initArea(rootNode:ICDoubleNode):void
+		function initArea(lineDatas:Vector.<ICLine>):void
 	}
 }
