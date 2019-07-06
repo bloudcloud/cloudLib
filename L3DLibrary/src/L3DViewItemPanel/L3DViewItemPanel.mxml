@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" width="95" height="110"
+		 creationComplete="Init()">
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	
+	<fx:Script>
+		<![CDATA[
+			import flash.display.BitmapData;
+			import flash.display.StageAlign;
+			import flash.display.StageScaleMode;
+			import flash.events.Event;
+			import flash.events.MouseEvent;
+			import flash.geom.Matrix;
+			import flash.geom.Point;
+			import flash.utils.ByteArray;
+			
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+			
+			import L3DLibrary.L3DLibraryWebService;
+			import L3DLibrary.L3DMaterialInformations;
+			import L3DLibrary.LivelyLibrary;
+			
+			import extension.cloud.dict.CWebServiceDict;
+			
+			import utils.lx.managers.GlobalManager;
+			
+			
+			
+			
+
+
+			private var url:String = "";
+			public var ClearViewItemPanelSelection:Function = null;		
+			public var AddItem:Function = null;
+			public var ShowMaterialDetails:Function = null;
+			private var information:L3DMaterialInformations = null;
+			private var toWidth:Number = 95;
+			private var toUrl:String = "";
+			private var toType:int = 0;
+	
+			private function Init():void
+			{	
+				stage.scaleMode = StageScaleMode.NO_SCALE;
+				stage.align = StageAlign.TOP_LEFT;
+				doubleClickEnabled = true;
+				addEventListener(MouseEvent.MOUSE_DOWN,onMouseDown);
+				addEventListener(MouseEvent.DOUBLE_CLICK,onMouseDoubleClick);
+				this.width = toWidth;
+				this.height = toWidth + 15;
+				url = toUrl;
+				if(url != null && url.length > 0 && L3DLibraryWebService.WebServiceEnable)
+				{					
+					//zh 2018.8.3
+					GlobalManager.Instance.serviceMGR.sendWebRequest(CWebServiceDict.REQUEST_DOWNLOADMATERIALDETAILBUFFER, result, fault, url, toType);
+				}
+			}	
+			
+			public function Setup(url:String, type:int, width:int = 95):void
+			{
+				toWidth = width;
+				toUrl = url;
+				toType = type;
+        	}
+			
+			private function result(reObj:ResultEvent):void
+			{
+				var buffer:ByteArray = reObj.result as ByteArray;
+				if(buffer != null && buffer.length > 0)
+				{
+					information = new L3DMaterialInformations(buffer, url);
+					ShowLabel.text = information.name;
+					SetupPreview(information.previewBuffer);
+				}
+			}			
+			
+			private function fault(feObj:FaultEvent):void
+			{
+				
+			}
+			
+			public function SetBackColor(color:uint):void
+			{
+				ViewBorder.setStyle("backgroundColor",color);
+			}
+			
+			private function onMouseDown(event:MouseEvent):void
+			{
+				if(ClearViewItemPanelSelection != null)
+				{
+					ClearViewItemPanelSelection();
+				}
+				ViewBorder.setStyle("backgroundColor",0x0000FF);
+				if(information != null)
+				{
+					LivelyLibrary.CurrentMaterial = information;
+				}
+				if(ShowMaterialDetails != null)
+				{
+					ShowMaterialDetails(information);
+				}
+			}
+			
+			private function onMouseDoubleClick(event:MouseEvent):void
+			{
+				if(information != null)
+				{
+					LivelyLibrary.CurrentMaterial = information;
+				}
+				if(AddItem != null)
+				{
+					AddItem(information);
+				}
+				if(ShowMaterialDetails != null)
+				{
+					ShowMaterialDetails(information);
+				}
+			}	
+			
+			private function SetupPreview(buffer:ByteArray):void
+			{
+				if(PreviewImage.source != null)
+				{
+					(PreviewImage.source as BitmapData).dispose();
+					PreviewImage.source = null;
+				}
+				PreviewImage.x = 1;
+				PreviewImage.y = 1;
+				PreviewImage.width = width - 4;
+				PreviewImage.height = width - 4;
+								
+				if(buffer == null)
+				{
+					return;
+				}
+				
+				PreviewImage.source = buffer;
+				PreviewImage.addEventListener(Event.COMPLETE, LoadImageCompletedHandle);
+			}
+			
+			private function LoadImageCompletedHandle(event:Event):void
+			{
+				PreviewImage.removeEventListener(Event.COMPLETE, LoadImageCompletedHandle);
+				var imageSize:Point = new Point(PreviewImage.contentWidth, PreviewImage.contentHeight);
+				if(imageSize.x == 0 || imageSize.y == 0)
+				{
+					return;
+				}
+				
+				var position:Point = new Point(PreviewImage.x,PreviewImage.y);
+				var size:Point = new Point(PreviewImage.width,PreviewImage.height);
+				if(imageSize.x > imageSize.y)
+				{
+					size.y = size.x * imageSize.y / imageSize.x;
+					position.y += (size.x - size.y)/2;
+				}
+				else
+				{
+					size.x = size.y * imageSize.x / imageSize.y;
+					position.x += (size.y - size.x)/2;
+				}
+				PreviewImage.x = position.x;
+				PreviewImage.y = position.y;
+				PreviewImage.width = size.x;
+				PreviewImage.height = size.y;
+			}
+			
+			public function Dispose():void
+			{
+				if(information != null)
+				{
+					information.Dispose();
+					information = null;
+				}
+			}
+			
+			private static function BitmapFactorScale(bmpData:BitmapData, scaleX:Number, scaleY:Number):BitmapData
+			{
+				if(bmpData == null)
+				{
+					return null;
+				}
+				var matrix:Matrix = new Matrix();
+				matrix.scale(scaleX, scaleY);
+				var bmpData_:BitmapData = new BitmapData(scaleX * bmpData.width, scaleY * bmpData.height, true, 0);
+				bmpData_.draw(bmpData, matrix);
+				return bmpData_;
+			}
+			
+			public static function BitmapScale(bmpData:BitmapData, maxLength:int):BitmapData
+			{
+				if(bmpData == null || maxLength < 2)
+				{
+					return null;
+				}
+				
+				if(bmpData.width <= maxLength && bmpData.height <= maxLength)
+				{
+					var bmpData_:BitmapData = new BitmapData(bmpData.width, bmpData.height, true, 0);
+					bmpData_.draw(bmpData);
+					return bmpData_;
+				}
+				
+				var width:int = bmpData.width;
+				var height:int = bmpData.height;
+				if(width > height)
+				{
+					height = maxLength * height / width;
+					width = maxLength;
+				}
+				else
+				{
+					width = maxLength * width / height;
+					height = maxLength;
+				}
+				var scaleX:Number = (width as Number) / (bmpData.width as Number);
+				var scaleY:Number = (height as Number) / (bmpData.height as Number);
+				return BitmapFactorScale(bmpData, scaleX, scaleY);
+			}
+		]]>
+	</fx:Script>
+	
+	<s:BorderContainer id="ViewBorder" x="0" y="0" width="100%" height="100%" backgroundColor="#000000">
+		<mx:Image id="PreviewImage" x="1" y="1" width="{this.width - 4}" height="{this.width - 4}"/>
+	</s:BorderContainer>
+	<s:Label id="ShowLabel" x="2" y="{this.width - 5}" width="{this.width - 5}" height="22" color="#FFFFFF" fontFamily="宋体"
+			 fontSize="11" text="标签" textAlign="center" verticalAlign="middle"/>
+</s:Group>

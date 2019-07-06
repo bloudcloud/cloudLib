@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" 
+		 creationComplete="group1_creationCompleteHandler(event)"
+		 mouseOver="group1_mouseOverHandler(event)" mouseOut="group1_mouseOutHandler(event)">
+	<fx:Script>
+		<![CDATA[
+			import mx.events.FlexEvent;
+			
+			import spark.components.Label;
+			
+			import extension.wl.globalData.allStaticTypes.ColorType;
+			import extension.wl.globalData.allStaticTypes.LivelyType;
+			
+			public var typeStyle:int = 2;//默认风格
+			public var typeStatus:int = 0;
+			public var viewOver:uint = 0;
+			public var viewOut:uint = 0;
+			public var viewAlpha:Number = 1;
+			public var lineOver:uint = 0;
+			public var lineOut:uint = 0;
+			public var lineAlpha:uint = 1;
+			public var itemOver:uint = 0;
+			public var itemOut:uint = 0;
+			public var itemWidth:Number = 0;
+			public var itemheight:Number = 0;
+			public var itemWeight:String = "normal";//bold
+			public var lineweight:Number = 1;
+			public var itemColor:int = -1;
+			
+			[Bindable]
+			public var topLeftRadius:Number = 0;
+			[Bindable]
+			public var topRightRadius:Number = 0;
+			[Bindable]
+			public var bottomLeftRadius:Number = 0;
+			[Bindable]
+			public var bottomRightRadius:Number = 0;
+			
+			public var labelSelected:Boolean = false;//是否选中按钮
+			public var viewText:String = "";//label值
+			public var labelSize:int = 16;//字号
+			public var labelMode:Boolean = true;//buttonMode  按钮模式or文本模式
+			public var labelTips:String = "";//提示
+			public var labelInfo:Object = null;//信息
+			public var labelAlign:String = CENTER;//水平布局
+			public var labelVerticalAlign:String = MIDDLE;//垂直布局
+			private var isColor:Boolean = true;
+			
+			public static const MIDDLE:String = "middle";
+			public static const TOP:String = "top";
+			public static const BOTTOM:String = "bottom";
+			
+			public static const CENTER:String = "center";
+			public static const LEFT:String = "left";
+			public static const RIGHT:String = "right";
+			public static const JUSTIFY:String = "justify";
+			
+			public static const LABEL_EVENT:String = "label_event";
+			public static const LABEL_OVER:String = "label_over";
+			public static const LABEL_OUT:String = "label_out";
+			private var label:Label;
+			
+			protected function group1_creationCompleteHandler(event:FlexEvent):void
+			{
+				this.buttonMode = labelMode;
+				
+				typeStyleHandler();
+				buildLabel();
+			}
+			
+			public function set labelText(v:String):void
+			{
+				viewText = v;
+				if(label)
+				{
+					label.text = viewText;
+				}
+			}
+			
+			public function get labelText():String
+			{
+				return viewText;
+			}
+			
+			protected function group1_mouseOverHandler(event:MouseEvent):void
+			{
+				if(labelSelected || !labelMode)
+				{
+					return;
+				}
+				label.setStyle("color",itemOver);
+				viewFill.color = viewOver;
+				viewLine.color = lineOver;
+			}
+			
+			protected function group1_mouseOutHandler(event:MouseEvent):void
+			{
+				if(labelSelected || !labelMode)
+				{
+					return;
+				}
+				label.setStyle("color",itemOut);
+				viewFill.color = viewOut;
+				viewLine.color = lineOut;
+			}
+			
+			public function typeStyleHandler():void
+			{
+				if(!isColor)
+				{
+					return;
+				}
+				isColor = true;
+				var colorObj:Object = ColorType.colorHandler(typeStyle,typeStatus);
+				if(colorObj)
+				{
+					viewOut = colorObj.viewOut;
+					itemOut = colorObj.itemOut;
+					viewOver = colorObj.viewOver;
+					itemOver = colorObj.itemOver;
+				}
+				
+				if(itemColor > 0)
+				{
+					viewOut = itemColor;
+				}
+			}
+			
+			private function buildLabel():void
+			{
+				label = new Label();
+				label.setStyle("borderAlpha",0);
+				label.setStyle("borderThickness",0);
+				label.setStyle("borderVisible",false);
+				label.setStyle("contentBackgroundAlpha",0);
+				label.setStyle("fontFamily",LivelyType.Font);
+				label.setStyle("fontSize",labelSize);
+				label.setStyle("fontWeight",itemWeight);
+				label.setStyle("color",itemOut);
+				label.setStyle("textAlign",labelAlign);
+				label.setStyle("verticalAlign",labelVerticalAlign);
+				
+				if(labelAlign == JUSTIFY)
+				{
+					label.setStyle("textAlignLast",labelAlign);
+				}
+				label.text = viewText;
+				resize();
+				this.addElement(label);
+				
+				viewFill.color = viewOut;
+				viewFill.alpha = viewAlpha;
+				
+				viewLine.color = lineOut;
+				viewLine.alpha = lineAlpha;
+				
+				viewLine.weight = lineweight;
+				if(labelSelected)
+				{
+					selecedHandler();
+				}
+			}
+			
+			public function resize():void
+			{
+				if(!label)
+				{
+					return;
+				}
+				label.width = itemWidth==0?this.width:itemWidth;
+				label.height = itemheight==0?this.height:itemheight;
+				label.x = this.width - label.width >> 1;
+				label.y = this.height - label.height >> 1;
+			}
+			
+			public function selecedHandler():void
+			{
+				if(label)
+				{
+					if(labelSelected)
+					{
+						label.setStyle("color",itemOver);
+						viewFill.color = viewOver;
+						viewLine.color = lineOver;
+					}
+					else
+					{
+						label.setStyle("color",itemOut);
+						viewFill.color = viewOut;
+						viewLine.color = lineOut;
+					}
+					label.validateNow();
+				}
+			}
+			/**
+			 * 创建LabelButton对象
+			 * @param text 文本内容
+			 * @param width 组件宽度
+			 * @param height 组件高度
+			 * @param style 组件配色风格
+			 * @param status 组件配色状态：当change触发，status为false时底色变，为true时底色不变，内容变色
+			 * @param mode 组件模式，true为文本按钮模式，false为文本显示模式，不支持鼠标移入变色效果
+			 * @param lineAlpha 组件边框透明底
+			 * @param lineOver 组件边框over颜色
+			 * @param lineOut 组件边框out颜色
+			 * @param viewAlpha 组件底色透明度
+			 * @param size 组件字号
+			 * @return LabelButton对象
+			 * 
+			 */	
+			public static function buildLabelButton(text:String,width:Number,height:Number,style:int,status:int = 0,mode:Boolean = true,lineAlpha:Number = 0,lineOver:uint = 0,lineOut:uint = 0,viewAlpha:Number = 0,size:int = 16):LabelButton
+			{
+				var label:LabelButton = new LabelButton();
+				label.labelMode = mode;
+				label.labelText = text;
+				label.width = width;
+				label.height = height;
+				label.viewAlpha = viewAlpha;
+				label.lineAlpha = lineAlpha;
+				label.lineOver = lineOver;
+				label.lineOut = lineOut;
+				label.labelSize = size;
+				label.typeStyle = style;
+				label.typeStatus = status;
+				return label;
+			}
+			
+		]]>
+	</fx:Script>
+	<s:Rect width="100%" height="100%"
+			topLeftRadiusX="{topLeftRadius}" topLeftRadiusY="{topLeftRadius}"
+			topRightRadiusX="{topRightRadius}" topRightRadiusY="{topRightRadius}"
+			bottomLeftRadiusX="{bottomLeftRadius}" bottomLeftRadiusY="{bottomLeftRadius}"
+			bottomRightRadiusX="{bottomRightRadius}" bottomRightRadiusY="{bottomRightRadius}">
+		<s:fill>
+			<s:SolidColor id="viewFill" color="0" alpha="0"/>
+		</s:fill>
+		<s:stroke>
+			<s:SolidColorStroke id="viewLine" color="0" alpha="0"/>
+		</s:stroke>
+	</s:Rect>
+</s:Group>

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" 
+		 creationComplete="group1_creationCompleteHandler(event)">
+	<fx:Script>
+		<![CDATA[
+			import extension.wl.buttons.LabelButton;
+			import extension.wl.globalData.allStaticTypes.ColorType;
+			import extension.wl.globalData.allStaticTypes.LivelyType;
+			
+			import mx.events.FlexEvent;
+			
+			import utils.DatasEvent;
+			
+			private var input:InputView = null;
+			private var save:LabelButton = null;
+			
+			protected function group1_creationCompleteHandler(event:FlexEvent):void
+			{
+				initSave();
+			}
+			
+			private function initSave():void
+			{
+				this.graphics.clear();
+				this.graphics.beginFill(ColorType.White);
+				this.graphics.drawRect(0,0,this.width,this.height);
+				this.graphics.endFill();
+				
+				if(!save)
+				{
+					save = LabelButton.buildLabelButton("保存",100,this.height,LivelyType.currentStyle,0,true,1,ColorType.BlueLively,ColorType.BlueLively);
+					save.viewAlpha = 1;
+					save.labelSelected = true;
+					save.addEventListener(MouseEvent.CLICK,saveHandler);
+					save.right = 0;
+					this.addElement(save);
+				}
+				if(!input)
+				{
+					input = InputView.buildInputView("新建截图",this.width - save.width - 10,this.height,LivelyType.currentStyle,0,"请输入要保存的名称");
+					input.labelAlign = InputView.LEFT;
+					input.left = 10;
+					this.addElement(input);
+				}
+				
+			}
+			
+			protected function saveHandler(event:MouseEvent):void
+			{
+				this.dispatchEvent(new DatasEvent(LabelButton.LABEL_EVENT,input.inputText));
+			}
+			
+		]]>
+	</fx:Script>
+	
+</s:Group>

@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" 
+		 creationComplete="group1_creationCompleteHandler(event)">
+	<fx:Metadata>
+		[Event(name="SearchEvent", type="flash.events.Event")]
+	</fx:Metadata>
+	<fx:Script>
+		<![CDATA[
+			import mx.events.FlexEvent;
+			
+			import extension.wl.buttons.SvgButton;
+			import extension.wl.globalData.allStaticTypes.SvgType;
+			import extension.wl.models.SvgModel;
+			import extension.wl.utils.MouseUtils;
+			
+			import utils.DatasEvent;
+			
+			public var typeStyle:int = 0;//默认风格
+			public var typeStatus:int = 0;
+			public var viewOut:uint = 0;
+			public var viewAlpha:Number = 1;
+			public var lineOut:uint = 0;
+			public var lineAlpha:uint = 1;
+			
+			public var searchPrompt:String = "搜索";
+			public var searchGap:int = 5;
+			
+			public var searchType:int = SEARCH_SVG;//搜索按钮类型
+			public var searchLayout:int = SEARCH_RIGHT;//搜索按钮布局，默认居右
+			
+			public static const SEARCH_LEFT:int = 1;//按钮居左
+			public static const SEARCH_RIGHT:int = 2;//按钮居右
+			
+			public static const SEARCH_SVG:int = 1;//svg按钮类型
+			public static const SEARCH_LABEL:int = 2;//label按钮类型
+			public static const SEARCH_LABEL_SVG:int = 3;//label+svg按钮类型
+			public static const SEARCH_SVG_LABEL:int = 4;//svg+label按钮类型
+			
+			[Bindable]
+			public var topLeftRadius:Number = 0;
+			[Bindable]
+			public var topRightRadius:Number = 0;
+			[Bindable]
+			public var bottomLeftRadius:Number = 0;
+			[Bindable]
+			public var bottomRightRadius:Number = 0;
+			
+			private var input:InputView = null;
+			private var svg:SvgButton = null;
+//			public var model:SvgModel = null;
+			public static const SearchEvent:String = "search_event";
+			public static const SearchValueEvent:String = "search_value_event";
+			
+			protected function group1_creationCompleteHandler(event:FlexEvent):void
+			{
+				buildSearchView();
+			}
+			
+			private function buildSearchView():void
+			{
+				input = InputView.buildInputView("",this.width-this.height-4,this.height-8,typeStyle,typeStatus,"请输入搜索内容");
+				input.labelAlign = InputView.LEFT;
+				input.x = 6;
+				input.y = 2;
+				input.addEventListener(InputView.INPUT_CHANGE_EVENT,inputChangeHandler);
+				this.addElement(input);
+				
+				svg = SvgButton.buildSvgButton(SvgType.SEARCH_EVENT,input.height,input.height,typeStyle);
+				svg.x = this.width-svg.height-6;
+				svg.y = 4;
+				svg.addEventListener(MouseEvent.MOUSE_DOWN,svgClickHandler);
+				this.addElement(svg);
+				
+				viewFill.color = viewOut;
+				viewFill.alpha = viewAlpha;
+				
+				viewLine.color = lineOut;
+				viewLine.alpha = lineAlpha;
+			}
+			
+			protected function inputChangeHandler(event:Event):void
+			{
+				var input:InputView = event.currentTarget as InputView;
+				var value:String = input.inputText; 
+				this.dispatchEvent(new DatasEvent(SearchValueEvent, value));
+			}
+			
+			protected function svgClickHandler(event:MouseEvent):void
+			{
+				MouseUtils.stopMouseEvent(event);
+				this.dispatchEvent(new Event(SearchEvent));
+			}
+			
+			public function get searchInfo():String
+			{
+				if(input == null)
+				{
+					return "";
+				}
+				return input.inputText;
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<s:Rect width="100%" height="100%"
+			topLeftRadiusX="{topLeftRadius}" topLeftRadiusY="{topLeftRadius}"
+			topRightRadiusX="{topRightRadius}" topRightRadiusY="{topRightRadius}"
+			bottomLeftRadiusX="{bottomLeftRadius}" bottomLeftRadiusY="{bottomLeftRadius}"
+			bottomRightRadiusX="{bottomRightRadius}" bottomRightRadiusY="{bottomRightRadius}">
+		<s:fill>
+			<s:SolidColor id="viewFill" color="0" alpha="0"/>
+		</s:fill>
+		<s:stroke>
+			<s:SolidColorStroke id="viewLine" color="0" alpha="0"/>
+		</s:stroke>
+	</s:Rect>
+</s:Group>

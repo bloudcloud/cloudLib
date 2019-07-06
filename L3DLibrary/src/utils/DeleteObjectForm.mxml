@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 width="186" height="82" title="删除物体" backgroundColor="0x33373a" close="titlewindow1_closeHandler(event)" fontFamily="宋体">
+	<fx:Script>
+		<![CDATA[
+			import mx.events.CloseEvent;
+			import mx.managers.PopUpManager;
+			
+			private var main:Object = null;
+			public var removeFun:Function = null;
+			
+			protected function OKButton_clickHandler(event:MouseEvent):void
+			{
+				if(removeFun != null)
+				{
+					removeFun();
+				}
+				else
+				{
+				    main.m_A3D.m_scene.scene.RemoveCurrentFurniture();
+				}
+				PopUpManager.removePopUp(this);
+			}
+			
+			public static function Show(main:Object, parent:DisplayObject, removeFun:Function = null):void
+			{			
+				var win:DeleteObjectForm = PopUpManager.createPopUp(parent, DeleteObjectForm, true) as DeleteObjectForm;
+				win.main = main;
+				win.removeFun = removeFun;
+				PopUpManager.centerPopUp(win);
+			}
+			
+			protected function titlewindow1_closeHandler(event:CloseEvent):void
+			{
+				PopUpManager.removePopUp(this);
+			}
+			
+			protected function CancelButton_clickHandler(event:MouseEvent):void
+			{
+				PopUpManager.removePopUp(this);
+			}
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	<s:Button id="OKButton" x="10" y="10" width="72" height="29" label="确定"
+			  click="OKButton_clickHandler(event)" fontFamily="宋体"
+			  skinClass="skins.ViewButtonSkin"/>
+	<s:Button id="CancelButton" x="102" y="10" width="72" height="29" label="取消" fontFamily="宋体" skinClass="skins.ViewButtonSkin"
+			  click="CancelButton_clickHandler(event)"/>
+</s:TitleWindow>

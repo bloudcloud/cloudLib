@@ -1,0 +1,1404 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
+		 xmlns:s="library://ns.adobe.com/flex/spark"
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 xmlns:lx="com.lx.*"
+		 xmlns:cores="components.cores.*"
+		 tabEnabled="false"
+		 tabChildren="false"
+		 tabFocusEnabled="false"
+		 preinitialize="preinitializeHandler(event)"
+		 creationComplete="creationCompleteHandler(event)"
+		 xmlns:views="utils.lx.views.*">
+	<fx:Script>
+		<![CDATA[
+			import mx.collections.ArrayCollection;
+			import mx.controls.TextArea;
+			import mx.controls.TextInput;
+			import mx.core.FlexGlobals;
+			import mx.core.UIComponent;
+			import mx.core.UITextField;
+			import mx.events.FlexEvent;
+			import mx.managers.IFocusManagerComponent;
+			import mx.managers.PopUpManager;
+			
+			import spark.components.Alert;
+			import spark.components.Application;
+			import spark.components.RichEditableText;
+			import spark.components.TextInput;
+			import spark.events.IndexChangeEvent;
+			
+			import alternativa.engine3d.alternativa3d;
+			import alternativa.engine3d.core.Camera3D;
+			import alternativa.engine3d.core.Light3D;
+			import alternativa.engine3d.core.Object3D;
+			import alternativa.engine3d.objects.WireFrame;
+			
+			import consts.Symbol;
+			import consts.types.FileType;
+			
+			import cores.ColorExtend;
+			import cores.DateEnumeration;
+			
+			import debugs.DebugExtend;
+			
+			import utils.lx.managers.FPS;
+			import utils.lx.managers.GlobalManager;
+			
+			use namespace alternativa3d;
+
+			private const Half:Number=0.5;
+			private const MinScale:Number=0.4;
+			private const DefaultPosition:uint=5;
+			private const HeightGap:uint=20;
+			private const ButtonSize:uint=28;
+			private const NULL:String="null";
+			private const VOID:String="";
+			private var currentPostion:uint = DefaultPosition;
+			private var timer:Timer=new Timer(1500, 1);
+			private var isTiming:Boolean;
+			private var switchDisplay:Boolean;
+			private var switchAxes:Boolean;
+			private var widthScale:Number=0;
+			private var heightScale:Number=0;
+			//是否显示点击链
+			private var switchClick:Boolean;
+			//是否显示父级链
+			private var switchParent:Boolean;
+			private var switchFocus:Boolean;
+			private var switchTarget:Boolean;
+			private var switchDrag:Boolean;
+			private var fps:FPS=new FPS();
+			private var currentTarget:Object;
+			private var currentDrag:Object;
+			private static const Parent:String="parent";
+			private static const Name:String="name";
+			private var parentNameArg:Array;
+			private var main:Application=FlexGlobals.topLevelApplication as Application;
+			private var modifyConfigView:ModifyConfigView=new ModifyConfigView();
+			private var setMMCFGView:SetMMCFGView=new SetMMCFGView();
+			private var hasData:Boolean;
+			private var object3D:Object3D;
+			private var camera3D:Camera3D;
+			private var light3D:Light3D;
+			private var enableTrackDisplay:Boolean;
+			
+			[Bindable]
+			public var sunTypes:ArrayCollection = new ArrayCollection(
+				[   
+					{type:"AMBIENT", value:1}, 
+					{type:"DIRECTIONAL", value:2}, 
+					{type:"OMNI", value:3}, 
+					{type:"SPOT", value:4}, 
+					{type:"SHADOW_BIT", value:0x100}
+				]                
+			);
+			
+			private var sunType:int;
+
+			public function popUpOpen(parentContainer:UIComponent=null,object3D:Object3D=null, camera3D:Camera3D=null,light3D:Light3D=null,position:uint=5, modal:Boolean=false):void
+			{
+				if (!main)
+				{
+					main=FlexGlobals.topLevelApplication as Application;
+				}
+				this.object3D = object3D;
+				this.camera3D = camera3D;
+				this.light3D = light3D;
+
+				if (!this.isPopUp)
+				{
+					main.systemManager.stage.addEventListener(MouseEvent.MOUSE_DOWN, startDragHandler);
+					main.systemManager.stage.addEventListener(MouseEvent.MOUSE_MOVE, mouseMoveHandler);
+					main.systemManager.stage.addEventListener(MouseEvent.MOUSE_UP, stopDragHandler);
+					main.systemManager.stage.addEventListener(KeyboardEvent.KEY_DOWN, keyboardDownHandler);
+//					GlobalManager.stage.getSandboxRoot().stage.addEventListener(Event.MOUSE_LEAVE,mouseLeaveHandler);
+					//
+					if (switchClick)
+					{
+						main.addEventListener(MouseEvent.MOUSE_DOWN, applicationMouseDownHandler, true);
+					}
+					else
+					{
+						main.removeEventListener(MouseEvent.MOUSE_DOWN, applicationMouseDownHandler, true);
+					}
+
+					setPosition(position);
+					if (parentContainer)
+					{
+						PopUpManager.addPopUp(this, parentContainer, modal, null, this.moduleFactory);
+					}
+					else
+					{
+						PopUpManager.addPopUp(this, main, modal, null, this.moduleFactory);
+					}
+				}
+			}
+
+			public function popUpClose():void
+			{
+				if (this.isPopUp)
+				{
+					main.systemManager.stage.removeEventListener(MouseEvent.MOUSE_DOWN, startDragHandler);
+					main.systemManager.stage.removeEventListener(MouseEvent.MOUSE_MOVE, mouseMoveHandler);
+					main.systemManager.stage.removeEventListener(MouseEvent.MOUSE_UP, stopDragHandler);
+					main.systemManager.stage.removeEventListener(KeyboardEvent.KEY_DOWN, keyboardDownHandler);
+					main.removeEventListener(MouseEvent.MOUSE_DOWN, applicationMouseDownHandler, true);
+					PopUpManager.removePopUp(this);
+				}
+			}
+
+			public function printInfo(value:String):void
+			{
+				if (printArea)
+				{
+					printArea.appendText(value + "\n");
+					printArea.validateNow();
+					if (printArea.scroller)
+					{
+						printArea.scroller.verticalScrollBar.value=printArea.scroller.verticalScrollBar.maximum;
+					}
+				}
+			}
+
+			private function keyboardDownHandler(event:KeyboardEvent):void
+			{
+				if (!this.focusManager)
+				{
+					return;
+				}
+
+				var currentFocus:IFocusManagerComponent=this.focusManager.getFocus();
+
+				if (isTextComponent(currentFocus))
+				{
+					return;
+				}
+
+				var index:uint;
+				switch (event.keyCode)
+				{
+					case Keyboard.NUMPAD_1:
+						index=1;
+						break;
+					case Keyboard.NUMPAD_2:
+						index=2;
+						break;
+					case Keyboard.NUMPAD_3:
+						index=3;
+						break;
+					case Keyboard.NUMPAD_4:
+						index=4;
+						break;
+					case Keyboard.NUMPAD_5:
+						index=5;
+						break;
+					case Keyboard.NUMPAD_6:
+						index=6;
+						break;
+					case Keyboard.NUMPAD_7:
+						index=7;
+						break;
+					case Keyboard.NUMPAD_8:
+						index=8;
+						break;
+					case Keyboard.NUMPAD_9:
+						index=9;
+						break;
+				}
+				setPosition(index);
+			}
+
+			private function isTextComponent(object:*):Boolean
+			{
+				if (object is RichEditableText || object is TextField || object is UITextField || object is spark.components.TextInput || object is mx.controls.TextInput || object is spark.components.TextArea || object is mx.controls.TextArea)
+				{
+					return true;
+				}
+				return false;
+			}
+
+			private function creationCompleteHandler(event:FlexEvent):void
+			{
+				setSize();
+				setPosition(5);
+				sunType = sunTypeComboBox.selectedItem.value;
+//				DebugSwitch.setOn();
+//				checkDebugInfo.selected=true;
+			}
+
+			/**
+			 * 设置尺寸
+			 */
+			public function setSize():void
+			{
+				if (widthScale < MinScale)
+				{
+					widthScale=MinScale;
+				}
+				else if (widthScale > 1)
+				{
+					widthScale=1;
+				}
+
+				if (heightScale < MinScale)
+				{
+					heightScale=MinScale;
+				}
+				else if (heightScale > 1)
+				{
+					heightScale=1;
+				}
+
+//				this.width=main.systemManager.stage.width*widthScale;
+				this.width=Capabilities.screenResolutionX * widthScale;
+//				this.height=main.systemManager.stage.height*heightScale;
+				this.height=Capabilities.screenResolutionY * heightScale;
+			}
+
+			/**
+			 * 设置位置，1下左，2下中，3下右，4中左，5中，6中右，7上左，8上中，9上右
+			 * */
+			public function setPosition(value:uint):void
+			{
+				if (value < 1 || value > 9)
+				{
+					value=DefaultPosition;
+				}
+				currentPostion = value;
+				switch (currentPostion)
+				{
+					case 1:
+						this.x=0;
+						this.y=Capabilities.screenResolutionY - this.height;
+						break;
+					case 2:
+						this.x=(Capabilities.screenResolutionX - this.width) * Half;
+						this.y=Capabilities.screenResolutionY - this.height;
+						break;
+					case 3:
+						this.x=Capabilities.screenResolutionX - this.width;
+						this.y=Capabilities.screenResolutionY - this.height;
+						break;
+					case 4:
+						this.x=0;
+						this.y=(Capabilities.screenResolutionY - this.height) * Half;
+						break;
+					case 5:
+						this.x=(Capabilities.screenResolutionX - this.width) * Half;
+						this.y=(Capabilities.screenResolutionY - this.height) * Half;
+						break;
+					case 6:
+						this.x=Capabilities.screenResolutionX - this.width;
+						this.y=(Capabilities.screenResolutionY - this.height) * Half;
+						break;
+					case 7:
+						this.x=0;
+						this.y=0;
+						break;
+					case 8:
+						this.x=(Capabilities.screenResolutionX - this.width) * Half;
+						this.y=0;
+						break;
+					case 9:
+						this.x=Capabilities.screenResolutionX - this.width;
+						this.y=0;
+						break;
+				}
+			}
+			
+			/**
+			 * 更新相机信息
+			 */
+			public function updateCameraInfo(eyeX:Number,eyeY:Number,eyeZ:Number,lookX:Number,lookY:Number,lookZ:Number,rotationX:Number,rotationY:Number,rotationZ:Number,fov:Number):void
+			{
+				if (this.isPopUp)
+				{
+					cameraEyeXYZ.text = eyeX.toFixed(2)+Symbol.COMMA_SIGN+eyeY.toFixed(2)+Symbol.COMMA_SIGN+eyeZ.toFixed(2);
+					cameraTargetXYZ.text = lookX..toFixed(2)+Symbol.COMMA_SIGN+lookY.toFixed(2)+Symbol.COMMA_SIGN+lookZ.toFixed(2);
+					cameraRotationXYZ.text = rotationX.toFixed(2)+Symbol.COMMA_SIGN+rotationY.toFixed(2)+Symbol.COMMA_SIGN+rotationZ.toFixed(2);
+					cameraFov.text = fov.toString();
+				}
+			}
+			
+			public function updateRayInfo(mouseX:Number,mouseY:Number):void
+			{
+				if(camera3D && this.isPopUp)
+				{
+					var origin:Vector3D = new Vector3D();
+					var direction:Vector3D = new Vector3D();
+					camera3D.calculateRay(origin,direction,mouseX,mouseY);
+					originVector3D.text = origin.x.toFixed(2)+Symbol.COMMA_SIGN+origin.y.toFixed(2)+Symbol.COMMA_SIGN+origin.z.toFixed(2);
+					directionVector3D.text = direction.x.toFixed(2)+Symbol.COMMA_SIGN+direction.y.toFixed(2)+Symbol.COMMA_SIGN+direction.z.toFixed(2);
+//					
+//					var box:Box = new Box(500, 500, 500);
+//					box.setMaterialToAllSurfaces(new FillMaterial(0x3F95F5,0.4));
+//					box.x = direction.x;
+//					box.y = direction.y;
+//					box.z = direction.z;
+//					object3D.addChild(box);
+				}
+			}
+			
+			private var displays:Array = [];
+			private var colors:Array = [0xff0000,0xffff00,0xff00ff,0x0000ff,0x00ffff,0x00ff00];
+			public function displaySetColor(displayObject:*):void
+			{
+				if(!displayObject || !(displayObject is DisplayObject))
+					return;
+				if(!enableTrackDisplay)
+				{
+					displayObject
+				}
+				var index:int=-1;
+				for (var i:int = 0; i < displays.length; i++) 
+				{
+					if(displays[i].name==displayObject.name)
+					{
+						index = i;
+						break;
+					}
+				}
+				if(index<0)
+				{
+					displays.push(displayObject);
+				}
+				drawColor(displayObject);
+			}
+			
+			private function drawColor(displayObject:*):void
+			{
+				if(enableTrackDisplay){
+					
+				}
+				displayObject.graphics.clear();
+				displayObject.graphics.beginFill(0);
+				displayObject.graphics.drawRect(0,0,displayObject.width,displayObject.height);
+				displayObject.graphics.endFill();
+			}
+
+			private function startDragHandler(event:MouseEvent):void
+			{
+				if (switchDrag && event.target is DisplayObject)
+				{
+					if (currentDrag)
+					{
+						currentDrag.stopDrag();
+					}
+					currentDrag=event.target;
+					try
+					{
+						currentDrag.startDrag();
+					}
+					catch (e:Error)
+					{
+
+					}
+				}
+			}
+
+			private function stopDragHandler(event:MouseEvent):void
+			{
+				if (switchDrag && currentDrag && currentDrag is DisplayObject)
+				{
+					try
+					{
+						currentDrag.stopDrag();
+					}
+					catch (e:Error)
+					{
+
+					}
+					currentDrag=null;
+				}
+			}
+
+			private function mouseMoveHandler(event:MouseEvent):void
+			{
+				stageMoveX.text=int(event.stageX).toString();
+				stageMoveY.text=int(event.stageY).toString();
+				localX.text=int(event.localX).toString();
+				localY.text=int(event.localY).toString();
+			}
+
+			private function windowsCloseBtn_mouseDownHandler(event:MouseEvent):void
+			{
+				event.stopImmediatePropagation();
+				popUpClose();
+			}
+
+			private function btnClean_mouseDownHandler(event:MouseEvent):void
+			{
+				event.stopImmediatePropagation();
+				printArea.text="";
+			}
+			
+			private function btnTrackDisplay_mouseDownHandler(event:MouseEvent):void
+			{
+				enableTrackDisplay = !enableTrackDisplay;
+				btnTrackDisplay.label = enableTrackDisplay ? "跟踪显示对象(开)" : "跟踪显示对象(关)";
+				for (var i:int = 0; i < displays.length; i++) 
+				{
+					drawColor(displays[i]);
+				}
+			}
+			
+			private function checkDrawAxes_mouseDownHandler(event:MouseEvent):void
+			{
+				event.stopImmediatePropagation();
+				switchAxes=!switchAxes;
+				initAxes();
+				if(switchAxes)
+				{
+					if(object3D)
+					{
+						if(!object3D.contains(axisX))
+						{
+							object3D.addChild(axisX);
+						}
+						if(!object3D.contains(axisY))
+						{
+							object3D.addChild(axisY);
+						}
+						if(!object3D.contains(axisZ))
+						{
+							object3D.addChild(axisZ);
+						}
+					}
+				}else
+				{
+					if(object3D.contains(axisX))
+					{
+						object3D.removeChild(axisX);
+					}
+					if(object3D.contains(axisY))
+					{
+						object3D.removeChild(axisY);
+					}
+					if(object3D.contains(axisZ))
+					{
+						object3D.removeChild(axisZ);
+					}
+				}
+			}
+
+			private function checkRedrawRegions_mouseDownHandler(event:MouseEvent):void
+			{
+				event.stopImmediatePropagation();
+				switchDisplay=!switchDisplay;
+				if (switchDisplay)
+				{
+					startTime();
+				}
+				else
+				{
+					endTime();
+				}
+			}
+			
+			private function confirmCameraPositionBtn_mouseDownHandler(event:MouseEvent):void
+			{
+				if(camera3D)
+				{
+					if(cameraSetX.text=="" || cameraSetY.text=="" || cameraSetZ.text=="")
+					{
+						Alert.show("相机参数不能为空");
+					}
+					camera3D.setPosition(Number(cameraSetX.text),Number(cameraSetY.text),Number(cameraSetZ.text));
+				}
+			}
+			
+			private function confirmTargetPositionBtn_mouseDownHandler(event:MouseEvent):void
+			{
+				if(camera3D)
+				{
+					if(targetSetX.text=="" || targetSetY.text=="" || targetSetZ.text=="")
+					{
+						Alert.show("相机参数不能为空");
+					}
+					camera3D.lookAt(Number(targetSetX.text),Number(targetSetY.text),Number(targetSetZ.text));
+				}
+			}
+			
+			private function confirmSunParamBtn_mouseDownHandler(event:MouseEvent):void
+			{
+				if(light3D)
+				{
+					if(sunColorSet.text=="" || sunIntensitySet.text=="")
+					{
+						Alert.show("太阳光参数不能为空");
+					}
+					light3D.color = int(sunColorSet.text);
+					light3D.intensity = Number(sunIntensitySet.text);
+					light3D.alternativa3d::type = sunType;
+				}
+			}
+			
+			private function sunTypeComboBox_changeHandler(event:IndexChangeEvent):void
+			{
+				sunType = sunTypeComboBox.selectedItem.value;
+			}
+			
+			private var axisX:WireFrame;
+			private var axisY:WireFrame;
+			private var axisZ:WireFrame;
+			private var isInitAxis:Boolean;
+			private function initAxes():void {
+				if(!isInitAxis)
+				{
+					isInitAxis = true;
+					var value:Number = 10000;
+					var thiness:Number = 10;
+					var p000:Vector3D = new Vector3D(0,0,0);
+					var pV00:Vector3D = new Vector3D(value,0,0);
+					var p0V0:Vector3D = new Vector3D(0,value,0);
+					var p00V:Vector3D = new Vector3D(0,0,value);
+
+					axisX = WireFrame.createLinesList(Vector.<Vector3D>([p000.clone(), pV00.clone()]), 0xff0000, thiness);
+					axisY = WireFrame.createLinesList(Vector.<Vector3D>([p000.clone(), p0V0.clone()]), 0x00ff00, thiness);
+					axisZ = WireFrame.createLinesList(Vector.<Vector3D>([p000.clone(), p00V.clone()]), 0x0000ff, thiness);
+				}
+			}
+
+			private function checkShowParents_mouseDownHandler(event:MouseEvent):void
+			{
+				event.stopImmediatePropagation();
+				switchParent=!switchParent;
+			}
+
+			private function checkMouseEnabled_mouseDownHandler(event:MouseEvent):void
+			{
+				event.stopImmediatePropagation();
+				switchClick=!switchClick;
+				if (switchClick)
+				{
+					FlexGlobals.topLevelApplication.addEventListener(MouseEvent.MOUSE_DOWN, applicationMouseDownHandler, true);
+				}
+				else
+				{
+					FlexGlobals.topLevelApplication.removeEventListener(MouseEvent.MOUSE_DOWN, applicationMouseDownHandler, true);
+				}
+			}
+
+			private function checkDrag_mouseDownHandler(event:MouseEvent):void
+			{
+				event.stopImmediatePropagation();
+				switchDrag=!switchDrag;
+			}
+
+			private function applicationMouseDownHandler(event:MouseEvent):void
+			{
+//				var s:String = "事件阶段:";
+//				switch (event.eventPhase)
+//				{
+//					case EventPhase.CAPTURING_PHASE:
+//						printInfo(s+"EventPhase.CAPTURING_PHASE");
+//						break;
+//					case EventPhase.AT_TARGET:
+//						printInfo(s+"EventPhase.AT_TARGET");
+//						break;
+//					case EventPhase.BUBBLING_PHASE:
+//						printInfo(s+"EventPhase.BUBBLING_PHASE");
+//						break;
+//				}
+				var result:String=DebugExtend.getDisplayObjectInfo(event.target as DisplayObject);
+				if (switchParent)
+				{
+					result+=getParentNameLink(event.target as DisplayObject);
+				}
+				printInfo(result);
+			}
+
+			/**
+			 * 得到显示对象
+			 * @param object 显示对象
+			 * @param spaceSymbol 自定义间隔符
+			 * @param isReverse 是否翻转显示
+			 * @return
+			 */
+			private function getParentNameLink(object:Object, spaceSymbol:String=".", isReverse:Boolean=false):String
+			{
+				if (!object)
+				{
+					return null;
+				}
+				parentNameArg=[];
+
+				recursiveParentName(object);
+
+				parentNameArg.push(object.name);
+
+				if (isReverse)
+				{
+					parentNameArg=parentNameArg.reverse();
+				}
+
+				var result:String=parentNameArg.join(spaceSymbol);
+
+				parentNameArg=null;
+
+				return result;
+
+			}
+
+			private function recursiveParentName(object:Object):void
+			{
+				if (object.hasOwnProperty(Parent))
+				{
+					if (object.parent)
+					{
+						if (object.parent.hasOwnProperty(Name))
+						{
+							if (object.parent.name != null)
+							{
+								parentNameArg.unshift(object.parent.name);
+								recursiveParentName(object.parent);
+							}
+						}
+					}
+				}
+			}
+
+			private function startTime():void
+			{
+				if (!isTiming)
+				{
+					isTiming=true;
+					showRedrawRegions(true, ColorExtend.getRandomColor(false));
+					timer.addEventListener(TimerEvent.TIMER_COMPLETE, timerCompleteHandler);
+					timer.start();
+				}
+			}
+
+			private function endTime():void
+			{
+				showRedrawRegions(false, ColorExtend.getRandomColor(false));
+				timer.removeEventListener(TimerEvent.TIMER_COMPLETE, timerCompleteHandler);
+				timer.stop();
+			}
+
+			private function timerCompleteHandler(event:TimerEvent):void
+			{
+				isTiming=false;
+				showRedrawRegions(false, ColorExtend.getRandomColor(false));
+				if (switchDisplay)
+				{
+					startTime();
+				}
+				else
+				{
+					endTime();
+				}
+			}
+
+			private function checkFocus_mouseDownHandler(event:MouseEvent):void
+			{
+				event.stopImmediatePropagation();
+				switchFocus=!switchFocus;
+				if (switchFocus)
+				{
+					main.addEventListener(Event.ENTER_FRAME, currentFocusHandler);
+				}
+				else
+				{
+					//没有选择显示焦点
+					main.removeEventListener(Event.ENTER_FRAME, currentFocusHandler);
+					if (showTarget.text != VOID)
+					{
+						showTarget.text=VOID;
+					}
+				}
+			}
+
+			private function checkTarget_mouseDownHandler(event:MouseEvent):void
+			{
+				event.stopImmediatePropagation();
+				switchTarget=!switchTarget;
+				if (switchTarget)
+				{
+					main.stage.addEventListener(MouseEvent.MOUSE_OVER, stageMouseOverHandler);
+				}
+				else
+				{
+					main.stage.removeEventListener(MouseEvent.MOUSE_OVER, stageMouseOverHandler);
+					if (showTarget.text != VOID)
+					{
+						showTarget.text=VOID;
+					}
+					currentTarget=null;
+				}
+			}
+
+			private function currentFocusHandler(event:Event):void
+			{
+				if (switchFocus)
+				{
+					if (FlexGlobals.topLevelApplication.focusManager.getFocus())
+					{
+						showFocus.text=FlexGlobals.topLevelApplication.focusManager.getFocus().toString();
+					}
+					else
+					{
+						//焦点对象为空
+						if (showFocus.text != NULL)
+						{
+							showFocus.text=NULL;
+						}
+					}
+				}
+			}
+
+			private function stageMouseOverHandler(event:MouseEvent):void
+			{
+				if (switchTarget)
+				{
+					//减少调用次数
+					if (currentTarget != event.target)
+					{
+						currentTarget=event.target;
+						showTarget.text=getParentNameLink(event.target);
+					}
+				}
+			}
+
+			private function direction_mouseDownHandler(event:MouseEvent):void
+			{
+				event.stopImmediatePropagation();
+				setSize();
+				setPosition(uint(event.target.label));
+			}
+
+//			private function changePosition(value:uint):void
+//			{
+//				if (!main)
+//					return;
+//				var w:Number=main.width;
+//				var h:Number=main.height;
+//				currentPostion = value;
+//				switch (currentPostion)
+//				{
+//					case 1:
+//					{
+//						this.x=0;
+//						this.y=0;
+//						break;
+//					}
+//					case 2:
+//					{
+//						this.x=(w - this.width) * Half;
+//						this.y=0;
+//						break;
+//					}
+//					case 3:
+//					{
+//						this.x=w - this.width;
+//						this.y=0;
+//						break;
+//					}
+//					case 4:
+//					{
+//						this.x=0;
+//						this.y=(h - this.height) * Half;
+//						break;
+//					}
+//					case 5:
+//					{
+//						this.x=(w - this.width) * Half;
+//						this.y=(h - this.height) * Half;
+//						break;
+//					}
+//					case 6:
+//					{
+//						this.x=w - this.width;
+//						this.y=(h - this.height) * Half;
+//						break;
+//					}
+//					case 7:
+//					{
+//						this.x=0;
+//						this.y=h - this.height;
+//						break;
+//					}
+//					case 8:
+//					{
+//						this.x=(w - this.width) * Half;
+//						this.y=h - this.height;
+//						break;
+//					}
+//					case 9:
+//					{
+//						this.x=w - this.width;
+//						this.y=h - this.height;
+//						break;
+//					}
+//					default:
+//					{
+//						changePosition(5);
+//						break;
+//					}
+//				}
+//			}
+
+			private function btnLeftHalf_mouseDownHandler(event:MouseEvent):void
+			{
+				this.width=main.width * Half;
+				this.height=main.height;
+				setPosition(7);
+			}
+
+			private function btnRightHalf_mouseDownHandler(event:MouseEvent):void
+			{
+				this.width=main.width * Half;
+				this.height=main.height;
+				setPosition(9);
+			}
+
+			private var logConfigParse:LogConfigParse
+
+			private function preinitializeHandler(event:FlexEvent):void
+			{
+				logConfigParse=new LogConfigParse(this);
+			}
+
+			public function init():void
+			{
+				logConfigParse||=new LogConfigParse(this);
+				logConfigParse.parse();
+			}
+
+			private function btnReloadConfig_mouseDownHandler(event:MouseEvent):void
+			{
+				init();
+			}
+
+			private function btnSavePrint_mouseDownHandler(event:MouseEvent):void
+			{
+				var file:FileReference=new FileReference();
+				var fileName:String="日志" + DateEnumeration.currentYMonDHMSnonFormat() + Symbol.DOT + FileType.TXT;
+				file.save(printArea.text, fileName);
+			}
+
+			private function checkPrintInFile_clickHandler(event:MouseEvent):void
+			{
+				GlobalManager.log.setTrace(checkPrintInFile.selected);
+			}
+
+			private function btnMMCFG_mouseDownHandler(event:MouseEvent):void
+			{
+				setMMCFGView.popUpOpen();
+			}
+
+			private function btnModifyConfig_mouseDownHandler(event:MouseEvent):void
+			{
+				modifyConfigView.popUpOpen();
+			}
+
+			public function initModifyConfig():void
+			{
+				if (hasData)
+				{
+					return;
+				}
+				hasData=true;
+
+				modifyConfigView.setSwitchState(logConfigParse.getSwitchState());
+				modifyConfigView.setLogLevels(logConfigParse.getLogLevels());
+				modifyConfigView.setLogFlags(logConfigParse.getLogFlags());
+				modifyConfigView.setPreLogFlags(logConfigParse.getPreLogFlags());
+			}
+
+			public function resetBeforeInitModifyConfig():void
+			{
+				hasData=false;
+			}
+
+			private function windowsWidthMinus_clickHandler(event:MouseEvent):void
+			{
+				widthScale-=0.1;
+				setSize();
+				setPosition(currentPostion);
+			}
+
+			private function windowsWidthPlus_clickHandler(event:MouseEvent):void
+			{
+				widthScale+=0.1;
+				setSize();
+				setPosition(currentPostion);
+			}
+
+			private function windowsHeightMinus_clickHandler(event:MouseEvent):void
+			{
+				heightScale-=0.1;
+				setSize();
+				setPosition(currentPostion);
+			}
+
+			private function windowsHeightPlus_clickHandler(event:MouseEvent):void
+			{
+				heightScale+=0.1;
+				setSize();
+				setPosition(currentPostion);
+			}
+		]]>
+	</fx:Script>
+
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	<s:Rect width="100%"
+			height="100%">
+		<s:fill>
+			<s:SolidColor color="0xffffff"/>
+		</s:fill>
+		<s:stroke>
+			<s:SolidColorStroke/>
+		</s:stroke>
+	</s:Rect>
+	<s:VGroup width="100%"
+			  height="100%"
+			  gap="0">
+		<s:HGroup width="100%"
+				  height="22"
+				  horizontalAlign="right"
+				  verticalAlign="middle">
+			<s:CheckBox id="checkPrintInFile"
+						label="打印本地/界面不输出"
+						fontFamily="宋体"
+						height="20"
+						click="checkPrintInFile_clickHandler(event)"/>
+			<s:Button id="btnMMCFG"
+					  label="设置mm.cfg"
+					  fontFamily="宋体"
+					  height="20"
+					  mouseDown="btnMMCFG_mouseDownHandler(event)"/>
+			<s:Button id="btnReloadConfig"
+					  label="重加载配置"
+					  fontFamily="宋体"
+					  height="20"
+					  mouseDown="btnReloadConfig_mouseDownHandler(event)"/>
+			<s:Button id="btnModifyConfig"
+					  label="修改日志配置"
+					  fontFamily="宋体"
+					  height="20"
+					  mouseDown="btnModifyConfig_mouseDownHandler(event)"/>
+			<s:Button id="windowsCloseBtn"
+					  label="关闭"
+					  fontFamily="宋体"
+					  toolTip=""
+					  width="50"
+					  height="20"
+					  mouseDown="windowsCloseBtn_mouseDownHandler(event)"/>
+		</s:HGroup>
+		<s:HGroup width="100%"
+				  horizontalAlign="left"
+				  verticalAlign="middle">
+			<s:Spacer width="10"/>
+			<s:Label text="窗口尺寸"
+					 fontFamily="宋体"/>
+			<s:Spacer width="10"/>
+			<s:Label text="宽"
+					 fontFamily="宋体"/>
+			<s:Button id="windowsWidthMinus"
+					  label="-"
+					  width="28"
+					  click="windowsWidthMinus_clickHandler(event)"/>
+			<s:Button id="windowsWidthPlus"
+					  label="+"
+					  width="28"
+					  click="windowsWidthPlus_clickHandler(event)"/>
+			<s:Spacer width="10"/>
+			<s:Label text="高"
+					 fontFamily="宋体"/>
+			<s:Button id="windowsHeightMinus"
+					  label="-"
+					  width="28"
+					  click="windowsHeightMinus_clickHandler(event)"/>
+			<s:Button id="windowsHeightPlus"
+					  label="+"
+					  width="28"
+					  click="windowsHeightPlus_clickHandler(event)"/>
+		</s:HGroup>
+		<s:Line width="100%">
+			<s:stroke>
+				<s:SolidColorStroke/>
+			</s:stroke>
+		</s:Line>
+		<s:HGroup width="100%"
+				  height="24"
+				  verticalAlign="middle">
+			<s:Spacer width="10"/>
+			<views:FPSFlex height="20"/>
+			<s:Spacer width="10"/>
+			<s:Label text="stage(X,Y):"
+					 verticalAlign="middle"
+					 mouseEnabled="false"/>
+			<s:Label id="stageMoveX"
+					 verticalAlign="middle"
+					 mouseEnabled="false"/>
+			<s:Label text=","
+					 verticalAlign="middle"
+					 mouseEnabled="false"/>
+			<s:Label id="stageMoveY"
+					 verticalAlign="middle"
+					 mouseEnabled="false"/>
+			<s:Spacer width="20"/>
+			<s:Label text="local(X,Y):"
+					 verticalAlign="middle"
+					 mouseEnabled="false"/>
+			<s:Label id="localX"
+					 verticalAlign="middle"
+					 mouseEnabled="false"/>
+			<s:Label text=","
+					 verticalAlign="middle"
+					 mouseEnabled="false"/>
+			<s:Label id="localY"
+					 verticalAlign="middle"
+					 mouseEnabled="false"/>
+		</s:HGroup>
+		<s:Line width="100%">
+			<s:stroke>
+				<s:SolidColorStroke/>
+			</s:stroke>
+		</s:Line>
+		<s:HGroup width="100%"
+				  height="24"
+				  verticalAlign="middle">
+			<s:Spacer width="10"/>
+			<s:Label text="CameraEye(X,Y,Z):"
+					 verticalAlign="middle"
+					 mouseEnabled="false"/>
+			<s:Label id="cameraEyeXYZ"
+					 verticalAlign="middle"
+					 mouseEnabled="false"/>
+			<s:Spacer width="100"/>
+			<s:Label text="CameraTarget(X,Y,Z):"
+					 verticalAlign="middle"
+					 mouseEnabled="false"/>
+			<s:Label id="cameraTargetXYZ"
+					 verticalAlign="middle"
+					 mouseEnabled="false"/>
+		</s:HGroup>
+		<s:Line width="100%">
+			<s:stroke>
+				<s:SolidColorStroke/>
+			</s:stroke>
+		</s:Line>
+		<s:HGroup width="100%"
+				  height="24"
+				  verticalAlign="middle">
+			<s:Spacer width="10"/>
+			<s:Label text="CameraRotation(X,Y,Z):"
+					 verticalAlign="middle"
+					 mouseEnabled="false"/>
+			<s:Label id="cameraRotationXYZ"
+					 verticalAlign="middle"
+					 mouseEnabled="false"/>
+			<s:Spacer width="100"/>
+			<s:Label text="Camera fov:"
+					 verticalAlign="middle"
+					 mouseEnabled="false"/>
+			<s:Label id="cameraFov"
+					 verticalAlign="middle"
+					 mouseEnabled="false"/>
+		</s:HGroup>
+		<s:Line width="100%">
+			<s:stroke>
+				<s:SolidColorStroke/>
+			</s:stroke>
+		</s:Line>
+		<s:HGroup width="100%"
+				  height="24"
+				  verticalAlign="middle">
+			<s:Spacer width="10"/>
+			<s:Label text="设置相机"
+					 height="22"
+					 verticalAlign="middle"
+					 mouseEnabled="false"/>
+			<s:TextInput id="cameraSetX"
+						 text="800"
+						 restrict="0-9"
+						 width="60"/>
+			<s:TextInput id="cameraSetY"
+						 text="800"
+						 restrict="0-9"
+						 width="60"/>
+			<s:TextInput id="cameraSetZ"
+						 text="800"
+						 restrict="0-9"
+						 width="60"/>
+			<s:Button id="confirmCameraPositionBtn"
+					  label="确定"
+					  width="60"
+					  mouseDown="confirmCameraPositionBtn_mouseDownHandler(event)"/>
+			<s:Spacer width="20"/>
+			<s:Label text="设置目标"
+					 verticalAlign="middle"
+					 mouseEnabled="false"/>
+			<s:TextInput id="targetSetX"
+						 text="0"
+						 restrict="0-9"
+						 width="60"/>
+			<s:TextInput id="targetSetY"
+						 text="0"
+						 restrict="0-9"
+						 width="60"/>
+			<s:TextInput id="targetSetZ"
+						 text="0"
+						 restrict="0-9"
+						 width="60"/>
+			<s:Button id="confirmTargetPositionBtn"
+					  label="确定"
+					  width="60"
+					  mouseDown="confirmTargetPositionBtn_mouseDownHandler(event)"/>
+		</s:HGroup>
+		<s:Line width="100%">
+			<s:stroke>
+				<s:SolidColorStroke/>
+			</s:stroke>
+		</s:Line>
+		<s:HGroup width="100%"
+				  height="24"
+				  verticalAlign="middle">
+			<s:Spacer width="10"/>
+			<s:Label text="3D点击"
+					 verticalAlign="middle"
+					 mouseEnabled="false"/>
+			<s:Spacer width="10"/>
+			<s:Label text="origin:"
+					 verticalAlign="middle"
+					 mouseEnabled="false"/>
+			<s:Label id="originVector3D"
+					 verticalAlign="middle"
+					 mouseEnabled="false"/>
+			<s:Spacer width="150"/>
+			<s:Label text="direction:"
+					 verticalAlign="middle"
+					 mouseEnabled="false"/>
+			<s:Label id="directionVector3D"
+					 verticalAlign="middle"
+					 mouseEnabled="false"/>
+		</s:HGroup>
+		<s:Line width="100%">
+			<s:stroke>
+				<s:SolidColorStroke/>
+			</s:stroke>
+		</s:Line>
+		<s:HGroup width="100%"
+				  height="24"
+				  verticalAlign="middle">
+			<s:Spacer width="10"/>
+			<s:Label text="太阳光颜色"
+					 verticalAlign="middle"
+					 mouseEnabled="false"/>
+			<s:TextInput id="sunColorSet"
+						 text="0xFFFFFF"
+						 width="60"/>
+			<s:Spacer width="50"/>
+			<s:Label text="太阳光强度"
+					 verticalAlign="middle"
+					 mouseEnabled="false"/>
+			<s:TextInput id="sunIntensitySet"
+						 text="0.08"
+						 restrict=".0-9"
+						 width="60"/>
+			<s:Spacer width="50"/>
+			<s:Label text="太阳光类型"
+					 verticalAlign="middle"
+					 mouseEnabled="false"/>
+			<s:ComboBox id="sunTypeComboBox"
+						dataProvider="{sunTypes}"
+						selectedIndex="1" 
+						labelField="type"
+						change="sunTypeComboBox_changeHandler(event)"
+						/>
+			<s:Spacer width="20"/>
+			<s:Button id="confirmSunParamBtn"
+					  label="确定"
+					  width="60"
+					  mouseDown="confirmSunParamBtn_mouseDownHandler(event)"/>
+		</s:HGroup>
+		<s:Line width="100%">
+			<s:stroke>
+				<s:SolidColorStroke/>
+			</s:stroke>
+		</s:Line>
+		<s:HGroup width="100%"
+				  height="24"
+				  verticalAlign="middle">
+			<s:Spacer width="10"/>
+			<s:CheckBox id="checkDrawAxes"
+						label="显示坐标轴"
+						fontFamily="宋体"
+						height="{HeightGap}"
+						mouseDown="checkDrawAxes_mouseDownHandler(event)"/>
+			<s:CheckBox id="checkRedrawRegions"
+						label="显示重绘"
+						fontFamily="宋体"
+						height="{HeightGap}"
+						mouseDown="checkRedrawRegions_mouseDownHandler(event)"/>
+			<s:CheckBox id="checkShowParents"
+						label="显示父级链"
+						fontFamily="宋体"
+						height="{HeightGap}"
+						mouseDown="checkShowParents_mouseDownHandler(event)"/>
+			<s:CheckBox id="checkMouseEnabled"
+						label="显示点击链"
+						fontFamily="宋体"
+						height="{HeightGap}"
+						mouseDown="checkMouseEnabled_mouseDownHandler(event)"/>
+			<s:CheckBox id="checkDrag"
+						label="拖拽"
+						fontFamily="宋体"
+						height="{HeightGap}"
+						mouseDown="checkDrag_mouseDownHandler(event)"/>
+		</s:HGroup>
+		<s:Line width="100%">
+			<s:stroke>
+				<s:SolidColorStroke/>
+			</s:stroke>
+		</s:Line>
+		<s:HGroup width="100%"
+				  height="{HeightGap+ButtonSize*3}"
+				  gap="0">
+			<s:VGroup gap="0"
+					  width="100%">
+				<s:HGroup width="100%">
+					<s:Spacer width="10"/>
+					<s:CheckBox id="checkFocus"
+								label="显示焦点"
+								fontFamily="宋体"
+								height="{HeightGap}"
+								mouseDown="checkFocus_mouseDownHandler(event)"/>
+				</s:HGroup>
+				<s:TextArea id="showFocus"
+							mouseEnabled="false"
+							width="100%"
+							height="100%"
+							focusAlpha="0"
+							editable="false"/>
+			</s:VGroup>
+			<s:VGroup gap="0"
+					  width="100%">
+				<s:HGroup width="100%">
+					<s:Spacer width="10"/>
+					<s:CheckBox id="checkTarget"
+								label="显示目标"
+								fontFamily="宋体"
+								height="{HeightGap}"
+								mouseDown="checkTarget_mouseDownHandler(event)"/>
+				</s:HGroup>
+				<s:TextArea id="showTarget"
+							mouseEnabled="false"
+							width="100%"
+							height="100%"
+							focusAlpha="0"
+							editable="false"/>
+			</s:VGroup>
+
+			<s:VGroup gap="0">
+				<s:HGroup gap="0">
+					<s:Button id="direction7"
+							  label="7"
+							  width="{ButtonSize}"
+							  height="{ButtonSize}"
+							  mouseDown="direction_mouseDownHandler(event)"/>
+					<s:Button id="direction8"
+							  label="8"
+							  width="{ButtonSize}"
+							  height="{ButtonSize}"
+							  mouseDown="direction_mouseDownHandler(event)"/>
+					<s:Button id="direction9"
+							  label="9"
+							  width="{ButtonSize}"
+							  height="{ButtonSize}"
+							  mouseDown="direction_mouseDownHandler(event)"/>
+				</s:HGroup>
+				<s:HGroup gap="0">
+					<s:Button id="direction4"
+							  label="4"
+							  width="{ButtonSize}"
+							  height="{ButtonSize}"
+							  mouseDown="direction_mouseDownHandler(event)"/>
+					<s:Button id="direction5"
+							  label="5"
+							  width="{ButtonSize}"
+							  height="{ButtonSize}"
+							  mouseDown="direction_mouseDownHandler(event)"/>
+					<s:Button id="direction6"
+							  label="6"
+							  width="{ButtonSize}"
+							  height="{ButtonSize}"
+							  mouseDown="direction_mouseDownHandler(event)"/>
+				</s:HGroup>
+				<s:HGroup gap="0">
+					<s:Button id="direction1"
+							  label="1"
+							  width="{ButtonSize}"
+							  height="{ButtonSize}"
+							  mouseDown="direction_mouseDownHandler(event)"/>
+					<s:Button id="direction2"
+							  label="2"
+							  width="{ButtonSize}"
+							  height="{ButtonSize}"
+							  mouseDown="direction_mouseDownHandler(event)"/>
+					<s:Button id="direction3"
+							  label="3"
+							  width="{ButtonSize}"
+							  height="{ButtonSize}"
+							  mouseDown="direction_mouseDownHandler(event)"/>
+				</s:HGroup>
+				<s:HGroup gap="0">
+					<s:Button id="btnLeftHalf"
+							  label="左"
+							  fontFamily="宋体"
+							  width="42"
+							  height="20"
+							  mouseDown="btnLeftHalf_mouseDownHandler(event)"/>
+					<s:Button id="btnRightHalf"
+							  label="右"
+							  fontFamily="宋体"
+							  width="42"
+							  height="20"
+							  mouseDown="btnRightHalf_mouseDownHandler(event)"/>
+				</s:HGroup>
+			</s:VGroup>
+		</s:HGroup>
+		<s:Line width="100%">
+			<s:stroke>
+				<s:SolidColorStroke/>
+			</s:stroke>
+		</s:Line>
+		<s:VGroup width="100%"
+				  height="100%"
+				  gap="0">
+			<s:HGroup horizontalAlign="right">
+				<s:Button id="btnSavePrint"
+						  label="保存打印"
+						  fontFamily="宋体"
+						  height="20"
+						  mouseDown="btnSavePrint_mouseDownHandler(event)"/>
+				<s:Button id="btnClean"
+						  label="清空"
+						  fontFamily="宋体"
+						  toolTip=""
+						  width="50"
+						  height="20"
+						  mouseDown="btnClean_mouseDownHandler(event)"/>
+				<s:Button id="btnTrackDisplay"
+						  label="跟踪显示对象(关)"
+						  fontFamily="宋体"
+						  toolTip=""
+						  width="120"
+						  height="20"
+						  mouseDown="btnTrackDisplay_mouseDownHandler(event)"/>
+			</s:HGroup>
+			<s:TextArea id="printArea"
+						fontFamily="宋体"
+						width="100%"
+						height="100%"
+						focusAlpha="0"
+						editable="false"/>
+		</s:VGroup>
+<!--		<views:ModifyDisplayView id="modifyDisplayView" width="100%" height="100%"/>-->
+	</s:VGroup>
+</s:Group>

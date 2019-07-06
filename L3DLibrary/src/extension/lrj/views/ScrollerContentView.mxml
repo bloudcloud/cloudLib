@@ -1,0 +1,297 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" 
+		 width="100%" 
+		 height="100%" 
+		 creationComplete="group1_creationCompleteHandler(event)">
+	<fx:Script>
+		<![CDATA[
+			import mx.core.UIComponent;
+			import mx.events.FlexEvent;
+			
+			import spark.components.Group;
+			
+			import extension.wl.globalData.allStaticTypes.ColorType;
+			
+			
+			private var preLineHeight:int = 32;
+			private var textArea:TextField = null;
+			private var textUI:UIComponent = null;
+			private var rows:int = 20;
+			
+			private var contentNum:int = 0;
+			private var contentArr:Array = [];
+			private var titleArr:Array = [];
+			
+			private var scrollView:UIComponent = null; //滚动条
+			private var scrollBar:UIComponent = null; //滑块
+			private var scrollPageTotal:int = 0;
+			private var scrollControl:Boolean = false;
+			private var currentPage:int = 0;
+			
+			private var titleFormat:TextFormat = null; //标题文本
+			private var textFormat:TextFormat = null; //内容文本
+			private var titleSize:int = 20;
+			private var textSize:int = 16;
+			
+			private static const DARKGRAY:uint = 0x333333; //字体颜色
+			
+			private var _contentData:Object = null;
+			public function set contentData(data:Object):void
+			{
+				_contentData = data;
+			}
+			
+			protected function group1_creationCompleteHandler(event:FlexEvent):void
+			{
+				// TODO Auto-generated method stub
+				initData();
+				initView();
+			}
+			
+			public function resize(w:Number, h:Number):void
+			{
+				cleanView();
+				initView();
+			}
+			
+			private function initData():void
+			{
+				// TODO Auto Generated method stub
+				if(!_contentData)
+				{
+					return;
+				}
+				
+				var len:int = _contentData.length;
+				for(var i:int = 0; i < len; i++)
+				{
+					var currentItem:Object = _contentData[i];
+					contentArr.push(currentItem.title);
+					titleArr.push(currentItem.title);
+					var currentLen:int = currentItem.content.length;
+					
+					for(var j:int = 0; j < currentLen; j++)
+					{
+						var currentContent:String = currentItem.content[j];
+						contentArr.push(currentContent);
+					}
+					
+					contentArr.push("");
+				}
+				
+				contentNum = contentArr.length;
+			}
+			
+			private function initView():void
+			{
+				// TODO Auto Generated method stub
+				rows = int(this.height / preLineHeight);
+				
+				if(!textUI)
+				{
+					textUI = new UIComponent();
+					textUI.width = this.width * 0.73;
+					textUI.height = this.height;
+					textUI.x = this.width / 2 - textUI.width / 2;
+					this.addElement(textUI);
+				}
+				
+				if(!textArea)
+				{
+					textArea = new TextField();
+					textArea.width = textUI.width;
+					textArea.height = textUI.height;
+					textArea.border = false;
+					textArea.selectable = false;
+					textArea.wordWrap = true;
+					textArea.mouseWheelEnabled = false;
+					
+					textArea.appendText("\n");
+					textUI.addChild(textArea);
+				}
+				
+				if(!titleFormat)
+				{
+					titleFormat = new TextFormat();
+					titleFormat.font = "PingFangSC-Medium";
+					titleFormat.bold = true;
+					titleFormat.color = DARKGRAY;
+					titleFormat.size = titleSize;
+					titleFormat.leading = (preLineHeight - titleSize) * 0.5;
+				}
+				
+				if(!textFormat)
+				{
+					textFormat = new TextFormat();
+					textFormat.font = "PingFangSC-Regular"; 
+					textFormat.color = DARKGRAY;
+					textFormat.size = textSize;
+					textFormat.leading = (preLineHeight - textSize) * 0.5;
+				}
+				
+				for(var i:int = 0; i < contentNum; i++)
+				{
+					textArea.appendText(contentArr[i] + "\n");
+				}
+				
+				for(var j:int = 0; j < textArea.numLines - 1; j++)
+				{
+					var currentTitle:String;
+					if(titleArr.length > 0)
+					{
+						currentTitle = titleArr[0] + "\r";
+					}
+					else
+					{
+						currentTitle = "noElseTitle";
+					}
+					
+					var startIndex:int = textArea.getLineOffset(j);
+					var endIndex:int = startIndex + textArea.getLineLength(j);
+					if(textArea.getLineText(j) == currentTitle)
+					{
+						textArea.setTextFormat(titleFormat, startIndex, endIndex);
+						titleArr.shift();
+					}
+					else
+					{
+						textArea.setTextFormat(textFormat, startIndex, endIndex);	
+					}
+				}
+			
+				var scrollWidth:Number = 12;
+				
+				if(!scrollView)
+				{
+					scrollView = new UIComponent();
+					scrollView.buttonMode = true;
+					scrollView.width = scrollWidth;
+					scrollView.height = this.height;
+					scrollView.graphics.beginFill(ColorType.White);
+					scrollView.graphics.drawRect(0, 0, scrollWidth, this.height);
+					scrollView.graphics.endFill();
+					scrollView.addEventListener(MouseEvent.CLICK, scrollClickHandler);
+					scrollView.x = this.width - scrollWidth;
+					scrollView.visible = false;
+					this.addElement(scrollView);
+				}
+				
+				if(!scrollBar)
+				{
+					scrollBar = new UIComponent();
+					scrollBar.width = scrollWidth;
+					scrollBar.x = this.width - scrollWidth;
+					scrollBar.visible = false;
+					this.addElement(scrollBar);
+				}
+				
+				scrollPageTotal = contentNum / rows;
+				
+				if(contentNum % rows > 0)
+				{
+					scrollPageTotal++;
+				}
+				
+				scrollControl = true;
+				scrollBar.height = int(scrollView.height/scrollPageTotal);
+				scrollBar.y = 0;
+				scrollBar.graphics.clear();
+				scrollBar.graphics.beginFill(ColorType.Grey);
+				scrollBar.graphics.drawRoundRect(0,0,scrollView.width,scrollBar.height,10,10);
+				scrollBar.graphics.endFill();
+				scrollControl = true;
+			}	
+			
+//			滚轮
+			public function viewWheelHandler(event:MouseEvent):void
+			{
+				if(event.delta > 0)
+				{
+					textArea.scrollV -= rows;
+					if(currentPage > 0)
+					{
+						currentPage--;
+					}
+				}else if(event.delta < 0)
+				{
+					textArea.scrollV += rows;
+					if(currentPage < scrollPageTotal - 1)
+					{
+						currentPage++;
+					}
+				}
+				
+				if(scrollBar)
+				{
+					scrollBar.y = currentPage * scrollBar.height;
+				}
+			}
+			
+//		           移入
+			public function viewOverHandler(event:MouseEvent):void
+			{
+				if(!scrollControl || !scrollView)
+				{
+					return;
+				}
+				scrollView.visible = true;
+				scrollBar.visible = true;
+			}
+			
+//			移出
+			public function viewOutHandler(event:MouseEvent):void
+			{
+				if(!scrollView)
+				{
+					return;
+				}
+				scrollView.visible = false;
+				scrollBar.visible = false;
+			}
+			
+			protected function scrollClickHandler(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				if(!scrollControl)
+				{
+					return;
+				}
+				var pageIndex:int = int(event.target.mouseY/scrollBar.height);
+				scrollBar.y = pageIndex * scrollBar.height;
+			}
+			
+			public function cleanView():void
+			{
+				// TODO Auto Generated method stub
+				this.removeAllElements();
+				
+				if(textUI)
+				{
+					textUI.removeChildren();
+					textUI = null;
+				}
+				
+				if(textArea)
+				{
+					textArea = null;
+				}
+				
+				if(scrollView)
+				{
+					scrollView = null;
+				}
+				
+				if(scrollBar)
+				{
+					scrollBar = null;
+				}
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+</s:Group>

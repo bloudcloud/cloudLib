@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:HGroup xmlns:fx="http://ns.adobe.com/mxml/2009"
+		  xmlns:s="library://ns.adobe.com/flex/spark"
+		  xmlns:mx="library://ns.adobe.com/flex/mx"
+		  tabChildren="false"
+		  tabEnabled="false"
+		  tabFocusEnabled="false"
+		  mouseChildren="false"
+		  mouseEnabled="false"
+		  creationComplete="hgroup_creationCompleteHandler(event)">
+	<fx:Script>
+		<![CDATA[
+			import flash.utils.getTimer;
+
+			import mx.events.FlexEvent;
+
+			import cores.StringExtend;
+			private var i:int=0;
+			private var n:int=10;
+			private var time:int;
+
+			private function hgroup_creationCompleteHandler(event:FlexEvent):void
+			{
+				start();
+			}
+
+			public function start():void
+			{
+				this.systemManager.getSandboxRoot().addEventListener(Event.ENTER_FRAME, enterframeHandler);
+				time=getTimer();
+			}
+
+			public function stop():void
+			{
+				this.systemManager.getSandboxRoot().removeEventListener(Event.ENTER_FRAME, enterframeHandler);
+			}
+
+			private function enterframeHandler(event:Event):void
+			{
+				i++;
+				if (i >= n)
+				{
+					i=0;
+					fpsValue.text=Number(1000 * n / (getTimer() - time)).toFixed(2);
+					time=getTimer();
+				}
+
+				memValue.text=StringExtend.byteUnit(System.totalMemory);
+			}
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	<s:Label text="FPS :"
+			 height="100%"
+			 verticalAlign="middle"
+			 mouseEnabled="false"/>
+	<s:Label id="fpsValue"
+			 height="100%"
+			 verticalAlign="middle"
+			 mouseEnabled="false"/>
+	<s:Spacer width="20"/>
+	<s:Label text="MEM :"
+			 height="100%"
+			 verticalAlign="middle"
+			 mouseEnabled="false"/>
+	<s:Label id="memValue"
+			 height="100%"
+			 verticalAlign="middle"
+			 mouseEnabled="false"/>
+</s:HGroup>

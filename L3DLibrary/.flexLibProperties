@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<flexLibProperties includeAllClasses="true" useMultiPlatformConfig="false" version="3">
+  <includeClasses>
+    <classEntry path="L3DLibrary.L3DPPTWebService"/>
+    <classEntry path="preloadconfig.LoadConfig"/>
+    <classEntry path="preloadconfig.DataParseType"/>
+    <classEntry path="preloadconfig.subLoadConfig.LoadWindowDoor"/>
+    <classEntry path="preloadconfig.LoginConfig"/>
+    <classEntry path="L3DLibrary.Brand"/>
+    <classEntry path="utils.LoadLejiaCase"/>
+    <classEntry path="utils.lx.managers.ServiceMGR"/>
+    <classEntry path="utils.lx.managers.StatusMGR"/>
+    <classEntry path="utils.lx.managers.IStatus"/>
+    <classEntry path="utils.lx.managers.status.consts.StatusConst"/>
+    <classEntry path="utils.lx.managers.LocalStorageMGR"/>
+    <classEntry path="middlewares.services.LoginMW"/>
+    <classEntry path="utils.lx.managers.UserMGR"/>
+    <classEntry path="middlewares.services.WebServiceMW"/>
+    <classEntry path="utils.lx.managers.task.IRPCRequestTaskData"/>
+    <classEntry path="ns.cloud_lejia"/>
+    <classEntry path="interfaces.IL3DTestTaskData"/>
+    <classEntry path="extension.cloud.dict.L3DTaskTypeDict"/>
+    <classEntry path="task.L3DBaseTaskData"/>
+    <classEntry path="utils.lx.managers.WebAPIMGR"/>
+    <classEntry path="utils.lx.managers.WebAPIUserMGR"/>
+    <classEntry path="utils.lx.consts.LogFlagCustom"/>
+    <classEntry path="mvcs.AppConfig"/>
+    <classEntry path="mvcs.MVCManager"/>
+    <classEntry path="L3DLibrary.L3DWebService"/>
+    <classEntry path="extension.wl.views.LineVertical"/>
+    <classEntry path="extension.wl.views.LineHorizontal"/>
+    <classEntry path="extension.cloud.mvcs.room.command.CDrawWallLineCommand"/>
+    <classEntry path="extension.cloud.mvcs.room.model.data.CL3DWallData"/>
+    <classEntry path="extension.cloud.mvcs.room.view.CL3DRoomViewSprite"/>
+    <classEntry path="extension.cloud.mvcs.room.model.data.CL3DRoomData"/>
+    <classEntry path="extension.cloud.mvcs.room.model.CL3DRoomModel"/>
+    <classEntry path="extension.cloud.mvcs.room.command.CDrawFloorCommand"/>
+    <classEntry path="extension.cloud.mvcs.dict.CL3DMVCSCommandType"/>
+    <classEntry path="extension.cloud.mvcs.room.view.CL3DRoomViewComponentMediator"/>
+    <classEntry path="extension.cloud.mvcs.room.view.CL3DRoomViewComponent"/>
+    <classEntry path="extension.cloud.interfaces.ICEntity3DData"/>
+    <classEntry path="utils.lx.managers.AutoSaveMGR"/>
+    <classEntry path="utils.lx.managers.DebugView"/>
+    <classEntry path="utils.lx.views.LogConfigParse"/>
+    <classEntry path="utils.lx.views.DebugLogin"/>
+    <classEntry path="core.MouseCursorManager"/>
+    <classEntry path="utils.lx.views.ModifyConfigView"/>
+    <classEntry path="utils.lx.views.LogFlagItem"/>
+    <classEntry path="extension.wl.views.TipsView"/>
+    <classEntry path="extension.cloud.interfaces.ICL3DRoomExtension"/>
+    <classEntry path="utils.lx.views.SetMMCFGView"/>
+    <classEntry path="L3DCAD.CL3DFloorInfo"/>
+    <classEntry path="extension.lrj.datas.DoorWindowViewData"/>
+    <classEntry path="extension.lrj.datas.TipsToolData"/>
+    <classEntry path="utils.lx.managers.WebAPIConnector"/>
+    <classEntry path="utils.lx.views.DebugSprite"/>
+    <classEntry path="utils.lx.views.ModifyDisplayView"/>
+    <classEntry path="utils.lx.views.DebugSpriteManager"/>
+    <classEntry path="utils.lx.draws.DrawRectUIComponent"/>
+    <classEntry path="extension.wl.views.UnitCopyView"/>
+    <classEntry path="extension.wl.views.InputCopyView"/>
+  </includeClasses>
+  <includeResources/>
+  <namespaceManifests/>
+</flexLibProperties>

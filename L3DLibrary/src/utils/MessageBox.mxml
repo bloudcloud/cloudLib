@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" creationComplete="group1_creationCompleteHandler(event)"
+		 xmlns:mx="library://ns.adobe.com/flex/mx" width="400" minHeight="210" height="100%" xmlns:buttons="buttons.*" xmlns:utils="utils.*">
+	
+	<fx:Script>
+		<![CDATA[
+			import mx.core.FlexGlobals;
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+			
+			[Bindable]
+			private var parents:DisplayObject;
+			[Bindable]
+			private var type:int = 1;
+			private var callback:Function;
+			private function onClose():void
+			{
+				if( callback != null )
+					callback(false);
+				PopUpManager.removePopUp(this);
+			}
+			public function popOpen(messages:String, type:int,callback:Function = null):void {
+				if(type != 3)
+				{
+					sureBtn.visible = true;
+					sureCancelBtn.visible = false;
+				}
+				else
+				{
+					sureBtn.visible = false;
+					sureCancelBtn.visible = true;
+				}
+				PopUpManager.addPopUp(this,FlexGlobals.topLevelApplication as DisplayObject,true);
+//				PopUpManager.centerPopUp(this);
+				this.x=(Capabilities.screenResolutionX - this.width)*0.5;
+				this.y=(Capabilities.screenResolutionY - this.height)*0.5;
+				/*this.x=(parent.width - this.width)*0.5;
+				this.y=(parent.height - this.height)*0.5;*/
+				mess.text = messages;
+				this.type = type;
+				this.callback = callback;
+			}
+			
+			private function onOK():void
+			{
+				if( callback != null )
+					callback(true);
+				PopUpManager.removePopUp(this);
+			}
+			
+			private function group1_creationCompleteHandler(event:FlexEvent):void
+			{
+				/*this.x=(parent.width - this.width)*0.5;
+				this.y=(parent.height - this.height)*0.5;*/
+				count();
+				this.stage.addEventListener(Event.RESIZE,onResize);
+			}
+			
+			private function onResize(event:Event):void
+			{
+				
+				count();
+				
+			}
+			
+			private function count():void
+			{
+				if(!parent || !parent.width || !parent.height)
+				{
+					if(this.stage != null)
+					{
+					    this.x=(this.stage.width - this.width)*0.5;
+					    this.y=(this.stage.height - this.height)*0.5;
+					}
+				}
+				else
+				{
+					this.x=(parent.width - this.width)*0.5;
+					this.y=(parent.height - this.height)*0.5;
+				}
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<s:Rect right="2" left="2" top="2" bottom="2" radiusX="0" radiusY="0" >
+		<s:fill>
+			<s:SolidColor color="#ffffff" alpha=".8"/>
+		</s:fill>
+	</s:Rect>
+	<!--<s:Rect width="100%" height="100%" radiusX="10" radiusY="10" >
+		<s:stroke>     
+			<s:SolidColorStroke id="borderStroke" weight="2" color="#77ccff" alpha=".8"/>
+		</s:stroke>
+	</s:Rect>-->
+	<s:Group width="100%" height="100%">
+		<s:RectangularDropShadow blurX="20" blurY="20"
+								 alpha="0.32" distance="11"
+								 blRadius="0" brRadius="0"
+								 angle="90" color="#000000" left="0" top="0" right="0"
+								 bottom="0"/>
+	</s:Group>
+	<s:VGroup height="100%" width="100%" verticalAlign="middle" horizontalAlign="center" gap="6">
+		<s:Spacer height="2"/>
+		<s:HGroup width="100%" horizontalAlign="right" gap="6">
+			<utils:AlertButton id="closedBtn"
+									   sourceOut="resources/aleat_closed.png"
+									   sourceOver="resources/aleat_closed_over.png"
+									   click="onClose()"
+									   skinClass="utils.AlertStateChangeSkin"/>
+			<s:Spacer width="2"/>
+		</s:HGroup>
+		<s:HGroup  width="100%" minHeight="116" horizontalAlign="center" verticalAlign="middle">
+			<s:Label text="测试文字测试文字测试文字测试文字测试文字测试文字测试文字测试文字测试文
+					 字测试文字测试文字测试文字测试文字测试文字测试文字测试文字测试文字测试文字" id="mess"
+					 maxDisplayedLines="100" width="{this.width-30}" textAlign="center" fontSize="18"/>
+		</s:HGroup>
+		<s:Spacer height="100%"/>
+		<s:Group width="100%" >
+			<s:HGroup width="100%" horizontalAlign="center" gap="0" id="sureCancelBtn">
+				<utils:AlertButton id="onCancel"
+										   sourceOut="resources/alert_cancel.png"
+										   sourceOver="resources/alert_cancel_over.png"
+										   click="onClose()"
+										   skinClass="utils.AlertStateChangeSkin"/>
+				<utils:AlertButton id="onOk"
+										   sourceOut="resources/alert_confirm.png"
+										   sourceOver="resources/alert_confirm_over.png"
+										   click="onOK()"
+										   skinClass="utils.AlertStateChangeSkin"/>
+			</s:HGroup>
+			<s:HGroup width="100%" horizontalAlign="center" height="60" verticalAlign="top" gap="0" id="sureBtn">
+				<s:Spacer width="20"/>
+				<utils:AlertButton id="onOk_S"
+										   sourceOut="resources/alert_s_confirm.png"
+										   sourceOver="resources/alert_s_confirm_over.png"
+										   click="onOK()"
+										   skinClass="utils.AlertStateChangeSkin"/>
+				<s:Spacer width="20"/>
+			</s:HGroup>
+		</s:Group>
+		
+	</s:VGroup>
+</s:Group>

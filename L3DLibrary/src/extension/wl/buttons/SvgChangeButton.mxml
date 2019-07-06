@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" 
+		 creationComplete="group1_creationCompleteHandler(event)">
+	<fx:Script>
+		<![CDATA[
+			import mx.events.FlexEvent;
+			
+			import extension.wl.globalData.allStaticTypes.SvgType;
+			import extension.wl.models.SvgModel;
+			import extension.wl.utils.MouseUtils;
+			
+			import flashx.textLayout.tlf_internal;
+			
+			import utils.DatasEvent;
+			
+			
+			public var typeStyle:int = 2;//默认风格
+			public var typeStatus:int = 0;
+			public var viewOver:uint = 0;
+			public var viewOut:uint = 0;
+			public var viewAlpha:Number = 1;
+			public var itemOver:uint = 0;
+			public var itemOut:uint = 0;
+			public var itemWidth:Number = 0;
+			public var itemheight:Number = 0;
+			
+			public var modelNormal:SvgModel = null;
+			public var svgEventNormal:String = "";
+			public var svgTipNormal:String = "";
+			public var svgSourceNormal:String = "";
+			
+			public var modelChange:SvgModel = null;
+			public var svgEventChange:String = "";
+			public var svgTipChange:String = "";
+			public var svgSourceChange:String = "";
+			
+			public var svgScale:uint = 60;
+			public var svgRadius:int = 2;
+			
+			private var svgNormal:SvgButton;
+			private var svgChange:SvgButton;
+			private var svgStatus:Boolean = false;
+			
+			public static const SVGCHANGE_EVENT:String = "svgChange_event";
+			
+			protected function group1_creationCompleteHandler(event:FlexEvent):void
+			{
+				this.buttonMode = true;
+				
+				modelHandler();
+				buildSvgChange();
+			}
+			
+			public function set buttonStatus(v:Boolean):void
+			{
+				svgStatus = v;
+				showHandler();
+			}
+			
+			public function get buttonStatus():Boolean
+			{
+				return svgStatus;
+			}
+			
+			private function modelHandler():void
+			{
+				modelNormal = SvgType.getSvgModelFromEvent(svgEventNormal);
+				if(modelNormal.source == "")
+				{
+					return;
+				}
+				if(svgSourceNormal == "")
+				{
+					svgSourceNormal = modelNormal.source;
+				}
+				if(svgTipNormal == "")
+				{
+					svgTipNormal = modelNormal.tip;
+				}
+				
+				modelChange = SvgType.getSvgModelFromEvent(svgEventChange);
+				if(modelChange.source == "")
+				{
+					return;
+				}
+				if(svgSourceChange == "")
+				{
+					svgSourceChange = modelChange.source;
+				}
+				if(svgTipChange == "")
+				{
+					svgTipChange = modelChange.tip;
+				}
+			}
+			
+			private function buildSvgChange():void
+			{
+				svgNormal = SvgButton.buildSvgButton(svgEventNormal,this.width,this.height,typeStyle,typeStatus,alpha);
+				svgNormal.addEventListener(MouseEvent.CLICK,clickHandler);
+				svgNormal.visible = false;
+				this.addElement(svgNormal);
+				
+				svgChange = SvgButton.buildSvgButton(svgEventChange,this.width,this.height,typeStyle,typeStatus,alpha);
+				svgChange.addEventListener(MouseEvent.CLICK,clickHandler);
+				svgChange.visible = false;
+				this.addElement(svgChange);
+				
+				showHandler();
+			}
+			
+			private function clickHandler(evt:MouseEvent):void
+			{
+				MouseUtils.stopMouseEvent(evt);
+				
+				svgStatus = !svgStatus;
+				showHandler();
+				this.dispatchEvent(new DatasEvent(SVGCHANGE_EVENT));
+			}
+			
+			private function showHandler():void
+			{
+				if(svgNormal == null || svgChange == null)
+				{
+					return;
+				}
+				if(svgStatus)
+				{
+					svgNormal.visible = false;
+					svgChange.visible = true;
+				}
+				else
+				{
+					svgNormal.visible = true;
+					svgChange.visible = false;
+				}
+			}
+			
+			public function clearButton():void
+			{
+				if(svgNormal)
+				{
+					svgNormal.removeEventListener(MouseEvent.CLICK,clickHandler);
+					this.removeElement(svgNormal);
+					svgNormal = null;
+				}
+				
+				if(svgChange)
+				{
+					svgChange.removeEventListener(MouseEvent.CLICK,clickHandler);
+					this.removeElement(svgChange);
+					svgChange = null;
+				}
+			}
+			
+			public static function buildSvgChangeButton(eventNormal:String,eventChange:String,width:Number,height:Number,style:int,status:int = 1,alpha:Number = 0):SvgChangeButton
+			{
+				var svg:SvgChangeButton = new SvgChangeButton();
+				svg.svgEventNormal = eventNormal;
+				svg.svgEventChange = eventChange;
+				svg.width = width;
+				svg.height = height;
+				svg.typeStyle = style;
+				svg.typeStatus = status;
+				svg.viewAlpha = alpha;
+				return svg;
+			}
+			
+		]]>
+	</fx:Script>
+	
+</s:Group>

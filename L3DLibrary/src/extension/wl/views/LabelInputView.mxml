@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" 
+		 creationComplete="group1_creationCompleteHandler(event)">
+	<fx:Script>
+		<![CDATA[
+			import mx.events.FlexEvent;
+			
+			import spark.components.HGroup;
+			
+			import extension.wl.buttons.LabelButton;
+			import extension.wl.models.LabelModel;
+			
+			import utils.DatasEvent;
+			import utils.lx.managers.GlobalManager;
+			
+			public var layoutType:int = 0;//默认0：label和input切换模式；  1：label和input左右模式
+			public var labelText:String = "";//label的值
+			public var inputText:String = "";//input的值
+			
+			public var positionChange:Boolean = false;
+			public var prompt:String;
+			public var typeStyle:int = 2;//默认风格
+			public var typeStatus:int;//默认状态
+			public var inputStyle:int = 2;//默认风格
+			public var inputStatus:int;//默认状态
+			public var typeMode:Boolean = true;
+			public var viewAlpha:Number = 1;
+			public var linealpha:Number;
+			public var lineOver:uint;
+			public var lineOut:uint;
+			public var lineColor:uint;
+			public var lineweight:Number = 0;
+			public var labelSize:int = 16;
+			public var viewTips:String = "";//组件提示
+			public var viewInfo:Object = null;//组件信息
+			public var labelVerticalAlign:String = "middle";
+			public var labelAlign:String = "center";
+			public var inputVerticalAlign:String = "middle";
+			public var inputAlign:String = "center";
+			public var topLeftRadius:Number = 0;
+			public var topRightRadius:Number = 0;
+			public var bottomLeftRadius:Number = 0;
+			public var bottomRightRadius:Number = 0;
+			public var inputAlpha:Number;
+			public var inputRestrict:Boolean = true;
+			public var labelEnabled:Boolean = false;
+			public var inputEnabled:Boolean = true;
+			public var labelSelected:Boolean;
+			public var labelWidth:Number;
+			public var inputWidth:Number;
+			public var labelToolTip:String;
+			private var currentLabelModel:LabelModel;
+			private var label:LabelButton;
+			private var input:InputView;
+			private var labelStatus:Boolean = false;
+			private var newInputText:String;
+			public static const LABELINPUT:String = "labelinput";
+			
+			protected function group1_creationCompleteHandler(event:FlexEvent):void
+			{
+				buildLabelInput();
+			}
+			
+			public function set buttonStatus(v:Boolean):void
+			{
+				labelStatus = v;
+				showHandle();
+			}
+			
+			public function get buttonStatus():Boolean
+			{
+				return labelStatus;
+			}
+			
+			public function setEnable():void
+			{
+				label.enabled = labelEnabled;	
+				input.enabled = inputEnabled;
+			}
+			
+			private function showHandle():void
+			{
+				if(labelStatus)
+				{
+					label.visible = false;
+					input.visible = true;
+				}
+				else
+				{
+					label.visible = true;
+					input.visible = false;
+				}
+			}
+			
+			public function inputChangeStyleHandler(inpStyle:int,inpStatus:int):void
+			{
+				inputStyle = inpStyle;
+				inputStatus = inpStatus;
+			}
+			
+			private function buildLabelInput():void
+			{
+				label = LabelButton.buildLabelButton(labelText,this.width,this.height,typeStyle,typeStatus,typeMode,linealpha,lineOver,lineOut,viewAlpha,labelSize);
+				label.addEventListener(MouseEvent.CLICK,clickHandle);
+				label.addEventListener(KeyboardEvent.KEY_DOWN,keyHandle);
+				label.visible=false;
+				label.labelVerticalAlign = labelVerticalAlign;
+				label.labelAlign = labelAlign;
+				label.toolTip = labelToolTip;
+				label.topLeftRadius=topLeftRadius;
+				label.topRightRadius=topRightRadius;
+				label.bottomLeftRadius=bottomLeftRadius;
+				label.bottomRightRadius=bottomRightRadius;
+				label.lineweight = lineweight;
+				this.addElement(label);
+				
+				input = InputView.buildInputView(inputText,this.width,this.height,inputStyle,inputStatus,prompt,linealpha,lineColor,inputAlpha,labelSize);
+				input.addEventListener(InputView.INPUT_CHANGE_EVENT, inputChangeHandler); //获取输入的值
+				input.addEventListener(KeyboardEvent.KEY_DOWN,KeyDownHandle);
+				input.visible=false;
+				if(inputRestrict)
+				{				
+					input.inputRestrict = "0-9"
+				}
+				input.labelAlign = inputAlign;
+				input.labelVerticalAlign = inputVerticalAlign;
+				input.topLeftRadius=topLeftRadius;
+				input.topRightRadius=topRightRadius;
+				input.bottomLeftRadius=bottomLeftRadius;
+				input.bottomRightRadius=bottomRightRadius;
+				input.lineweight = lineweight;
+				this.addElement(input);
+			
+				if (layoutType ==1) 
+				{
+					input.visible=false;	
+					showHandle();
+				}
+				else if (layoutType == 2) 
+				{
+					if(positionChange)
+					{
+					label.width = labelWidth;
+					input.width = inputWidth;
+					label.x = input.x+input.width;
+					label.enabled = true;
+					}else
+					{
+						label.width = label.labelText.length*20;
+						input.x = label.x+label.width;
+						input.width = inputWidth;
+						label.enabled =labelEnabled;
+						input.enabled =inputEnabled;
+					}
+					label.visible = true;
+					input.visible = true;
+				}
+			}
+					
+			private function clickHandle(event:MouseEvent):void
+			{
+				if(layoutType == 1)
+				{
+					input.inputText = "";
+					labelStatus = !labelStatus;
+					showHandle();
+				}else {
+					var currentText:String = (event.currentTarget as LabelButton).labelText;
+					if(newInputText != this.inputText && newInputText != null)
+					{
+						this.inputText = newInputText;
+					}
+					GlobalManager.Instance.dispatchEvent(new DatasEvent(LABELINPUT,this));
+				}
+				
+			}
+			private function keyHandle(event:KeyboardEvent):void
+			{
+				if(event.keyCode == Keyboard.ENTER)
+				{
+					
+				}
+				
+			}
+			
+			private function KeyDownHandle(event:KeyboardEvent):void
+			{
+				if(event.keyCode == Keyboard.ENTER)
+				{
+					if(layoutType == 0)
+					{
+						if(input.inputText != "")
+						{
+							label.labelText = input.inputText;
+						}
+						labelStatus = !labelStatus;
+						showHandle();
+					}else
+					{
+						if(newInputText != this.inputText && newInputText != null)
+						{
+							this.inputText = newInputText;
+						}
+						GlobalManager.Instance.dispatchEvent(new DatasEvent(LABELINPUT,this));
+					}
+				
+				}
+			}
+			
+			public function clearButton():void
+			{
+				if(label)
+				{
+					label.removeEventListener(MouseEvent.CLICK,clickHandle);
+					this.removeElement(label);
+					label = null;
+				}
+				if(input)
+				{
+					input.removeEventListener(KeyboardEvent.KEY_DOWN,KeyDownHandle);
+					this.removeElement(input);
+					input = null;
+				}
+			} 
+			
+			public function selecedHandler():void
+			{
+				label.labelSelected = labelSelected;
+				label.selecedHandler();
+			}
+
+			protected function inputChangeHandler(event:Event):void
+			{
+				var currentKey:String = (event.currentTarget.parent as LabelInputView).labelText;
+				var currentValue:String = (event.currentTarget as InputView).inputText;
+				newInputText = (event.currentTarget as InputView).inputText;
+				currentLabelModel =LabelModel.buildLabelModel(currentKey, currentValue);
+				this.dispatchEvent(new DatasEvent(LABELINPUT, currentLabelModel));
+			}
+			
+			public static function buildLabelInputView(eventNormal:String,eventInput:String,width:Number,height:Number,style:int,type:int ,status:int = 0,prompt:String = "",lineAlpha:Number = 0,lineOver:uint = 0,lineOut:uint = 0,alpha:Number = 0,inputalpha:Number = 0,size:int = 16):LabelInputView
+			{
+				var label:LabelInputView = new LabelInputView();
+				label.labelText = eventNormal;
+				label.inputText = eventInput;
+				label.width = width;
+				label.height = height;
+				label.typeStyle = style;
+				label.typeStatus = status;
+				label.prompt = prompt;
+				label.linealpha = lineAlpha;
+				label.lineColor = lineOut;
+				label.lineOver = lineOver;
+				label.lineOut = lineOut;
+				label.viewAlpha = alpha;
+				label.labelSize = size;
+				label.layoutType = type;
+				label.inputAlpha = inputalpha;
+				return label;
+			}
+			
+//			protected function onKeyDown(event:KeyboardEvent):void
+//			{
+//				// TODO Auto-generated method stub
+//				if(event.keyCode == Keyboard.ENTER)
+//				{
+//					this.dispatchEvent(new DatasEvent(LABELINPUT, currentLabelModel));				
+//				}
+//			}
+			
+		]]>
+	</fx:Script>
+	
+</s:Group>

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Panel xmlns:fx="http://ns.adobe.com/mxml/2009"
+			   xmlns:s="library://ns.adobe.com/flex/spark"
+			   xmlns:mx="library://ns.adobe.com/flex/mx"
+			   width="186" height="82" title="新建场景" backgroundColor="0x33373a" fontFamily="宋体">
+	
+	<fx:Script>
+		<![CDATA[
+			import mx.events.CloseEvent;
+			import mx.managers.PopUpManager;
+			
+			public var main:Object = null;
+			
+			protected function OKButton_clickHandler(event:MouseEvent):void
+			{
+				main.Show2D();
+			//	main.mMainMenu.OnNewFile_Yes();
+				main.SceneRender2D.ClearScene();
+				PopUpManager.removePopUp(this);
+			}
+			
+			public static function Show(main:Object, parent:*):void
+			{			
+			/*	var win:NewSceneForm = PopUpManager.createPopUp(parent, NewSceneForm, true) as NewSceneForm;
+				win.main = main;
+				PopUpManager.centerPopUp(win);*/
+				
+				var window:NewSceneForm = new NewSceneForm();
+				window.main = main;
+			//	window.owner = parent;
+				PopUpManager.addPopUp(window, parent, true);
+				PopUpManager.centerPopUp(window);
+			}
+			
+			protected function titlewindow1_closeHandler(event:CloseEvent):void
+			{
+				PopUpManager.removePopUp(this);
+			}
+			
+			protected function CancelButton_clickHandler(event:MouseEvent):void
+			{
+				PopUpManager.removePopUp(this);
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	<s:Button id="OKButton" x="10" y="10" width="72" height="29" label="确定"
+			  click="OKButton_clickHandler(event)" fontFamily="宋体"
+			  skinClass="skins.ViewButtonSkin"/>
+	<s:Button id="CancelButton" x="102" y="10" width="72" height="29" label="取消" fontFamily="宋体" skinClass="skins.ViewButtonSkin"
+			  click="CancelButton_clickHandler(event)"/>
+</s:Panel>

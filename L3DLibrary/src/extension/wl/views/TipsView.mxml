@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" width="100%" height="100%"
+		 creationComplete="group1_creationCompleteHandler(event)" xmlns:buttons="buttons.*" xmlns:buttons1="extension.wl.buttons.*">
+	<fx:Script>
+		<![CDATA[
+			import mx.events.FlexEvent;
+			
+			import extension.wl.globalData.allStaticTypes.ColorType;
+			import extension.wl.globalData.allStaticTypes.LivelyType;
+			
+			import utils.DatasEvent;
+			
+			public var tipsID:int = 0;//提示id  0为用户自定义上传对象删除提示 ； 1为自由铺砖关闭退出提示；
+			
+			public var info:Object = "";//用于信息存储
+			public static var DELETE_EVENT:String="delete_event";
+			public static var DELETE_CANCEL:String="delete_cancel";
+			
+			protected function group1_creationCompleteHandler(event:FlexEvent):void
+			{
+				
+			}
+			
+			public function set tips(v:String):void
+			{
+				tipsLabel.labelText = v;
+			}
+			
+			public function set cancalTips(v:String):void
+			{
+				cancelBtn.labelText = v;
+			}
+			
+			public function set confirmTips(v:String):void
+			{
+				confirmBtn.labelText = v;
+			}
+			
+			protected function cancelBtn_clickHandler(event:MouseEvent):void
+			{
+				this.dispatchEvent(new DatasEvent(DELETE_CANCEL));
+			}
+			
+			protected function confirmBtn_clickHandler(event:MouseEvent):void
+			{
+				this.dispatchEvent(new DatasEvent(DELETE_EVENT,info));
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<s:Rect width="100%" height="100%">
+		<s:fill>
+			<s:SolidColor color="{ColorType.LightGreyLively}"/>
+		</s:fill>
+	</s:Rect>
+	<s:HGroup width="100%" height="100%" verticalAlign="middle" horizontalAlign="center">
+		<s:Group width="400" height="220">
+			<buttons1:LabelButton id="tipsLabel" buttonMode="false" width="400" height="50" top="50" viewAlpha="0" lineAlpha="0" labelSize="20" labelMode="false"/>
+			<buttons1:LabelButton id="cancelBtn" labelText="取消" left="0" bottom="0" width="200" height="50" click="cancelBtn_clickHandler(event)" labelSelected="true" typeStatus="1" typeStyle="{LivelyType.LivelyStyle}"/>
+			<buttons1:LabelButton id="confirmBtn" labelText="确定" left="200" bottom="0" width="200" height="50" click="confirmBtn_clickHandler(event)" labelSelected="true" typeStyle="{LivelyType.LivelyStyle}"/>
+		</s:Group>
+	</s:HGroup>
+</s:Group>

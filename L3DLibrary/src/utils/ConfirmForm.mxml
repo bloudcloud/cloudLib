@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009"
+				xmlns:s="library://ns.adobe.com/flex/spark"
+				xmlns:mx="library://ns.adobe.com/flex/mx"
+				width="186" height="82" title="提醒" backgroundColor="0x33373a" showCloseButton="true" close="titlewindow1_closeHandler(event)" fontFamily="宋体" layout="absolute">
+	
+	<fx:Script>
+		<![CDATA[
+			import mx.events.CloseEvent;
+			import mx.managers.PopUpManager;
+			
+			private var okFun:Function = null;
+			private var cancelFun:Function = null;
+			
+			protected function OKButton_clickHandler(event:MouseEvent):void
+			{
+				PopUpManager.removePopUp(this);
+				if(okFun != null)
+				{
+					okFun();
+				}
+			}
+			
+			public static function Show(parent:DisplayObject, title:String, okFun:Function, cancelFun:Function):void
+			{			
+		/*		var win:ConfirmForm = PopUpManager.createPopUp(parent, ConfirmForm, true) as ConfirmForm;
+				win.okFun = okFun;
+				win.cancelFun = cancelFun;
+				PopUpManager.centerPopUp(win);*/				
+				var window:ConfirmForm = new ConfirmForm();
+				window.title = title;
+				window.okFun = okFun;
+				window.cancelFun = cancelFun;
+				PopUpManager.addPopUp(window, parent, true);
+				PopUpManager.centerPopUp(window);
+			}
+			
+			protected function titlewindow1_closeHandler(event:CloseEvent):void
+			{
+				PopUpManager.removePopUp(this);
+				if(cancelFun != null)
+				{
+					cancelFun();
+				}
+			}
+			
+			protected function CancelButton_clickHandler(event:MouseEvent):void
+			{
+				PopUpManager.removePopUp(this);
+				if(cancelFun != null)
+				{
+					cancelFun();
+				}
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	<s:Button id="OKButton" x="4" y="7" width="72" height="29" label="确定"
+			  click="OKButton_clickHandler(event)" fontFamily="宋体"
+			  skinClass="skins.ViewButtonSkin"/>
+	<s:Button id="CancelButton" x="108" y="7" width="72" height="29" label="取消" fontFamily="宋体" skinClass="skins.ViewButtonSkin"
+			  click="CancelButton_clickHandler(event)"/>
+</mx:TitleWindow>

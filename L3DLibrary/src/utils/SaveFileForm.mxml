@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009"
+			   xmlns:s="library://ns.adobe.com/flex/spark"
+			   xmlns:mx="library://ns.adobe.com/flex/mx"
+			   width="210" height="82" close="titlewindow1_closeHandler(event)" title="保存文件" backgroundColor="0x33373a" fontFamily="宋体">
+	<fx:Script>
+		<![CDATA[
+			import mx.events.CloseEvent;
+			import mx.managers.PopUpManager;
+			
+			public var data:* = null;
+			public var defaultFileName:String = "";
+			
+			protected function titlewindow1_closeHandler(event:CloseEvent):void
+			{
+				PopUpManager.removePopUp(this);
+			}
+			
+			protected function ExitButton_clickHandler(event:MouseEvent):void
+			{
+				PopUpManager.removePopUp(this);
+			}
+			
+			protected function SaveButton_clickHandler(event:MouseEvent):void
+			{
+				var file:FileReference=new FileReference();
+			   file.save(data,defaultFileName);
+			}
+
+			public static function Show(data:*, defaultFileName:String, parent:DisplayObject):void
+			{
+				if(data == null || defaultFileName == null || defaultFileName.length == 0)
+				{
+					return;
+				}
+				
+				var win:SaveFileForm = PopUpManager.createPopUp(parent, SaveFileForm, true) as SaveFileForm;
+				win.data = data;
+				win.defaultFileName = defaultFileName;
+				PopUpManager.centerPopUp(win);
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	<s:Button id="SaveButton" x="11" y="10" width="72" height="28" label="保存" fontFamily="宋体" skinClass="skins.ViewButtonSkin"
+			  click="SaveButton_clickHandler(event)"/>
+	<s:Button id="ExitButton" x="127" y="10" width="72" height="28" label="退出" fontFamily="宋体" skinClass="skins.ViewButtonSkin"
+			  click="ExitButton_clickHandler(event)"/>
+</s:TitleWindow>

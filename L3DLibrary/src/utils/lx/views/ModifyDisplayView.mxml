@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:VGroup xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" width="100%" height="100%"
+		 creationComplete="group_creationCompleteHandler(event)">
+	<fx:Script>
+		<![CDATA[
+			import mx.events.FlexEvent;
+			
+			private var colors:Array = [0xff0000,0xffff00,0x00ff00,0x00ffff,0x0000ff,0xff00ff];
+			private var unitAlpha:Number = 0.5;
+			private var displays:Array = [];
+			
+			private function group_creationCompleteHandler(event:FlexEvent):void
+			{
+				
+			}
+			
+			private function btnAddDisplayName_mouseDownHandler(e:MouseEvent):void
+			{
+				var index:int = displays.indexOf(inputAddDisplayName.text);
+				if(index<0)
+				{
+					displays.push(inputAddDisplayName.text);
+					textAreaDisplayName.text = displays.toString();
+				}
+			}
+			
+			private function btnDelDisplayName_mouseDownHandler(e:MouseEvent):void
+			{
+				var index:int = displays.indexOf(iputDelDisplayName.text);
+				if(index>-1)
+				{
+					displays.splice(index,1);
+					textAreaDisplayName.text = displays.toString();
+				}
+			}
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	<s:HGroup verticalAlign="middle">
+		<s:TextInput id="inputAddDisplayName"/>
+		<s:Button id="btnAddDisplay" 
+				  width="100"
+				  label="添加显示对象名字"
+				  mouseDown="btnAddDisplayName_mouseDownHandler(event)"/>
+		<s:Spacer width="50"/>
+		<s:TextInput id="iputDelDisplayName"/>
+		<s:Button id="btnDelDisplay" 
+				  width="100"
+				  label="删除显示对象名字"
+				  mouseDown="btnDelDisplayName_mouseDownHandler(event)"/>
+	</s:HGroup>
+	<s:TextArea id="textAreaDisplayName" width="100%" height="100%"/>
+</s:VGroup>

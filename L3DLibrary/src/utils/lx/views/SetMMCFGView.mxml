@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
+		 xmlns:s="library://ns.adobe.com/flex/spark"
+		 xmlns:mx="library://ns.adobe.com/flex/mx">
+
+	<fx:Script>
+		<![CDATA[
+			import mx.core.FlexGlobals;
+			import mx.managers.PopUpManager;
+
+			public function popUpOpen():void
+			{
+				PopUpManager.addPopUp(this, FlexGlobals.topLevelApplication as DisplayObject, true);
+				PopUpManager.centerPopUp(this);
+			}
+
+			public function popUpClose():void
+			{
+				PopUpManager.removePopUp(this);
+			}
+
+			private function btnBuildMMCFG_clickHandler(event:MouseEvent):void
+			{
+				var mmcfg:String="ErrorReportingEnable=1\nTraceOutputFileEnable=1\nSuppressDebuggerExceptionDialogs=1\nAS3Sampling=1\nAS3AutoStartSampling=1\nTraceOutputFileName=" + traceOutputFileInput.text;
+				var file:FileReference=new FileReference();
+				var fileName:String="mm.cfg";
+				file.save(mmcfg, fileName);
+			}
+
+			private function btnClose_clickHandler(event:MouseEvent):void
+			{
+				popUpClose();
+			}
+		]]>
+	</fx:Script>
+
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	<s:Rect width="100%"
+			height="100%">
+		<s:fill>
+			<s:SolidColor color="0xffffff"/>
+		</s:fill>
+		<s:stroke>
+			<s:SolidColorStroke/>
+		</s:stroke>
+	</s:Rect>
+	<s:Button id="btnClose"
+			  label="关闭"
+			  right="0"
+			  top="0"
+			  click="btnClose_clickHandler(event)"/>
+	<s:VGroup width="100%"
+			  height="100%"
+			  left="50"
+			  right="50"
+			  top="50"
+			  bottom="50">
+		<s:Label text="在本地找到flashlog.txt的文件地址，填写完整路径，在Windows路径一般是"/>
+		<s:Label text="C:\Users\你的用户名\AppData\Roaming\Macromedia\Flash Player\Logs\flashlog.txt"/>
+		<s:TextInput id="traceOutputFileInput"
+					 width="400"/>
+		<s:Button id="btnBuildMMCFG"
+				  label="生成mm.cfg，手动替换本地的mm.cfg"
+				  fontFamily="宋体"
+				  click="btnBuildMMCFG_clickHandler(event)"/>
+	</s:VGroup>
+</s:Group>

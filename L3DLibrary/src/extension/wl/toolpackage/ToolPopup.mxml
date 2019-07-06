@@ -1,0 +1,1167 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" 
+		 width="100%" height="100%" 
+		 creationComplete="group1_creationCompleteHandler(event)"
+		 >
+	<fx:Script>
+		<![CDATA[						
+			import mx.core.UIComponent;
+			import mx.events.FlexEvent;
+			import mx.graphics.SolidColor;
+			
+			import spark.components.Group;
+			import spark.components.HGroup;
+			import spark.primitives.Rect;
+			
+			import L3DLibrary.L3DRootNode;
+			
+			import extension.lrj.color.ColorSelect;
+			import extension.lrj.views.TipsGroupView;
+			import extension.wl.buttons.LabelButton;
+			import extension.wl.buttons.LabelChangeButton;
+			import extension.wl.buttons.SvgButton;
+			import extension.wl.buttons.SvgChangeButton;
+			import extension.wl.globalData.allStaticTypes.ColorType;
+			import extension.wl.globalData.allStaticTypes.LivelyType;
+			import extension.wl.globalData.allStaticTypes.SvgType;
+			import extension.wl.globalData.allStaticTypes.UserType;
+			import extension.wl.models.LabelModel;
+			import extension.wl.models.SvgModel;
+			import extension.wl.utils.ObjectUtils;
+			import extension.wl.views.LabelInputView;
+			import extension.wl.views.LineVertical;
+			
+			import utils.DatasEvent;
+			import utils.lx.managers.GlobalManager;
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+//			public var pageLength:int = 4;//每页长度
+			public var pageLength:int = 5;
+			public var pageTotal:int = 1;//总页数
+			public var pageIndex:int = 0;//当前页
+			public var itemCount:int = 0;//按钮总数
+			public var popupjson:Object;
+			private var popupItems:Array = null;//保存所有按钮
+			public var popupGroup:HGroup = null;
+			private var pageButton:SvgButton = new SvgButton;
+			private var rect:Rect;			
+			private var firstLabelModel:Vector.<LabelModel>;
+			private var secendLabelModel:Vector.<LabelModel>;
+			private var currentLayer:int = 1;
+			public var count:int = 0;
+			public var popupChildGroup:HGroup;
+			private var point:Point;				//获取点击的那个按钮的坐标
+			public var svgInfoObj:Array = [];		//	保存设置条内关于SVGBUTTON的二级弹出条JSON
+			public var labelBtnArr:Array;		//如果有分割线，保存分割线前面的按钮
+			public var popGroup:Group;
+			private var saveName:String = "";
+			private var labelModel:LabelModel;
+			private var items:Array = [];
+			private var popUpindex:String;
+			public var colors:ColorSelect;
+			private var piaoChuangType:Array = [];
+			private var openWindowType:int = 0;
+			private var light:Boolean = false;
+			public var labelInputArr:Array = [];
+			public static const SVG_TYPE:int = 1;
+			public static const LABEL_TYPE:int=2;
+			public static const SVG_CHANGE_TYPE:int =3;
+			public static const LABEL_CHANGE_TYPE:int = 4;
+			public static const LABEL_INPUT_TYPE:int = 5;
+			public static const LEFT_LABEL_INPUT_TYPE:int = 6;
+			public static const RIGHT_LABEL_INPUT_TYPE:int = 7;
+			
+			public static const ISDOUBLELIGHT:String = "isDoubleLight";
+			public function set Light(v:Boolean):void
+			{
+				light = v;
+			}
+			public function set SaveName(v:String):void
+			{
+				saveName = v;
+			}
+			private var line:LineVertical;
+			
+			private var tipsGroupView:TipsGroupView = null;
+			
+			protected function group1_creationCompleteHandler(event:FlexEvent):void
+			{
+				
+			}
+			//			private function findLabelModel(layer:int,mark:String):LabelModel
+			
+			//			创建PopupEventData
+			private function buildPopUpEventData(type:int, revisionLayer:int, info:Object, currentLayer:int = 1):ToolEventData
+			{
+				var popupEventData:ToolEventData = new ToolEventData();
+				popupEventData.type = type;
+				popupEventData.revisionLayer = revisionLayer;
+				popupEventData.info = info;
+				popupEventData.currentLayer = currentLayer;
+				return popupEventData;
+			}
+			
+			public function initPopup():void
+			{
+				popupGroup = new HGroup();
+				popupGroup.horizontalAlign = "right";
+				popupGroup.verticalAlign = "top";
+				popupGroup.addEventListener(FlexEvent.CREATION_COMPLETE, popupGroupupcompleteHandler);
+				popupGroup.width = 350;
+				popupGroup.gap= 10;
+				this.addElement(popupGroup);
+				pageButton = buildSvgButton(null,SvgType.POPUP_GENGDUO_EVENT,46,46);
+				GlobalManager.Instance.addEventListener(LabelInputView.LABELINPUT,LabelClick);
+			}
+			
+			private function buildSvgButton(info:Object,event:String,width:Number,height:Number,style:int=4,status:int=2,alpha:int=1):SvgButton
+			{
+				var svgBtn:SvgButton = SvgButton.buildSvgButton(event,width,height,style,status,alpha);
+				svgBtn.svgInfo = info;
+				svgBtn.typeStyleHandler();
+				svgBtn.lineAlpha = 1;
+				svgBtn.svgBorderThickness = 3;
+				svgBtn.lineOver = svgBtn.viewOver;
+				svgBtn.lineOut = ColorType.White;
+				svgBtn.svgRadius = 8;
+				svgBtn.addEventListener(MouseEvent.CLICK,itemClickHandler);			
+				return svgBtn;
+			}
+			
+			public function popupIndexHandler(index:String,first:Vector.<LabelModel>,secend:Vector.<LabelModel>):void
+			{
+				firstLabelModel = new Vector.<LabelModel>();
+				secendLabelModel = new Vector.<LabelModel>();
+				firstLabelModel = first;
+				secendLabelModel = secend;
+				var jsonLength:int = popupjson.popupscript.length;
+				for (var i:int = 0; i < jsonLength; i++) 
+				{
+					var popupname:String = "popup"+index;
+					popUpindex = index;
+					if(popupjson.popupscript[i].name==popupname)
+					{
+						popupDataClean();
+						itemCount = popupjson.popupscript[i].children.length;
+						pageTotal = int(itemCount/pageLength);
+						if(itemCount%pageLength > 0)
+						{
+							pageTotal += 1;
+						}
+						pageIndex = 0;	
+						items = popupjson.popupscript[i].children as Array
+						buildHandler(items);
+						break;
+					}
+				}
+//				if(itemCount>4)
+//				{
+//					popupGroup.addElement(pageButton);
+//				}
+			}
+			
+			private function getCurrentTip(tips:Array):void
+			{
+				var currentTip:Array = tips;
+				var curtip:String;	
+				curtip = currentTip[0];
+				currentTip[0] = currentTip[1];
+				currentTip[1] = currentTip[0];
+				
+			}
+			
+//			伊莎莱转角料更新数据
+			private function updateDataByLink(object:Object):void
+			{
+//				
+//				var defaultValue:String = "";
+				var arr:Array = (object.dataLink as Array).concat();
+				var brandCode = UserType.USER_BRAND;
+				arr.insertAt(0, brandCode);
+				arr.push(object.tips);
+					
+				var rootJson:Object = ObjectUtils.clone(L3DRootNode.instance.libraryJson);
+				var json:Object = ObjectUtils.jsonSearchNode(rootJson, arr.concat());
+				if(json)
+				{
+					var len:int = (json.children as Array).length;
+					object.children = [];
+//					type = 2
+					
+					for(var i:int = 0; i < len; i++)
+					{
+//						if(i == 0)
+//						{
+//							defaultValue = json.children[i].name;
+//						}
+						
+						var childData:Object = {};
+						childData.key = json.children[i].name;
+						childData.type = "2";
+						childData.value = "";
+						
+						object.children.push(childData);
+					}
+				}
+				
+//				更新model
+//				for(var j:int = 0; j < firstLabelModel.length; j++)
+//				{
+//					var model:LabelModel = firstLabelModel[j] as LabelModel;
+//					if(model.labelKey == object.svgNormal)
+//					{
+//						model.labelValue = defaultValue;
+//						break;
+//					}
+//				}
+			}
+			
+			protected function buildHandler(items:Array):*
+			{
+				popupItems = [];
+				var labelInputView:LabelInputView;
+				for(var i:int = 0; i<itemCount;i++)
+				{	 
+					switch(int(items[i].type))
+					{
+						case SVG_TYPE:
+						{
+							if(items[i].dataLink && UserType.USER_BRAND == "美诗固门窗") //88、 门窗转角料处理
+							{
+								updateDataByLink(items[i]);
+							}
+							
+							var svgBtn:SvgButton = buildSvgButton(items[i].children as Object,items[i].svgNormal,46,46);
+							var svgModel:SvgModel = SvgType.getSvgModelFromEvent(items[i].svgNormal);
+							if(svgBtn.svgInfo.length != 0)
+							{
+								piaoChuangType = svgBtn.svgInfo as Array;
+								for (var k:int = 0; k < piaoChuangType.length; k++) 
+								{
+									svgInfoObj.push(piaoChuangType[k]);
+								}
+							}
+							svgBtn.svgTip = items[i].tips;
+							svgBtn.id = items[i].svgNormal;
+							popupItems.push(svgBtn);
+							break;
+						}
+							
+						case LABEL_TYPE:
+						{
+							var labelBtn:LabelButton;
+							if(popUpindex == "75")
+							{
+								popupGroup.horizontalAlign = "left";
+								labelBtn = LabelButton.buildLabelButton(items[i].labelNormal,80,49,4,2,true,0,0,0,1);	
+								labelBtn.enabled = false;
+							}else if(popUpindex == "71")
+							{
+								popupGroup.gap = 0;
+								popupGroup.horizontalAlign = "center";
+								
+								if(i == 0)
+								{
+//									是否保存
+									labelBtn = LabelButton.buildLabelButton(items[i].labelNormal,180,60, 2, 0, false, 0,0,0,1,25);
+									labelBtn.labelMode = false;
+								}
+								else
+								{
+//									labelBtn = LabelButton.buildLabelButton(items[i].labelNormal,190,60,2,0,true,0,0,0,1,25);
+									labelBtn = LabelButton.buildLabelButton(items[i].labelNormal,60,60,2,0,true,0,0,0,1,25);
+								}
+								
+								if(labelBtn.labelText == "是")
+								{
+									labelBtn.labelSelected = true;
+									labelBtn.selecedHandler();
+								}
+							}else if(popUpindex == "72")
+							{
+								popupGroup.gap = 0;
+								popupGroup.horizontalAlign = "center";
+								labelBtn = LabelButton.buildLabelButton(items[i].labelNormal,100,49,2,0,true,0,0,0,1);
+								if(labelBtn.labelText == "本地保存")
+								{
+									labelBtn.labelSelected = true;
+									labelBtn.selecedHandler();
+								}
+							}else{
+								popupGroup.gap = 0;
+								popupGroup.horizontalAlign = "right";
+								labelBtn = LabelButton.buildLabelButton(items[i].labelNormal,49,49,4,2,true,1,ColorType.GreenLively,ColorType.White,1);								
+								labelBtn.topLeftRadius = 8;
+								labelBtn.topRightRadius =8;
+								labelBtn.bottomLeftRadius = 8;
+								labelBtn.bottomRightRadius = 8;
+								labelBtn.lineweight = 3;
+							}
+							labelBtn.labelInfo = items[i].children as Object;
+//							labelBtn.width = labelBtn.labelText.length;
+							labelBtn.addEventListener(MouseEvent.CLICK,itemClickHandler);
+							currentLayer =1;
+
+							popupItems.push(labelBtn);
+							break;
+						}
+							
+						case SVG_CHANGE_TYPE:
+						{
+							var svgChangeBtn:SvgChangeButton = SvgChangeButton.buildSvgChangeButton(items[i].svgNormal,items[i].svgChange,49,49,2);
+							svgChangeBtn.addEventListener(MouseEvent.CLICK,itemClickHandler);
+							popupItems.push(svgChangeBtn);
+							break;
+						}
+							
+						case LABEL_CHANGE_TYPE:
+						{
+							if(popUpindex == "84")
+							{
+								GlobalManager.Instance.dispatchEvent(new DatasEvent(ISDOUBLELIGHT));
+							}
+							if(light)
+							{
+								var labelChangeBtn:LabelChangeButton = LabelChangeButton.buildLabelChangeButton(items[i].labelChange,items[i].labelNormal,49,49,4,2,true,1,0,0,1);
+							}
+							else 
+							{
+								var labelChangeBtn:LabelChangeButton = LabelChangeButton.buildLabelChangeButton(items[i].labelNormal,items[i].labelChange,49,49,4,2,true,1,0,0,1);
+							}
+							labelChangeBtn.addEventListener(MouseEvent.CLICK,itemClickHandler);
+							labelChangeBtn.lineweight = 3;
+							labelChangeBtn.lineOver = ColorType.GreenLively;
+							labelChangeBtn.lineOut = ColorType.White;
+							labelChangeBtn.topEventLeftRadius = 8;
+							labelChangeBtn.topEventRightRadius = 8;
+							labelChangeBtn.bottomEventLeftRadius = 8;
+							labelChangeBtn.bottomEventRightRadius = 8;
+							popupItems.push(labelChangeBtn);
+							break;
+						}
+							
+						case LABEL_INPUT_TYPE:
+						{
+							labelModel = new LabelModel();
+							if(firstLabelModel != null){
+								for (var j:int = 0; j < firstLabelModel.length; j++) 
+								{
+									if (items[i].labelNormal == firstLabelModel[j].labelKey) 
+									{
+										labelModel.labelValue = firstLabelModel[j].labelValue;
+									}								
+								}	
+							}
+//							if(popUpindex == "VR场景保存")
+//							{
+//								popupGroup.horizontalAlign = "left";
+//								popupGroup.gap = 0;
+//								var labelInputView:LabelInputView = LabelInputView.buildLabelInputView("确定","",350,49,2,2,0,"",1,ColorType.White,ColorType.White,1,1);	
+//								labelInputView.labelWidth = 100;
+//								labelInputView.inputWidth = 250;
+//								labelInputView.positionChange = true;
+//							}else if(popUpindex == "另存")
+//							{
+//								popupGroup.horizontalAlign = "left";
+//								popupGroup.gap = 0;
+//								var labelInputView:LabelInputView = LabelInputView.buildLabelInputView("另存","",350,49,2,2,0,"",1,ColorType.White,ColorType.White,1,1);	
+//								labelInputView.labelWidth = 100;
+//								labelInputView.inputWidth = 250;
+//								labelInputView.positionChange = true;
+//							}else if(popUpindex == "新建保存" || popUpindex == "本地保存")
+//							{
+//								popupGroup.horizontalAlign = "left";
+//								popupGroup.gap = 0;
+//								var labelInputView:LabelInputView = LabelInputView.buildLabelInputView("保存",getNewName(),350,49,4,2,3,"",1,ColorType.White,ColorType.White,1,1);	
+//								labelInputView.inputChangeStyleHandler(2,0);
+//								labelInputView.labelWidth = 100;
+//								labelInputView.inputWidth = 250;
+//								labelInputView.positionChange = true;
+//							}else{
+								popupGroup.horizontalAlign = "right";
+								popupGroup.gap = 10;
+								labelInputView = LabelInputView.buildLabelInputView(labelModel.labelValue,labelModel.labelValue,49,49,4,1,2,"",1,ColorType.White,ColorType.White,1,1);								
+								labelInputView.labelToolTip = items[i].tips;
+								labelInputView.positionChange = false;
+								labelInputView.topLeftRadius = 8;
+								labelInputView.topRightRadius = 8;
+								labelInputView.bottomLeftRadius = 8;
+								labelInputView.bottomRightRadius = 8;
+								labelInputView.lineweight = 3;
+								labelInputView.linealpha = 1;
+								labelInputView.lineOver = ColorType.GreenLively;
+								labelInputView.lineOut = ColorType.White;
+//							}
+							labelInputView.id = items[i].labelNormal;
+							labelInputView.addEventListener(LabelInputView.LABELINPUT, inputChangeHandler);
+							popupItems.push(labelInputView);
+							break;
+						}
+							case LEFT_LABEL_INPUT_TYPE:
+						{
+							labelModel = new LabelModel();
+							if(firstLabelModel != null)
+							{
+								for (var j2:int = 0; j2 < firstLabelModel.length; j2++) 
+								{
+									if (items[i].labelNormal == firstLabelModel[j2].labelKey) 
+									{
+										if(firstLabelModel[j2].labelValue == null)
+										{
+											labelModel.labelValue = saveName;
+										}else
+										{
+											saveName = firstLabelModel[j2].labelValue;
+										}
+									}								
+								}	
+							}
+							if(popUpindex == "85")
+							{
+								saveName = null;
+							}
+							popupGroup.horizontalAlign = "left";
+							popupGroup.gap = 0;
+							labelInputView = LabelInputView.buildLabelInputView(items[i].labelNormal,saveName,350,49,4,2,3,"",1,ColorType.White,ColorType.White,1,1);	
+							labelInputView.inputChangeStyleHandler(2,0);
+							labelInputView.labelWidth = 100;
+							labelInputView.inputWidth = 250;
+							labelInputView.inputRestrict = false;
+							labelInputView.positionChange = true;
+							labelInputView.id = items[i].labelNormal;
+							labelInputView.addEventListener(LabelInputView.LABELINPUT, inputChangeHandler);
+							popupItems.push(labelInputView);
+						}
+							break;
+					}
+				}				
+				pageHandler();
+			}
+			
+			private function differentLabelInputView(labeltext:String):void
+			{
+				
+			}
+			
+			private var currentSvgModel:SvgModel;			//存储当前一级
+			private function itemClickHandler(event:MouseEvent):void
+			{	
+				point = new Point();
+				var item:DisplayObject = event.currentTarget as DisplayObject;
+				var uc:UIComponent=event.currentTarget as UIComponent;
+				point=uc.parent.localToGlobal(new Point(uc.x, uc.y));
+				
+				var popupEventData:ToolEventData;
+				
+				if(item is SvgButton)
+				{
+					labelBtnArr = [];
+					var svgBtn:SvgButton = item as SvgButton;
+					svgInfoObj= svgBtn.svgInfo as Array;
+					for (var i6:int = 0; i6 < popupItems.length; i6++) 
+					{
+						if(popupItems[i6].className == "SvgButton")
+						{
+							popupItems[i6].buttonSelected = true;
+							if(popupItems[i6].svgEvent == SvgType.POPUP_OPENWINDOW_EVENT && svgBtn.id == SvgType.POPUP_OPENWINDOW_EVENT)
+							{
+								openWindowType ++;
+								popupItems[i6].svgSelected = true;
+								if(openWindowType > 2)
+								{
+									popupItems[i6].svgSelected = false;
+								}
+							}
+							else if (popupItems[i6] as SvgButton == svgBtn) 
+							{
+								popupItems[i6].svgSelected = !(popupItems[i6].svgSelected);
+							}else
+							{
+								popupItems[i6].svgSelected = false;
+								popupItems[i6].svgSelecedHandler();
+								popupItems[i6].buttonSelected = false;
+							}
+							popupItems[i6].svgSelecedHandler();
+							popupItems[i6].buttonSelected = false;	
+						}
+					}
+					if(svgBtn.svgEvent == SvgType.POPUP_EDIT_EVENT &&popUpindex =="23")
+					{
+						svgInfoObj = (svgBtn.svgInfo as Array).concat();
+						GlobalManager.Instance.dispatchEvent(new DatasEvent(SvgType.POPUP_EDIT_EVENT));
+					}
+					if(svgBtn.svgEvent == SvgType.POPUP_BRICKGAPCOLOR_EVENT && popUpindex != "52")
+					{
+						colors = new ColorSelect();
+						colors.name = "colors";
+						colors.group.x = point.x;
+						colors.group.y = point.y-265;
+						for (var i10:int = 0; i10 < firstLabelModel.length; i10++) 
+						{
+							if(firstLabelModel[i10].labelKey == SvgType.POPUP_BRICKGAPCOLOR_EVENT)
+							{
+								colors.colorn = uint(firstLabelModel[i10].labelValue);
+							}
+						}
+						colors.InitColorSelectUI(); 
+						popupGroup.addElementAt(colors,0);
+					}
+					if(svgBtn.svgEvent == SvgType.POPUP_GENGDUO_EVENT)
+					{
+						cleansecendpopup();
+						var popupGroupLength:int = popupGroup.numElements;
+						for (var i7:int = 0; i7 < popupGroupLength-1; i7++) 
+						{
+							popupGroup.removeElementAt(0);										
+						}
+						pageIndex ++;
+						if(pageIndex >= pageTotal)
+						{
+							pageIndex = 0;
+						}												
+						pageHandler();
+						
+//						改变提示页数
+						if(tipsGroupView)
+						{
+							tipsGroupView.updateView(pageIndex);
+						}
+						
+						return;
+					}				
+					cleansecendpopup();
+					popGroup = new Group();
+					popupChildGroup = new HGroup();
+					popupChildGroup.horizontalAlign = "center";
+					popupChildGroup.verticalAlign = "middle";
+					popupChildGroup.gap = 4;
+					if (svgBtn.svgInfo.length>=1 ) 
+					{
+						//						存储当前一级按钮的svgModel
+						currentSvgModel = svgBtn.model;
+						
+						for (var i:int = 0; i < svgInfoObj.length; i++) 
+						{	
+							var labelModel: LabelModel = new LabelModel();
+							labelModel.labelKey = svgInfoObj[i].value;
+							if(secendLabelModel != null)
+							{
+								for (var i4:int = 0; i4 < secendLabelModel.length; i4++) 
+								{								
+									if (labelModel.labelKey == secendLabelModel[i4].labelKey) 
+									{
+										labelModel.labelValue = secendLabelModel[i4].labelValue;
+									}
+								}
+							}
+							
+							if (svgInfoObj[i].type == 6) 
+							{
+								if (labelModel.labelValue == null || labelModel.labelValue == "") 
+								{
+									labelModel.labelValue =" 0";	
+									if(UserType.USER_BRAND == "新豪轩" && svgInfoObj[i].key == "自定义")
+									{
+										labelModel.labelValue = "自定义";
+									}
+								}
+								
+								var labelInput:LabelInputView = LabelInputView.buildLabelInputView(svgInfoObj[i].key,labelModel.labelValue,svgInfoObj[i].key.length*20+90,30,2,2,1,"",0,0,0,0,1);
+								labelInput.id = svgInfoObj[i].value;
+								labelInput.inputWidth = 90;
+								labelInput.inputVerticalAlign = "top";
+								
+//								lrj 19.4.1
+								if(UserType.USER_BRAND == "新豪轩" && svgInfoObj[i].key == "自定义")
+								{
+									labelInput.inputRestrict = false;
+								}
+								
+								if(popUpindex == "1")
+								{
+									labelInput.labelEnabled = true;
+									labelInput.inputEnabled = false;
+								}
+								labelInput.addEventListener(LabelInputView.LABELINPUT, inputChangeHandler);
+								labelInputArr.push(labelInput);
+								popupChildGroup.addElement(labelInput);
+							}else if(svgBtn.svgInfo[i].type == 2)								
+							{
+								var labelbtn:LabelButton = LabelButton.buildLabelButton(svgInfoObj[i].key,svgInfoObj[i].key.length*20,30,4,5);
+								labelBtnArr.push(labelbtn);	
+								for (var i3:int = 0; i3 < labelBtnArr.length; i3++) 
+								{
+									if(firstLabelModel!= null)
+									{
+										for (var i5:int = 0; i5 < firstLabelModel.length; i5++) 
+										{
+											if (firstLabelModel[i5].labelValue==svgInfoObj[i3].key) 
+											{
+												if ((labelBtnArr[i3] as LabelButton).labelText == firstLabelModel[i5].labelValue) 
+												{												
+													(labelBtnArr[i3] as LabelButton).labelSelected = true;
+												}else 
+												{
+													(labelBtnArr[i3] as LabelButton).labelSelected = false;
+												}
+											}
+											(labelBtnArr[i3] as LabelButton).selecedHandler();
+										}
+									}
+								}
+								currentLayer =2;
+								labelbtn.addEventListener(MouseEvent.CLICK,itemClickHandler);									
+								popupChildGroup.addElement(labelbtn);		
+							}
+						}
+						popupChildGroup.addEventListener(FlexEvent.CREATION_COMPLETE, popupChildGroupcompleteHandler);
+						popGroup.addElement(popupChildGroup);	
+					}else
+					{
+						popupEventData = buildPopUpEventData(1, 1, svgBtn.model);
+						this.dispatchEvent(new DatasEvent(SvgType.SVG_EVENT,popupEventData));
+					}
+					if (svgBtn.svgInfo.length>0) 
+					{
+						this.addElement(popGroup);
+						
+					}
+				}
+				
+				if(item is LabelButton)
+				{
+					var labelBtn:LabelButton = item as LabelButton;
+					if(labelBtnArr != null)
+					{
+						for (var j:int = 0; j < labelBtnArr.length; j++) 
+						{
+							if (labelBtn == labelBtnArr[j]) 
+							{			
+								labelBtnArr[j].labelSelected = true;	
+								if(firstLabelModel != null)
+								{
+									for (var k:int = 0; k < firstLabelModel.length; k++) 
+									{
+										if (currentSvgModel.SVG_EVENT == firstLabelModel[k].labelKey) 
+										{
+											firstLabelModel[k].labelValue = labelBtnArr[j].labelText;
+										}
+									}
+									
+								}
+								if(secendLabelModel != null)
+								{
+									for (var i2:int = 0; i2 < secendLabelModel.length; i2++) 
+									{
+										if (currentSvgModel.SVG_EVENT == secendLabelModel[i2].labelKey) 
+										{
+											secendLabelModel[i2].labelValue = labelBtnArr[j].labelText;
+										}
+									}
+								}
+								
+								
+								
+							}else
+							{
+								labelBtnArr[j].labelSelected = false;
+							}
+							labelBtnArr[j].selecedHandler();
+						}		
+					}
+						
+					
+					if(currentLayer == 2 && popUpindex !="1")
+					{
+						popGroup.removeAllElements();
+						for (var i9:int = 0; i9 < popupItems.length; i9++) 
+						{
+							if(popupItems[i9].className == "SvgButton")
+							{
+								popupItems[i9].buttonSelected = true;
+								popupItems[i9].svgSelected = false;
+								popupItems[i9].svgSelecedHandler();
+								popupItems[i9].buttonSelected = false;	
+							}
+						}
+						
+					}
+					if(currentSvgModel != null)
+					{
+						popupEventData = buildPopUpEventData(2, 1, currentSvgModel);
+					}else{
+						popupEventData = buildPopUpEventData(2, 1, labelBtn.labelText);
+					}
+					
+					if(secendLabelModel != null)
+					{
+						for (var i8:int = 0; i8 < secendLabelModel.length; i8++) 
+						{
+							if(secendLabelModel[i8].labelKey == labelBtn.labelText && secendLabelModel[i8].labelValue == "0")
+							{
+								popupEventData = buildPopUpEventData(2,2,labelBtn.labelText);
+							}
+						}
+					}
+					
+					if(labelBtn.labelText == "直铺"||labelBtn.labelText == "斜铺"||labelBtn.labelText == "横向"||labelBtn.labelText == "纵向")
+					{
+					}else{
+						this.dispatchEvent(new DatasEvent(LabelButton.LABEL_EVENT,popupEventData));
+					}	
+				}
+				
+				
+				if(item is SvgChangeButton)
+				{
+					var svgChangeBtn:SvgChangeButton = item as SvgChangeButton;
+					var model:SvgModel;
+					if(svgChangeBtn.buttonStatus)
+					{
+						model = svgChangeBtn.modelChange;
+					}
+					else
+					{
+						model = svgChangeBtn.modelNormal
+					}
+					var newSvgChangeBtn:Object = new Object();
+					newSvgChangeBtn.type = 3;
+					newSvgChangeBtn.Hierarchy = 1;
+					newSvgChangeBtn.SvgChangeModel = model
+					this.dispatchEvent(new DatasEvent(SvgType.SVG_EVENT,newSvgChangeBtn));
+				}
+				
+				if(item is LabelChangeButton)
+				{
+					var labelChangeBtn:LabelChangeButton = item as LabelChangeButton;
+					var labelInfo:String = "";
+					if(labelChangeBtn.buttonStatus)
+					{
+						labelInfo = labelChangeBtn.labelEventChange;
+					}
+					else
+					{
+						labelInfo = labelChangeBtn.labelEventNormal;
+					}
+					var newLabelChangeBtn:ToolEventData = new ToolEventData();
+					newLabelChangeBtn.currentLayer = 1;
+					newLabelChangeBtn.revisionLayer = 1;
+					newLabelChangeBtn.info = labelInfo;
+					this.dispatchEvent(new DatasEvent(LabelButton.LABEL_EVENT,newLabelChangeBtn));
+				}
+				
+			}
+			
+			private function setpopupChildrenGroup():void
+			{
+				var rect: Rect = buildrect(4,ColorType.LightGreyLively);
+				rect.width = popupChildGroup.width+4;
+				rect.height = popupChildGroup.height+4; 
+				rect.x = popupChildGroup.x;
+				rect.y = popupChildGroup.y-1.5;
+				popGroup.addElementAt(rect,0);
+				var rect2:Rect = buildrect(4,ColorType.White);
+				rect2.width = popupChildGroup.width+8;
+				rect2.height = popupChildGroup.height+8; 
+				rect2.x = popupChildGroup.x-4;
+				rect2.y = popupChildGroup.y-4;
+				popGroup.addElementAt(rect2,0);
+			}
+			
+			private function pageHandler():void
+			{
+//				var num:int =0;
+//				for (var i:int = 0; i < itemCount; i++) 
+//				{	   
+//					if(i >= pageIndex*pageLength && i< (pageIndex+1)*pageLength)
+//					{
+//						popupGroup.addElementAt(popupItems[i],num);
+//						num++;
+//					}
+//				}
+				
+				var startIndex:int;
+				var endIndex:int;
+				if(itemCount > pageLength)
+				{
+					startIndex  = pageIndex * (pageLength - 1);
+					endIndex = (pageIndex + 1) * (pageLength - 1);
+				}
+				else
+				{
+					startIndex = pageIndex * pageLength;
+					endIndex = (pageIndex + 1) * pageLength;
+				}
+				
+				for(var i:int = 0; i < itemCount; i++)
+				{
+					if(itemCount > pageLength)
+					{
+						if(i < startIndex || i >= endIndex)
+						{
+							continue;
+						}
+					}
+					
+					popupGroup.addElement(popupItems[i]);
+				}
+				
+				if(itemCount > pageLength)
+				{
+					popupGroup.addElement(pageButton);
+				}
+			}
+			
+			
+			private function popupDataClean():void
+			{
+				if(!popupItems || itemCount == 0)
+				{
+					return;
+				}
+				
+				for (var i:int = 0; i < itemCount; i++) 
+				{
+					popupItems[i].removeEventListener(MouseEvent.CLICK,itemClickHandler);
+				}
+				popupItems.splice(0,itemCount);
+				itemCount = 0;
+			}
+			
+			protected function popupGroupupcompleteHandler(event:FlexEvent):void
+			{			
+				if (popupGroup.x<=0) 
+				{
+					popupGroup.x=0;
+				}
+				if ((popupGroup.x+popupGroup.width)>this.width) 
+				{
+					popupGroup.x = this.width-popupGroup.width-15;
+				}
+				
+				if(UserType.USER_BRAND == "新豪轩")
+				{
+					initTipsGroupViewHandler(new Point(popupGroup.x, popupGroup.y)); //19.3.20
+				}
+			}
+			
+			protected function popupChildGroupcompleteHandler(event:FlexEvent):void
+			{					
+				popGroup.width = popupChildGroup.width+4;
+				popGroup.height = popupChildGroup.height+4;
+				popGroup.x = point.x - popGroup.width / 2 + 15-this.x;
+				popGroup.y = popupGroup.y-popGroup.height-15;
+				if (popGroup.parent.x<=0) 
+				{
+					popGroup.parent.x=0;
+				}
+				if ((popGroup.x+popGroup.width)>systemManager.stage.width) 
+				{
+					popGroup.x = this.width-popGroup.width-15;
+				}
+				setpopupChildrenGroup();
+			}
+			
+			private function buildrect(radius:int,color:uint):Rect
+			{
+				rect = new Rect();
+				var fillColor:SolidColor = new SolidColor();
+				fillColor.color = color; 
+				rect.fill = fillColor; 
+				rect.topLeftRadiusX=radius;
+				rect.topLeftRadiusY=radius;
+				rect.topRightRadiusX=radius;
+				rect.topRightRadiusY=radius;
+				rect.bottomLeftRadiusX=radius;
+				rect.bottomLeftRadiusY=radius;
+				rect.bottomLeftRadiusY=radius;
+				rect.bottomRightRadiusX=radius;
+				rect.bottomRightRadiusY=radius;
+				return rect;
+			}
+			
+			private var secondPopupEventData:ToolEventData;
+			private var popupEventData:ToolEventData;
+			public function inputChangeHandler(event:DatasEvent):void
+			{
+				var inputChange:LabelModel = event.data as LabelModel;
+				var svginfoValue:String = "";
+				
+				for (var i2:int = 0; i2 < popupItems.length; i2++) 
+				{
+					if (popupItems[i2].className == "LabelInputView") 
+					{
+						if (popupItems[i2].id == (event.currentTarget as LabelInputView).id) 
+						{
+							svginfoValue = popupItems[i2].id;
+						}
+						for (var j:int = 0; j < firstLabelModel.length; j++) 
+						{
+							if (svginfoValue == firstLabelModel[j].labelKey) 
+							{
+								firstLabelModel[j].labelValue = (event.data as LabelModel).labelValue;
+								popupEventData = buildPopUpEventData(5, 1, svginfoValue);
+								if(popUpindex == "52")
+								{
+									this.addEventListener(KeyboardEvent.KEY_DOWN,OnKeyDown);
+								}else {
+								this.dispatchEvent(new DatasEvent(LabelButton.LABEL_EVENT, popupEventData));
+								}
+							}
+						}
+					}
+				}
+				if(svgInfoObj != null)
+				{
+					for (var i:int = 0; i < svgInfoObj.length; i++) 
+					{
+						if (svgInfoObj[i].key == (event.data as LabelModel).labelKey ) 
+						{
+							svginfoValue = svgInfoObj[i].value;
+							for (var k:int = 0; k < secendLabelModel.length; k++) 
+							{
+								if (svginfoValue == secendLabelModel[k].labelKey) 
+								{
+									secendLabelModel[k].labelValue =  (event.data as LabelModel).labelValue;
+									secondPopupEventData = buildPopUpEventData(6, 2, svginfoValue,2);
+									if(popUpindex == "52" ||popUpindex == "81" ||popUpindex == "85" || popUpindex == "2" || popUpindex == "4" || popUpindex == "1" || popUpindex == "16" || popUpindex == "波打线" || popUpindex == "50" || popUpindex == "基座" || popUpindex == "100" || popUpindex == "90")
+									{
+										this.addEventListener(KeyboardEvent.KEY_DOWN,OnKeyDown);
+									}
+									else if(svginfoValue == LabelModel.INPUT_EVENT)
+									{
+										this.dispatchEvent(new DatasEvent(LabelModel.INPUT_EVENT,secendLabelModel[k].labelValue));
+									}
+									else {
+										this.dispatchEvent(new DatasEvent(LabelButton.LABEL_EVENT,secondPopupEventData));
+									}
+								}
+							}		
+						}
+					}	
+				}
+			}
+			
+			private function cleansecendpopup():void
+			{
+				if (popupChildGroup && stage.contains(popupChildGroup)) 
+				{
+					popGroup.removeElement(popupChildGroup);
+					this.removeElement(popGroup);
+				}
+			}
+			
+			public function RemoveBtn(o:Array):void
+			{
+				for (var i:int = 0; i < o.length; i++) 
+				{
+					for(var j:int = 0; j <popupItems.length ; j++)
+					{
+						if(popupItems[j].id == o[i])
+						{
+							if(popupGroup.containsElement(popupItems[j]))
+							{
+								popupGroup.removeElement(popupItems[j]);								
+							}
+							popupItems.removeAt(j);
+							itemCount--;
+						}
+					}
+				}
+				pageTotal = int(itemCount/pageLength);
+				if(itemCount%pageLength > 0)
+				{
+					pageTotal += 1;
+				}
+				if(popupItems.length<5 && popupGroup.containsElement(pageButton))
+				{
+					popupGroup.removeElement(pageButton);
+				}
+				pageHandler();
+			}
+			
+			public function RemoveChildBtn(o:Array):void
+			{
+				for (var i:int = 0; i < o.length; i++) 
+				{
+					for (var j:int = 0; j < svgInfoObj.length; j++) 
+					{
+						if(svgInfoObj[j].value == o[i])
+						{
+							svgInfoObj.removeAt(j);
+						}
+					}
+					
+				}
+				
+			}
+			
+			protected function LabelClick(event:DatasEvent):void
+			{
+				// TODO Auto-generated method stub
+				var labelInput:LabelInputView = event.data as LabelInputView;
+				var hor:Array = new Array();
+				var ver:Array = new Array();
+//				var currentText:String = event.data;
+				if(popUpindex == "1")
+				{
+					for (var i:int = 0; i < labelInputArr.length; i++) 
+					{
+						if(labelInputArr[i].labelText == "横向间距"||labelInputArr[i].labelText == "横向间砖"||labelInputArr[i].labelText == "横向"||labelInputArr[i].labelText == "纵向")
+						{
+							hor.push(labelInputArr[i]);
+							
+						}else if(labelInputArr[i].labelText == "纵向间距"||labelInputArr[i].labelText == "纵向间砖"||labelInputArr[i].labelText == "错位距离"||labelInputArr[i].labelText == "错位比例")
+						{	
+							ver.push(labelInputArr[i]);
+						}
+					}
+					if(labelInput.labelText == "横向间距"||labelInput.labelText == "横向间砖")
+					{
+						for (var j:int = 0; j < hor.length; j++) 
+						{
+							if(hor[j].labelText == labelInput.labelText)
+							{
+								hor[j].inputEnabled = true;
+								hor[j].labelSelected = true;
+								hor[j].setEnable();
+							}else
+							{
+								hor[j].inputEnabled = false;
+								hor[j].labelSelected = false;
+								hor[j].setEnable();
+							}
+							hor[j].selecedHandler();
+						}
+					}else{
+						for (var k:int = 0; k < ver.length; k++) 
+						{
+							if(ver[k].labelText == labelInput.labelText)
+							{
+								ver[k].inputEnabled = true;
+								ver[k].labelSelected = true;
+								ver[k].setEnable();
+							}else
+							{
+								ver[k].inputEnabled = false;
+								ver[k].labelSelected = false;
+								ver[k].setEnable();
+							}
+							ver[k].selecedHandler();
+						}
+					}
+					
+					
+					
+
+				}
+			}
+			
+			protected function OnKeyDown(event:KeyboardEvent):void
+			{
+				// TODO Auto-generated method stub
+				if(event.keyCode == Keyboard.ENTER)
+				{
+					if(popupEventData)
+					{
+						this.dispatchEvent(new DatasEvent(LabelButton.LABEL_EVENT,popupEventData));
+					}else if(secondPopupEventData != null)
+					{
+						this.dispatchEvent(new DatasEvent(LabelButton.LABEL_EVENT,secondPopupEventData));
+					}
+				}
+			}
+			
+			private function TipsType(currentButton:Object,oldTip:String,newTip:String):void
+			{
+				var svgBtn:SvgButton = currentButton as SvgButton;
+				if(svgBtn.svgTip == oldTip)
+				{
+					svgBtn.svgTip = newTip;
+				}else
+				{
+					svgBtn.svgTip = oldTip;
+				}
+			}
+			
+//			加入提示说明 新豪轩
+			private function initTipsGroupViewHandler(position:Point):void
+			{
+//				if(!items || items.length == 0)
+//				{
+//					return;
+//				}
+//				
+//				var tipsGroupData:Array = [];
+//				for(var i:int = 0; i < items.length; i++)
+//				{
+//					var type:String = items[i].type;
+//					var tips:String = items[i].tips;
+//					
+//					if(type == "1")
+//					{
+//						tipsGroupData.push(tips);
+//					}
+//					else
+//					{
+//						tipsGroupData.push("");
+//					}
+//				}
+				if(!popupItems || popupItems.length == 0)
+				{
+					return;
+				}
+				
+				var tipsGroupData:Array = [];
+				for(var i:int = 0; i < popupItems.length; i++)
+				{
+					if(popupItems[i] is SvgButton)
+					{
+						tipsGroupData.push((popupItems[i] as SvgButton).svgTip);
+					}
+					else if(popupItems[i] is LabelInputView)
+					{
+						tipsGroupData.push((popupItems[i] as LabelInputView).labelToolTip);
+					}
+					else
+					{
+						tipsGroupData.push("");
+					}
+				}
+				
+				tipsGroupView = TipsGroupView.buildTipsGroupView(tipsGroupData, 46, 20, 10, pageLength, pageIndex);
+				tipsGroupView.width = 46 * pageLength + 10 * (pageLength - 1);
+				tipsGroupView.height = 20;
+				
+				tipsGroupView.x = position.x;
+				tipsGroupView.y = position.y - 20;
+				
+				tipsGroupView.addEventListener(FlexEvent.CREATION_COMPLETE, completeHandler);
+				this.addElement(tipsGroupView);
+			}
+
+			protected function completeHandler(event:FlexEvent):void
+			{
+				// TODO Auto-generated method stub
+				if(popupGroup.numElements > 0)
+				{
+					tipsGroupView.x += popupGroup.getElementAt(0).x; //对齐
+				}
+			}
+			
+		]]>
+	</fx:Script>
+</s:Group>

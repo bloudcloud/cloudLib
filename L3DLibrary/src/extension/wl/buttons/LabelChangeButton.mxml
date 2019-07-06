@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" creationComplete="group1_creationCompleteHandler(event)">
+	<fx:Script>
+		<![CDATA[
+			import mx.events.FlexEvent;
+			
+			import extension.wl.buttons.LabelButton;
+			
+			public var tipwidth:Number;
+			public var tipheight:Number;
+			public var typeStyle:int=2;//默认风格
+			public var typeStatus:int = 0;
+			public var labelEventNormal:String = "";
+			public var labelEventChange:String ="";
+			public var typeMode:Boolean;
+			public var viewAlpha:Number = 1;
+			public var linealpha:Number;
+			public var lineOver:uint;
+			public var lineOut:uint;
+			public var size:Number;
+			public var lineweight:Number = 1;
+			
+			public var topEventLeftRadius:Number;
+			public var topEventRightRadius:Number;
+			public var bottomEventLeftRadius:Number;
+			public var bottomEventRightRadius:Number;
+			
+			private var labelNormal:LabelButton;
+			private var labelChange:LabelButton;
+			private var labelStatus:Boolean = false;
+			
+			protected function group1_creationCompleteHandler(event:FlexEvent):void
+			{
+				// TODO Auto-generated method stub
+				buildLabelChange();
+			}
+		
+			public function set buttonStatus(v:Boolean):void{
+			labelStatus =v;
+			showHandle();
+			}
+			
+			public function get buttonStatus():Boolean{
+			return labelStatus;
+			}
+			
+			private function buildLabelChange():void{
+			labelNormal = LabelButton.buildLabelButton(labelEventNormal,this.width,this.height,typeStyle,typeStatus,typeMode,linealpha,lineOver,lineOut,viewAlpha,size);
+			labelNormal.addEventListener(MouseEvent.CLICK,clickHandle);
+			labelNormal.lineweight = lineweight;
+			labelNormal.visible=false;
+			labelNormal.topLeftRadius=topEventLeftRadius;
+			labelNormal.topRightRadius=topEventRightRadius;
+			labelNormal.bottomLeftRadius=bottomEventLeftRadius;
+			labelNormal.bottomRightRadius=bottomEventRightRadius;
+			this.addElement(labelNormal);
+			
+			labelChange = LabelButton.buildLabelButton(labelEventChange,this.width,this.height,typeStyle,typeStatus,typeMode,linealpha,lineOver,lineOut,viewAlpha,size);
+			labelChange.addEventListener(MouseEvent.CLICK,clickHandle);
+			labelChange.lineweight = lineweight;
+			labelChange.visible=false;
+			labelChange.topLeftRadius=topEventLeftRadius;
+			labelChange.topRightRadius=topEventRightRadius;
+			labelChange.bottomLeftRadius=bottomEventLeftRadius;
+			labelChange.bottomRightRadius=bottomEventRightRadius;
+			this.addElement(labelChange);
+			
+			showHandle();
+			}
+			
+			private function clickHandle(event:MouseEvent):void{
+				
+				labelStatus = !labelStatus;
+				showHandle();
+			}
+			
+			private function showHandle():void{
+			
+				if(labelStatus){
+				
+					labelNormal.visible = false;
+					labelChange.visible = true;
+				}else{
+				
+					labelNormal.visible=true;
+					labelChange.visible=false;
+				}
+			}
+			
+			public function clearButton():void
+			{
+				if(labelNormal)
+				{
+					labelNormal.removeEventListener(MouseEvent.CLICK,clickHandle);
+					this.removeElement(labelNormal);
+					labelNormal = null;
+				}
+				
+				if(labelChange)
+				{
+					labelChange.removeEventListener(MouseEvent.CLICK,clickHandle);
+					this.removeElement(labelChange);
+					labelChange = null;
+				}
+			} 
+			
+			public static function buildLabelChangeButton(eventNormal:String,eventChange:String,width:Number,height:Number,style:int,status:int = 0,mode:Boolean = true,lineAlpha:Number = 0,lineOver:uint = 0,lineOut:uint = 0,alpha:Number = 0,size:int = 16):LabelChangeButton
+			{
+				var svg:LabelChangeButton = new LabelChangeButton();
+				svg.labelEventNormal = eventNormal;
+				svg.labelEventChange = eventChange;
+				svg.width = width;
+				svg.height = height;
+				svg.typeStyle = style;
+				svg.typeStatus = status;
+				svg.typeMode = mode;
+				svg.linealpha = lineAlpha;
+				svg.lineOver = lineOver;
+				svg.lineOut = lineOut;
+				svg.viewAlpha = alpha;
+
+				return svg;
+			}
+			
+		]]>
+	</fx:Script>
+</s:Group>

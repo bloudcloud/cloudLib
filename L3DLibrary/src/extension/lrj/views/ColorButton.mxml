@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark"
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 creationComplete="group1_creationCompleteHandler(event)" 
+		 mouseOut="group1_mouseOutHandler(event)" 
+		 mouseOver="group1_mouseOverHandler(event)">
+	<fx:Script>
+		<![CDATA[
+			import mx.events.FlexEvent;
+			import mx.graphics.SolidColor;
+			import mx.graphics.SolidColorStroke;
+			
+			import spark.primitives.Rect;
+			
+			public var frameOver:uint = 0;
+			public var frameOut:uint = 0;
+			public var frameWeight:Number = 2;
+			public var frameAlpha:Number = 1;
+				
+			public var color:uint = 0; 
+			public var colorAlpha:Number = 1;
+			public var itemWidth:Number = 0;
+			public var itemHeight:Number = 0;
+			
+			[Bindable]
+			public var topLeftRadius:Number = 0;
+			[Bindable]
+			public var topRightRadius:Number = 0;
+			[Bindable]
+			public var bottomLeftRadius:Number = 0;
+			[Bindable]
+			public var bottomRightRadius:Number = 0;
+			
+			private var rect:Rect =  null;
+			private var solidColor:SolidColor = null;
+			private var solidColorStroke:SolidColorStroke = null
+				
+			public var labelMode:Boolean = true; //
+			public var info:Object = null;
+			
+			protected function group1_creationCompleteHandler(event:FlexEvent):void
+			{
+				// TODO Auto-generated method stub
+				if(labelMode)
+				{
+					this.buttonMode = true;
+				}
+				
+				initView();
+			}
+			
+			private function initView():void
+			{
+				// TODO Auto Generated method stub
+				if(!rect)
+				{
+					rect = new Rect();
+					rect.width = this.width;
+					rect.height = this.height;
+					rect.topLeftRadiusX = topLeftRadius;
+					rect.topLeftRadiusY = topLeftRadius;
+					rect.topRightRadiusX = topRightRadius;
+					rect.topRightRadiusY = topRightRadius;
+					rect.bottomLeftRadiusX = topRightRadius;
+					rect.bottomLeftRadiusY = topRightRadius;
+					rect.bottomRightRadiusX = topRightRadius; 
+					rect.bottomRightRadiusY = topRightRadius;
+					this.addElement(rect);
+				}
+				
+				if(!solidColor)
+				{ 
+					solidColor = new SolidColor();
+					solidColor.color = color;
+					solidColor.alpha = colorAlpha;
+					rect.fill = solidColor;
+				}
+				
+				if(!solidColorStroke)
+				{
+					solidColorStroke = new SolidColorStroke();
+					solidColorStroke.color = frameOut;
+					solidColorStroke.alpha = frameAlpha;
+					solidColorStroke.weight = frameWeight;
+					rect.stroke = solidColorStroke;
+				}
+			}
+			
+			public static function buildColorButton(width:Number, height:Number, color:uint, frameOut:uint, frameOver:uint, frameAlpha:Number = 1, colorAlpha:Number = 1):ColorButton
+			{
+				var button:ColorButton = new ColorButton();
+				button.width = width;
+				button.height = height;
+				button.color = color;
+				button.frameOut = frameOut;
+				button.frameOver = frameOver;
+				button.frameAlpha = frameAlpha;
+				button.colorAlpha = colorAlpha;
+				
+				return button;
+			}
+				
+			protected function group1_mouseOutHandler(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				if(!labelMode)
+				{
+					return;
+				}
+				
+				solidColor.color = color;
+				solidColorStroke.color = frameOut;
+				
+				rect.fill = solidColor;
+				rect.stroke = solidColorStroke;
+			}
+			
+			protected function group1_mouseOverHandler(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				if(!labelMode)
+				{
+					return;
+				}
+				
+				solidColor.color = color;
+				solidColorStroke.color = frameOver;
+				
+				rect.fill = solidColor;
+				rect.stroke = solidColorStroke;
+			}
+			
+			public function resize():void
+			{
+				if(!rect)
+				{
+					return;
+				}
+				rect.width = itemWidth==0?this.width:itemWidth;
+				rect.height = itemHeight==0?this.height:itemHeight;
+				rect.x = itemWidth==0?0:this.width - itemWidth >> 1;
+				rect.y = itemHeight==0?0:this.height - itemHeight >> 1;
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+</s:Group>

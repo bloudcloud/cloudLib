@@ -1,0 +1,354 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" 
+		 width="100%" 
+		 height="100%"
+		 creationComplete="group1_creationCompleteHandler(event)">
+	<fx:Script>
+		<![CDATA[
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+			
+			import spark.components.Group;
+			
+			import extension.wl.buttons.LabelButton;
+			import extension.wl.buttons.SvgButton;
+			import extension.wl.buttons.SvgChangeButton;
+			import extension.wl.globalData.allStaticTypes.ColorType;
+			import extension.wl.globalData.allStaticTypes.LivelyType;
+			import extension.wl.globalData.allStaticTypes.SvgType;
+			
+			import utils.DatasEvent;
+			
+			private static var confirmText:String = "我知道了";
+			
+			private var updateNotificationHead:Group = null; //头部
+			private var updateNotificationBody:Group = null; //body：包含显示内容以及确认按钮
+
+			private var updateNotificationHeadBtn:LabelButton = null; //通知更新
+			private var closeBtn:SvgButton = null; //关闭
+			private var updateNotificationConfirm:LabelButton = null; //我知道了
+			
+			private var _content:Object = null; //内容json对象(包含标题和正文)
+			private var contentView:ScrollerContentView = null; //内容界面
+			
+			private var isOpenAgain:SharedObject; //保存数据到本地
+			private var isOpenAgainBtn:SvgChangeButton = null;
+			private var isOpenAgainLabel:LabelButton = null;
+			
+			public static const UPDATENOTIFICATION_CLOSE:String = "update_Notification_Close";
+			public static const ISSHOW_CHANGE:String = "isShow_Change";
+			
+			public function set content(data:Object):void
+			{
+				_content = data;
+			}
+			
+			protected function group1_creationCompleteHandler(event:FlexEvent):void
+			{
+				// TODO Auto-generated method stub
+				initBasicView();
+				initContentView();
+				
+				if(!this.hasEventListener(MouseEvent.MOUSE_WHEEL))
+				{
+					this.addEventListener(MouseEvent.MOUSE_WHEEL, viewWheelHandler);
+				}
+				
+				if(!this.hasEventListener(MouseEvent.MOUSE_OVER))
+				{
+					this.addEventListener(MouseEvent.MOUSE_OVER, viewMouseOverHandler);
+				}
+				
+				if(!this.hasEventListener(MouseEvent.MOUSE_OUT))
+				{
+					this.addEventListener(MouseEvent.MOUSE_OUT, viewMouseOutHandler);
+				}
+			}
+			
+			public function resize(w:Number, h:Number):void
+			{
+				this.width = w;
+				this.height = h;
+				if(updateNotificationHead)
+				{
+					updateNotificationHead.height = this.height * 0.06;
+					updateNotificationHead.width = this.width;
+					updateNotificationHead.top = 0;
+					
+					updateNotificationHead.graphics.clear();
+					updateNotificationHead.graphics.beginFill(ColorType.BlueLively);
+					updateNotificationHead.graphics.drawRect(0, 0, updateNotificationHead.width, updateNotificationHead.height);
+					updateNotificationHead.graphics.endFill();
+				}
+				
+				if(updateNotificationHeadBtn)
+				{
+					updateNotificationHeadBtn.x = updateNotificationHead.width * 0.5 - updateNotificationHeadBtn.width * 0.5;
+					updateNotificationHeadBtn.y = updateNotificationHead.height * 0.5 - updateNotificationHeadBtn.height * 0.5;
+				}
+				
+				if(closeBtn)
+				{
+					closeBtn.width = updateNotificationHead.height * 0.5;
+					closeBtn.height = updateNotificationHead.height * 0.5;
+					closeBtn.right = 20;
+					closeBtn.top = 	updateNotificationHead.height * 0.5 - closeBtn.height * 0.5;
+				}
+				
+				if(updateNotificationBody)
+				{
+					updateNotificationBody.height = this.height * (1 - 0.06);
+					updateNotificationBody.width = this.width;
+					updateNotificationBody.bottom = 0;
+				}
+				
+				if(contentView)
+				{
+					contentView.height = this.height - (updateNotificationConfirm.height + 40 + updateNotificationHead.height);
+					contentView.width = this.width;
+				}
+				
+				if(updateNotificationConfirm)
+				{
+					updateNotificationConfirm.x = updateNotificationBody.width * 0.5 - updateNotificationConfirm.width * 0.5;
+				}
+				
+				if(contentView)
+				{
+					contentView.resize(this.width, this.height - (updateNotificationConfirm.height + 40 + updateNotificationHead.height));
+				}
+				
+			}
+			
+			private function initBasicView():void
+			{
+				// TODO Auto Generated method stub
+				if(!_content)				
+				{
+					return;
+				}
+				
+				if(!updateNotificationHead)
+				{
+					updateNotificationHead = new Group();
+					updateNotificationHead.height = this.height * 0.06;
+					updateNotificationHead.width = this.width;
+					updateNotificationHead.top = 0;
+					
+					updateNotificationHead.graphics.beginFill(ColorType.BlueLively);
+					updateNotificationHead.graphics.drawRect(0, 0, updateNotificationHead.width, updateNotificationHead.height);
+					updateNotificationHead.graphics.endFill();
+					
+					this.addElement(updateNotificationHead);
+				}
+				
+				if(!updateNotificationHeadBtn)
+				{
+					updateNotificationHeadBtn = LabelButton.buildLabelButton(_content.head, updateNotificationHead.width, updateNotificationHead.height, LivelyType.currentStyle, 0, false);
+					updateNotificationHeadBtn.labelSelected = true;
+					updateNotificationHead.addElement(updateNotificationHeadBtn);
+				}
+				
+				if(!closeBtn)
+				{
+					var size:Number = updateNotificationHead.height * 0.5;
+					closeBtn = SvgButton.buildSvgButton(SvgType.CLOSE_EVENT, size, size, LivelyType.currentStyle, 3);
+					closeBtn.right = 20;
+//					closeBtn.top = 10;
+					closeBtn.top = updateNotificationHead.height * 0.5 - closeBtn.height * 0.5;
+					
+					closeBtn.addEventListener(MouseEvent.CLICK, closeBtnClickHandler);
+					updateNotificationHead.addElement(closeBtn);
+				}
+				
+				if(!updateNotificationBody)
+				{
+					updateNotificationBody = new Group();
+					updateNotificationBody.height = this.height * (1 - 0.06);
+					updateNotificationBody.width = this.width;
+					updateNotificationBody.bottom = 0;
+					
+					this.addElement(updateNotificationBody);
+				}
+				
+				if(!updateNotificationConfirm)
+				{
+					updateNotificationConfirm = LabelButton.buildLabelButton("我知道了", 200, 48, LivelyType.currentStyle, 3, true, 0, 0, 0, 1);
+					updateNotificationConfirm.bottom = 20; 
+					updateNotificationConfirm.topLeftRadius = 3;
+					updateNotificationConfirm.topRightRadius = 3;
+					updateNotificationConfirm.bottomLeftRadius = 3;
+					updateNotificationConfirm.bottomRightRadius = 3;
+					updateNotificationConfirm.x = updateNotificationBody.width * 0.5 - updateNotificationConfirm.width * 0.5;
+					
+					updateNotificationConfirm.addEventListener(MouseEvent.CLICK, confirmClickHandler);
+					updateNotificationBody.addElement(updateNotificationConfirm);
+				}
+				
+//				if(!isOpenAgainLabel)
+//				{
+//					isOpenAgainLabel = LabelButton.buildLabelButton("下次不再打开!", 130, 30, 2, 0, false, 0, 0, 0, 0, 20);
+//					isOpenAgainLabel.bottom = 0;
+//					isOpenAgainLabel.right = 0;
+//					updateNotificationBody.addElement(isOpenAgainLabel);
+//				}
+//				
+//				if(!isOpenAgainBtn)
+//				{
+//					isOpenAgainBtn = SvgChangeButton.buildSvgChangeButton(SvgType.PANE_EVENT, SvgType.PANE_CHOSEN_EVENT, 30, 30, LivelyType.currentStyle);
+//					isOpenAgainBtn.bottom = 0;
+//					isOpenAgainBtn.x = updateNotificationBody.width - isOpenAgainLabel.width - isOpenAgainBtn.width;
+//					isOpenAgainBtn.addEventListener(SvgChangeButton.SVGCHANGE_EVENT, svgChangeHandler);
+//					updateNotificationBody.addElement(isOpenAgainBtn);
+//				}
+				
+			}
+			
+			private function initContentView():void
+			{
+				if(!contentView)
+				{
+					contentView = new ScrollerContentView();
+					contentView.contentData = _content.body;
+					contentView.height = this.height - (updateNotificationConfirm.height + 40 + updateNotificationHead.height);
+					contentView.width = this.width;
+					updateNotificationBody.addElement(contentView);
+				}
+			}
+			
+//			清理
+			private function cleanView():void 	
+			{
+				if(this.isPopUp)
+				{
+					PopUpManager.removePopUp(this);					
+				}
+
+				this.removeAllElements();
+				
+				if(this.hasEventListener(MouseEvent.MOUSE_WHEEL))
+				{
+					this.removeEventListener(MouseEvent.MOUSE_WHEEL, viewWheelHandler);
+				}
+				
+				if(this.hasEventListener(MouseEvent.MOUSE_OVER))
+				{
+					this.removeEventListener(MouseEvent.MOUSE_OVER, viewMouseOverHandler);
+				}
+				
+				if(this.hasEventListener(MouseEvent.MOUSE_OUT))
+				{
+					this.removeEventListener(MouseEvent.MOUSE_OUT, viewMouseOutHandler);
+				}
+				
+				if(contentView)
+				{
+					contentView.cleanView();
+					contentView = null;
+				}
+				
+				if(_content)
+				{
+					_content = null;
+				}
+				
+				if(updateNotificationHead)
+				{
+					updateNotificationHead.removeAllElements();
+					updateNotificationHead = null;
+				}
+				
+				if(updateNotificationHeadBtn)
+				{
+					updateNotificationHeadBtn = null;
+				}
+
+				if(closeBtn)
+				{
+					closeBtn = null;
+				}
+				
+				if(updateNotificationBody)
+				{
+					updateNotificationBody.removeAllElements();
+					updateNotificationBody = null;
+				}
+				
+				if(updateNotificationConfirm)
+				{
+					updateNotificationConfirm = null;
+				}
+			}
+			
+			//关闭
+			protected function closeBtnClickHandler(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				if(this.isPopUp)
+				{
+					PopUpManager.removePopUp(this);
+				}
+				cleanView();
+				this.dispatchEvent(new DatasEvent(UPDATENOTIFICATION_CLOSE));
+			}
+			
+			//确定
+			protected function confirmClickHandler(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				if(this.isPopUp)
+				{
+					PopUpManager.removePopUp(this);
+				}
+				cleanView();
+				this.dispatchEvent(new DatasEvent(UPDATENOTIFICATION_CLOSE));
+			}
+			
+			protected function viewWheelHandler(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				if(contentView)
+				{
+					contentView.viewWheelHandler(event);
+				}
+			}
+			
+			protected function viewMouseOverHandler(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				if(contentView)
+				{
+					contentView.viewOverHandler(event);
+				}
+			}
+			
+			protected function viewMouseOutHandler(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				contentView.viewOutHandler(event);
+			}
+			
+			protected function svgChangeHandler(event:DatasEvent):void
+			{
+				// TODO Auto-generated method stub
+				var svgChangeBtn:SvgChangeButton = event.currentTarget as SvgChangeButton;
+				var isOpenData:Boolean = !svgChangeBtn.buttonStatus;
+				
+				isOpenAgain = SharedObject.getLocal("isOpenUpdateView");
+				isOpenAgain.data.isOpen = isOpenData;
+				isOpenAgain.flush();
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	<s:Rect width="100%" height="100%">
+		<s:fill>
+			<s:SolidColor color="{ColorType.White}"/>
+		</s:fill>
+	</s:Rect>
+</s:Group>

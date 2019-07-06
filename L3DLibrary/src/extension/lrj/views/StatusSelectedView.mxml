@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx"  
+		 creationComplete="group1_creationCompleteHandler(event)">
+	<fx:Script>
+		<![CDATA[
+			import mx.events.FlexEvent;
+			
+			import extension.wl.buttons.LabelButton;
+			import extension.wl.globalData.allStaticTypes.LivelyType;
+			
+			private var _data:Array = null;
+			private var currentIndex:int = 0; //
+			private var maxIndex:int;
+			private var minIndex:int;
+			private var labelButton:LabelButton = null; //
+			
+			public function set data(arr:Array):void
+			{
+				_data = arr;
+			}
+			
+			public function get currentValue():* //
+			{
+				return _data[currentIndex];
+			}
+			
+			protected function group1_creationCompleteHandler(event:FlexEvent):void
+			{
+				// TODO Auto-generated method stub
+				if(_data == null || _data.length == 0)	
+				{
+					return;
+				}
+				
+				maxIndex = _data.length - 1;
+				minIndex = 0;
+				
+				initView();
+			}
+			
+			private function initView():void
+			{
+				// TODO Auto Generated method stub
+				if(!labelButton)
+				{
+					var label:String = _data[currentIndex];
+					labelButton = LabelButton.buildLabelButton(label, this.width - 4, this.height - 4, LivelyType.currentStyle, 0, true, 0, 0, 0, 1);
+					labelButton.addEventListener(MouseEvent.CLICK, labelButtonClickHandler);
+					this.addElement(labelButton);
+				}
+			}
+			
+			protected function labelButtonClickHandler(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				currentIndex++;
+				if(currentIndex > maxIndex)
+				{
+					currentIndex = minIndex;
+				}
+				
+				labelButton.labelText = _data[currentIndex];
+			}
+			
+			public function cleanView():void
+			{
+				if(labelButton)
+				{
+					labelButton.removeEventListener(MouseEvent.CLICK, labelButtonClickHandler);
+					this.removeElement(labelButton);
+					labelButton = null;
+				}
+				
+				_data = null;
+			}
+			
+		]]>
+	</fx:Script>
+
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+</s:Group>

@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" 
+		 horizontalCenter="0" verticalCenter="0"
+		 minWidth="268" height="200">
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	
+	
+	<fx:Script>
+		<![CDATA[
+			import com.greensock.TweenMax;
+			
+			import mx.core.FlexGlobals;
+			import mx.managers.PopUpManager;
+			
+			import extension.lrj.dict.UIConstDict;
+			
+			import utils.DatasEvent;
+			import utils.lx.managers.GlobalManager;
+			
+			public static function ShowAlertInfo(msg:String,type:int):void
+			{
+				var alert:L3DAlert=new L3DAlert();
+				alert.show(msg, type);
+				PopUpManager.addPopUp(alert, FlexGlobals.topLevelApplication as DisplayObject);
+				PopUpManager.centerPopUp(alert);
+				alert.alphaAlert(3);
+			}
+			
+			public function showAlert(msg:String, type:int, parent:Object=null, delay:int=500):void{
+				this.show(msg, type);
+				PopUpManager.addPopUp(this, FlexGlobals.topLevelApplication as DisplayObject);
+				PopUpManager.centerPopUp(this);
+				alphaAlert();
+//				setTimeout(alphaAlert, delay);
+			}
+			
+			/* 
+			* msg: 提示框显示信息 
+			* type: 提示框类型    （1:失败  2:提醒  其他:成功）
+			*/
+			internal function show(msg:String, type:int):void{
+//				this.msg.text = msg;
+//				switch(type){
+//					case 1: 
+//						alertColor.color = 0xff7777; 
+//						icon.source = "image/OneSecondAlertImg/失败出错.png";
+//						break;
+//					case 2: 
+//						alertColor.color = 0xfbd141; 
+//						icon.source = "image/OneSecondAlertImg/提醒.png";
+//						break; 
+//					default:
+//						alertColor.color = 0x86c883; 
+//						icon.source = "image/OneSecondAlertImg/成功.png";
+//				}
+				GlobalManager.Instance.dispatchEvent(new DatasEvent(UIConstDict.TIPS_TOOLVIEW,msg));			
+			}
+			
+			internal function alphaAlert(delaySecond:Number=1.5):void{
+				TweenMax.to(this,delaySecond,{alpha:0,onComplete:removeHandler});
+			}
+			
+			private function removeHandler():void{
+				PopUpManager.removePopUp(this);
+				setNull();
+			}
+			
+			private function setNull():void{
+				if(icon!=null) icon.source = null;
+				icon = null;
+				msg = null;
+				this.removeAllElements();
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<s:Rect width="100%" height="100%" radiusX="10">
+		<s:fill>
+			<s:SolidColor id="alertColor" color="#86c883"/>
+		</s:fill>
+	</s:Rect>
+		
+	<s:VGroup width="100%" height="100%" gap="20" horizontalAlign="center" verticalAlign="middle" 
+			  paddingLeft="20" paddingRight="20">
+		<s:BitmapImage id="icon" height="56"/>
+		<s:Label id="msg" color="#ffffff" fontFamily="宋体" fontSize="24" fontWeight="bold"
+				 text=""/>
+	</s:VGroup>
+	
+</s:Group>

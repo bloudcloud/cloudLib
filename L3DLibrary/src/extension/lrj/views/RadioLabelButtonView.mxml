@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" 
+		 creationComplete="group1_creationCompleteHandler(event)">
+	<fx:Script>
+		<![CDATA[
+			import mx.events.FlexEvent;
+			
+			import extension.wl.buttons.LabelButton;
+			
+			import utils.DatasEvent;
+			
+			
+			
+			
+			public var tipwidth:Number;
+			public var tipheight:Number;
+			public var typeStyle:int = 2; //默认风格
+			public var typeStatus:int = 0;
+			public var typeMode:Boolean;
+			public var viewAlpha:Number = 1;
+			public var lineAlpha:Number;
+			public var lineOver:uint;
+			public var lineOut:uint;
+			public var size:Number;
+			public var lineweight:Number = 1;
+			public var fontSize:int = 0;
+			
+			public var topEventLeftRadius:Number;
+			public var topEventRightRadius:Number;
+			public var bottomEventLeftRadius:Number;
+			public var bottomEventRightRadius:Number;
+			
+			private var singleHeight:Number;
+			private var singleWidth:Number;
+			
+			private var labels:Vector.<LabelButton>;
+			private var labelArg:Array = [];
+			private var _selectIndex:int = 0;
+			
+			public static const RADIOLABEL_CHANEGE:String = "RadioLabel_Change";
+			
+			protected function group1_creationCompleteHandler(event:FlexEvent):void
+			{
+				// TODO Auto-generated method stub
+				buildRadioLabelGroup();
+			}
+			
+			public function set selectIndex(value:int):void
+			{
+				_selectIndex = value;
+			}
+			
+			private function showHandler():void
+			{
+				// TODO Auto Generated method stub
+				var mark:String = labelArg[_selectIndex];
+				var len:int = labels.length
+					
+				if(len == 0)
+				{
+					return;
+				}
+				
+				for(var i:int = 0; i < len; i++)
+				{
+					var currentLabelButton:LabelButton = labels[i] as LabelButton;
+					if(currentLabelButton.labelText == mark)
+					{
+						currentLabelButton.labelSelected = true;
+						currentLabelButton.selecedHandler();
+					}
+					else
+					{
+						currentLabelButton.labelSelected = false;
+						currentLabelButton.selecedHandler();	
+					}
+				}
+			}
+			
+			private function buildRadioLabelGroup():void
+			{
+				// TODO Auto Generated method stub
+				var len:int = labelArg.length;
+				
+				if(len == 0)
+				{
+					return;
+				}
+				
+				if(!labels)
+				{
+					labels = new Vector.<LabelButton>();
+				}
+				
+				for(var i:int = 0; i < len; i++)
+				{
+					var labelButton:LabelButton = LabelButton.buildLabelButton(labelArg[i], singleWidth, singleHeight, typeStyle,typeStatus,typeMode,lineAlpha,lineOver,lineOut,viewAlpha,size);
+					labelButton.addEventListener(MouseEvent.CLICK, labelButtonClickHandler);
+					labelButton.x = i * singleWidth;
+					labelButton.lineweight = lineweight;
+					labelButton.topLeftRadius=topEventLeftRadius;
+					labelButton.topRightRadius=topEventRightRadius;
+					labelButton.bottomLeftRadius=bottomEventLeftRadius;
+					labelButton.bottomRightRadius=bottomEventRightRadius;
+					labelButton.labelSize = fontSize;
+					labelButton.labelInfo = buildInfo(i, labelArg[i]);
+					this.addElement(labelButton);
+					
+					labels.push(labelButton);
+				}
+				
+				showHandler();
+				
+			}
+			
+			private function labelButtonClickHandler(event:MouseEvent):void
+			{
+				var info:Object = (event.currentTarget as LabelButton).labelInfo;
+				_selectIndex = info.index;
+				showHandler();
+				
+				this.dispatchEvent(new DatasEvent(RADIOLABEL_CHANEGE, info));
+			}
+			
+			public function cleanView():void
+			{
+			}
+			
+			private function buildInfo(index:int, label:String):Object
+			{
+				var obj:Object = {};
+				obj.index = index;
+				obj.label = label;
+				
+				return obj;
+			}
+						
+			public static function buildRadioLabelButton(arg:Array, width:Number, height:Number, style:int, status:int = 0, mode:Boolean = true, lineAlpha:Number = 0, lineOver:uint = 0, lineOut:uint = 0,alpha:Number = 0,size:int = 16):RadioLabelButtonView
+			{
+				var buttonGroup:RadioLabelButtonView = new RadioLabelButtonView();
+				buttonGroup.labelArg = arg;
+				buttonGroup.singleWidth = width / arg.length;
+				buttonGroup.singleHeight = height;
+				buttonGroup.height = height;
+				buttonGroup.typeStyle = style;
+				buttonGroup.typeStatus = status;
+				buttonGroup.typeMode = mode;
+				buttonGroup.lineAlpha = lineAlpha;
+				buttonGroup.lineOver = lineOver;
+				buttonGroup.lineOut = lineOut;
+				buttonGroup.viewAlpha = alpha;
+				buttonGroup.fontSize = size;
+				
+				return buttonGroup;
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+</s:Group>

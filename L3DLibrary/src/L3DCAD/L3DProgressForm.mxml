@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" width="194" height="30" horizontalCenter="0" verticalCenter="0" creationComplete="creationCompleteHandler(event)">
+	
+	<fx:Script>
+		<![CDATA[
+			import mx.events.FlexEvent;
+			
+			private var percent:int = 0;
+			
+			protected function creationCompleteHandler(event:FlexEvent):void
+			{
+				ShowProgress.label = "";
+			}
+			
+			public function ShowPercent():void
+			{
+				Percent = percent + 1;
+			}
+			
+			public function get Percent():int
+			{
+				return percent;
+			}
+			
+			public function set Percent(v:int):void
+			{
+				percent = v > ShowProgress.maximum || v < 0 ? 0 : v;
+				ShowProgress.setProgress(percent, ShowProgress.maximum);
+				ShowProgress.label = "";
+			}
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	<s:BorderContainer x="0" y="0" width="194" height="30">
+		<mx:ProgressBar id="ShowProgress" x="10" y="10" width="172" height="24" mode="manual" minimum="0" maximum="100"/>
+	</s:BorderContainer>
+</s:Group>

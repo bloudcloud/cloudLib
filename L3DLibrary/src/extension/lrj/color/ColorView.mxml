@@ -1,0 +1,356 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" 
+		 creationComplete="group1_creationCompleteHandler(event)">
+	<fx:Script>
+		<![CDATA[
+			import mx.events.FlexEvent;
+			
+			import spark.components.Group;
+			import spark.components.HGroup;
+			import spark.components.VGroup;
+			import spark.layouts.HorizontalAlign;
+			import spark.layouts.VerticalAlign;
+			
+			import extension.lrj.views.ColorButton;
+			import extension.wl.buttons.LabelButton;
+			import extension.wl.globalData.allStaticTypes.ColorType;
+			import extension.wl.globalData.allStaticTypes.LivelyType;
+			
+			import utils.DatasEvent;
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			private var _colors:Array = null; //颜色数组
+			private var colorsLength:int = 0; //颜色数组长度
+			private var colorItems:Vector.<ColorButton> = null; //颜色按钮Vector
+			private var groupItems:Vector.<Group> = null;
+			private var currentColorIndex:int = 0; //当前点击颜色
+			
+			private var colorsView:VGroup = null;
+			private var headView:HGroup = null; //头部
+			private var closeBtn:LabelButton = null; //关闭按钮
+			
+			private var loader:Loader = null; //addItem
+			private var bytes:ByteArray = null;
+			private var content:BitmapData = null;
+			
+			private static var frameOverColor:uint = 0xffffff;
+			
+			public static const COLOR_SELECT_EVENT:String = "Color_Select_Event ";
+			public static const COLORVIEW_CLOSE_EVENT:String = "ColorView_Close_Event"; 
+			
+			public function set colors(data:Array):void
+			{
+				_colors = data;	
+			}
+			
+			protected function group1_creationCompleteHandler(event:FlexEvent):void
+			{
+				// TODO Auto-generated method stub
+				if(!_colors || _colors.length == 0)	
+				{
+					return;
+				}
+				
+				initData();
+				initView();
+			}
+			
+			private function initData():void
+			{
+				if(!colorItems)
+				{
+					colorItems = new Vector.<ColorButton>();
+				}
+				
+				if(!groupItems)
+				{
+					groupItems = new Vector.<Group>();
+				}
+				
+				colorsLength = _colors.length;
+				currentColorIndex = 0;
+			}
+			
+			public function resizeHandler(screenHeight:int):void
+			{
+				this.height = screenHeight;
+				var itemSize:Number = this.height * 0.08;
+				var headHeight:Number = 40;
+				var height:Number = this.height * 0.9 - headHeight;
+				var width:Number = this.height * 0.08;
+				
+				if(colorsView)
+				{
+					colorsView.height = height;
+					colorsView.width = width;
+				}
+				
+				if(headView)
+				{
+					headView.width = width;
+				}
+
+				for(var j:int = 0; j < colorsLength; j++)
+				{
+					var group:Group = groupItems[j];
+					group.width = itemSize;
+					group.height = itemSize;
+					
+					group.graphics.clear();
+					group.graphics.beginFill(ColorType.LightGreyLively);
+					group.graphics.drawRect(0, 0, group.width, group.height);
+					group.graphics.endFill();
+				}
+				
+				for(var i:int = 0; i < colorsLength; i++)
+				{
+					var item:ColorButton = colorItems[i];
+					item.width = itemSize - 4;
+					item.height = itemSize - 4;
+					item.resize();
+				}
+				
+				if(closeBtn)
+				{
+					closeBtn.width = width;
+					closeBtn.resize();
+				}
+			}
+			
+			private function initView():void
+			{
+				var itemSize:Number = this.height * 0.08;
+				var headHeight:Number = 40;
+				var height:Number = this.height * 0.9 - headHeight;
+				var width:Number = this.height * 0.08;
+				
+				if(!colorsView)
+				{
+					var gap:Number = (height - itemSize * colorsLength) / (colorsLength - 1);
+				
+					colorsView = buildVGroup(width, height, HorizontalAlign.CENTER, VerticalAlign.MIDDLE, gap);
+//					colorsView.x = 5;
+					colorsView.y = this.height * 0.5 - colorsView.height * 0.5;
+					colorsView.top = headHeight;
+					
+					this.addElement(colorsView);
+				}
+				
+				if(!headView)
+				{
+					headView = buildHGroup(width, headHeight, HorizontalAlign.CENTER, VerticalAlign.MIDDLE, gap);
+					headView.bottom = 5;
+					this.addElement(headView);
+				}
+				
+				if(!closeBtn)
+				{
+					closeBtn = LabelButton.buildLabelButton("关闭", width, 30, LivelyType.currentStyle,0,true,1,ColorType.LightGreyLively,ColorType.LightGreyLively,1);
+					closeBtn.addEventListener(MouseEvent.CLICK, closeButtonClickHandler);
+					headView.addElement(closeBtn);
+				}
+				
+//				创建颜色按钮
+				for(var i:int = 0; i < colorsLength; i++)
+				{
+//					if(_colors[i] == "addItem") //添加
+//					{
+//						buildAddItemHandler(itemSize, itemSize, i);
+//					}
+//					else
+//					{
+						var currentColor:uint = _colors[i];
+						buildItem(currentColor, itemSize, itemSize, i);						
+//					}
+				}
+			}
+			
+//			private function buildAddItemHandler(width:Number, height:Number, index:int):void
+//			{
+//				loader = new Loader();
+//				loader.contentLoaderInfo.addEventListener(IOErrorEvent.IO_ERROR, addItemLoad_ErrorHandler);
+//				loader.contentLoaderInfo.addEventListener(Event.COMPLETE, addItemLoad_CompleteHandler);
+//				loader.load(new URLRequest("resources/addDWGItem_normal.png"));
+//			}
+			
+			private function buildItem(itemColor:uint, width:Number, height:Number, index:int):void
+			{
+				var group:Group = new Group();
+				group.width = width;
+				group.height = height;
+				
+				group.graphics.clear();
+				group.graphics.beginFill(ColorType.LightGreyLively);
+				group.graphics.drawRect(0, 0, group.width, group.height);
+				group.graphics.endFill();
+				
+				var item:ColorButton = ColorButton.buildColorButton(width - 4, height - 4, itemColor, itemColor, frameOverColor);
+				item.info = _colors[index];
+				
+				item.topLeftRadius = 2;
+				item.topRightRadius = 2;
+				item.bottomLeftRadius = 2;
+				item.bottomRightRadius = 2;
+				
+				item.x = group.width * 0.5 - item.width * 0.5;
+				item.y = group.height * 0.5 - item.height * 0.5;
+				
+				item.addEventListener(MouseEvent.CLICK, colorBtn_ClickHandler);
+				group.addElement(item);
+				
+				colorItems.push(item);
+				groupItems.push(group);
+				colorsView.addElement(group);
+			}
+			
+//			选择颜色
+			protected function colorBtn_ClickHandler(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				var currentItem:ColorButton = event.currentTarget as ColorButton;
+				var currentColor:uint = currentItem.info as uint;
+				
+				this.dispatchEvent(new DatasEvent(COLOR_SELECT_EVENT, currentColor));
+			}
+			
+			/**
+			 * 创建一个纵向布局容器
+			 * @param width 宽度
+			 * @param height 高度
+			 * @param horizontalAlign 横向布局
+			 * @param verticalAlign 纵向布局
+			 * @param gap 间距
+			 * @return VGroup
+			 * 
+			 */		
+			public static function buildVGroup(width:Number,height:Number,horizontalAlign:String,verticalAlign:String,gap:int = 5):VGroup
+			{
+				var vgroup:VGroup = new VGroup();
+				vgroup.width = width;
+				vgroup.height = height;
+				vgroup.horizontalAlign = horizontalAlign;
+				vgroup.verticalAlign = verticalAlign;
+				vgroup.gap = gap;
+				return vgroup;
+			}
+			
+			/**
+			 * 创建一个横向布局容器
+			 * @param width 宽度
+			 * @param height 高度
+			 * @param horizontalAlign 横向布局
+			 * @param verticalAlign 纵向布局
+			 * @param gap 间距
+			 * @return VGroup
+			 */
+			public static function buildHGroup(width:Number, height:Number, horizontalAlign:String, verticalAlign:String, gap:int = 5):HGroup
+			{
+				var hgroup:HGroup = new HGroup();
+				hgroup.width = width;
+				hgroup.height = height;
+				hgroup.horizontalAlign = horizontalAlign;
+				hgroup.verticalAlign = verticalAlign;
+				hgroup.gap = gap;
+				return hgroup;
+			}
+			
+			public function cleanView():void
+			{
+				removeItemsHandler();
+				if(colorsView)
+				{
+					this.removeElement(colorsView);
+					colorsView.removeAllElements();
+					colorsView = null;
+				}
+				
+				if(closeBtn && headView)
+				{
+					headView.removeElement(closeBtn);
+					closeBtn.removeEventListener(MouseEvent.CLICK, closeButtonClickHandler);
+					closeBtn = null;
+				}
+				
+				if(headView)
+				{
+					this.removeElement(headView);
+					headView.removeAllElements();
+					headView = null;
+				}
+				
+				this.removeAllElements();
+			}
+			
+			private function removeItemsHandler():void
+			{
+				var len:int = colorItems.length;
+				for(var i:int = 0; i < len; i++)
+				{
+					var item:ColorButton = colorItems[i];
+					item.removeEventListener(MouseEvent.CLICK, colorBtn_ClickHandler);
+					item = null;
+				}
+				
+				for(var j:int = 0; j < len; j++)
+				{
+					var group:Group = groupItems[j];
+					group = null;
+				}
+				
+				groupItems.splice(0, groupItems.length);
+				groupItems = null;
+				colorItems.splice(0, colorItems.length);
+				colorItems = null;
+				colorsLength = 0;
+			}
+			
+//			protected function addItemLoad_ErrorHandler(event:IOErrorEvent):void
+//			{
+//				// TODO Auto-generated method stub
+//				loader.contentLoaderInfo.removeEventListener(IOErrorEvent.IO_ERROR, addItemLoad_ErrorHandler);
+//				loader.contentLoaderInfo.removeEventListener(Event.COMPLETE, addItemLoad_CompleteHandler);
+//				loader = null;
+//			}
+			
+//			protected function addItemLoad_CompleteHandler(event:Event):void
+//			{
+//				// TODO Auto-generated method stub
+//				content = (event.target.con)		
+//			}
+			
+			protected function closeButtonClickHandler(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				cleanView();
+				this.dispatchEvent(new DatasEvent(COLORVIEW_CLOSE_EVENT));
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	<s:Rect width="100%" height="100%">
+		<s:fill>
+			<s:SolidColor color="{ColorType.White}" alpha="0.75"/>
+		</s:fill>
+	</s:Rect>
+</s:Group>

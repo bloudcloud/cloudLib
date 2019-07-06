@@ -1,0 +1,409 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" width="900" height="650"
+		 creationComplete="Init()" xmlns:L3DUtils="L3DUtils.*">
+	
+	<fx:Script>
+		<![CDATA[
+			import flash.display.BitmapData;
+			import flash.display.Loader;
+			import flash.display.Sprite;
+			import flash.display.StageAlign;
+			import flash.display.StageScaleMode;
+			import flash.events.Event;
+			import flash.events.MouseEvent;
+			import flash.geom.Point;
+			import flash.net.FileReference;
+			
+			import mx.containers.Canvas;
+			import mx.controls.Alert;
+			import mx.core.UIComponent;
+			import mx.managers.PopUpManager;
+			
+			import L3DLibrary.LivelyLibrary;
+			
+			private var fileRef:FileReference=new FileReference();
+			private var loader:Loader = new Loader();
+			private var completeFun:Function = null; 
+			private var renderUI:UIComponent = new UIComponent();
+			private var renderMask:Sprite = new Sprite();
+			private var currentBitmap:BitmapData = null;
+			private var state:int = 0;
+			private var startPoint:Point = new Point();
+			private var endPoint:Point = new Point();
+			private var originalLength:Number = 0;
+			private var scaleRatio:Number = 0;
+			
+			private function Init():void
+			{	
+				stage.scaleMode = StageScaleMode.NO_SCALE;
+				stage.align = StageAlign.TOP_LEFT;	
+				CADImage.x = 12;
+				CADImage.y = 12;
+				CADImage.width = 600;
+				CADImage.height = 600;	
+				renderUI.addChild(renderMask);
+				CADImage.addElement(renderUI);
+				addEventListener(MouseEvent.CLICK,onMouseClick);
+				addEventListener(MouseEvent.MOUSE_MOVE,onMouseMove);
+			}
+			
+			private function onMouseClick(event:MouseEvent):void
+			{
+				if(currentBitmap == null)
+				{
+					return;
+				}
+				
+				switch(state)
+				{
+					case 1:
+					{
+						var currentPoint1:Point = new Point(CADImage.mouseX, CADImage.mouseY);
+						if(currentPoint1.x >= 0 && currentPoint1.x < CADImage.width)
+						{
+							if(currentPoint1.y >= 0 && currentPoint1.y < CADImage.height)
+							{
+								startPoint.x = currentPoint1.x;
+								startPoint.y = currentPoint1.y;
+								state = 2;
+							}
+						}						
+					}
+						break;
+					case 2:
+					{
+						var currentPoint2:Point = new Point(CADImage.mouseX, CADImage.mouseY);
+						if(currentPoint2.x >= 0 && currentPoint2.x < CADImage.width)
+						{
+							if(currentPoint2.y >= 0 && currentPoint2.y < CADImage.height)
+							{
+								endPoint.x = currentPoint2.x;
+								endPoint.y = currentPoint2.y;
+								renderMask.graphics.clear();
+								state = 0;
+								SetupDistance();
+							}
+						}
+					}
+						break;
+				}
+			}
+			
+			private function onMouseMove(event:MouseEvent):void
+			{
+				if(currentBitmap == null)
+				{
+					return;
+				}
+				
+				switch(state)
+				{
+					case 1:
+					{
+						var currentPoint1:Point = new Point(CADImage.mouseX, CADImage.mouseY);
+						if(currentPoint1.x >= 0 && currentPoint1.x < CADImage.width)
+						{
+							if(currentPoint1.y >= 0 && currentPoint1.y < CADImage.height)
+							{
+								renderMask.graphics.clear();
+								renderMask.graphics.lineStyle(1,0xFF0000,1);
+								renderMask.graphics.moveTo(currentPoint1.x - 6,currentPoint1.y);
+								renderMask.graphics.lineTo(currentPoint1.x + 6,currentPoint1.y);
+								renderMask.graphics.moveTo(currentPoint1.x,currentPoint1.y - 6);
+								renderMask.graphics.lineTo(currentPoint1.x,currentPoint1.y + 6);
+							}
+						}
+					}
+						break;
+					case 2:
+					{
+						var currentPoint:Point = new Point(CADImage.mouseX, CADImage.mouseY);
+						if(currentPoint.x >= 0 && currentPoint.x < CADImage.width)
+						{
+							if(currentPoint.y >= 0 && currentPoint.y < CADImage.height)
+							{
+								renderMask.graphics.clear();
+								renderMask.graphics.lineStyle(1,0xFF0000,1);
+								renderMask.graphics.moveTo(startPoint.x,startPoint.y);
+								renderMask.graphics.lineTo(currentPoint.x,currentPoint.y);
+								renderMask.graphics.moveTo(startPoint.x - 6,startPoint.y);
+								renderMask.graphics.lineTo(startPoint.x + 6,startPoint.y);
+								renderMask.graphics.moveTo(startPoint.x,startPoint.y - 6);
+								renderMask.graphics.lineTo(startPoint.x,startPoint.y + 6);
+								renderMask.graphics.moveTo(currentPoint.x - 6,currentPoint.y);
+								renderMask.graphics.lineTo(currentPoint.x + 6,currentPoint.y);
+								renderMask.graphics.moveTo(currentPoint.x,currentPoint.y - 6);
+								renderMask.graphics.lineTo(currentPoint.x,currentPoint.y + 6);
+							}
+						}
+					}
+						break;
+				}
+			}
+			
+			private function SetupDistance():void
+			{
+				var checkPoint:Point = new Point(endPoint.x - startPoint.x, endPoint.y - startPoint.y);
+				originalLength = checkPoint.length;
+				if(originalLength < 1)
+				{
+					return;
+				}
+				var win:L3DInputDistanceForm = PopUpManager.createPopUp(this, L3DInputDistanceForm, true) as L3DInputDistanceForm;
+				win.CompleteFun =  CompleteSetDistance;
+				PopUpManager.centerPopUp(win);
+			}
+			
+			private function CompleteSetDistance(v:Number):void
+			{
+				if(v <= 0)
+				{
+					return;
+				}
+				
+				var inScale:Number = CompuBitmapScaleRatio(currentBitmap, 600);
+				scaleRatio = v * inScale / originalLength;
+				DistanceRatioLabel.text = (Number(int(scaleRatio * 1000)) * 0.001).toString();
+			}
+			
+			public function set CompleteFun(v:Function):void
+			{
+				completeFun = v;
+			}
+			
+			public  function OnCloseDlg():void
+			{
+				if(state != 0)
+				{
+					return;
+				}
+				
+				PopUpManager.removePopUp(this);
+				ClearCADImage();
+			}
+			
+			protected function LoadCADImageButton_clickHandler(event:MouseEvent):void
+			{		
+				if(state != 0)
+				{
+					return;
+				}
+				
+				fileRef.browse([new FileFilter("Images(*.jpg, *.jpeg, *.bmp, *.png)","*.jpg;, *.jpeg;, *.bmp; *.png")]);
+				fileRef.addEventListener(Event.SELECT,onSelect);
+			}
+			
+			private function onSelect(e:Event):void
+			{
+				fileRef.load();
+				fileRef.addEventListener(Event.COMPLETE,onComplete);
+				fileRef.removeEventListener(Event.SELECT,onSelect);
+			}
+			
+			private function onComplete(e:Event):void
+			{
+				fileRef.removeEventListener(Event.COMPLETE,onComplete);
+				loader.loadBytes(fileRef.data);
+				loader.contentLoaderInfo.addEventListener(Event.COMPLETE,onLoadComplete);
+			}
+			
+			private function onLoadComplete(event:Event):void
+			{
+				loader.contentLoaderInfo.removeEventListener(Event.COMPLETE, onLoadComplete);				
+				//		var bitmap:BitmapData = L3DMaterial.LoadBitmapData(loader.contentLoaderInfo.bytes);
+				var bitmap:BitmapData=new BitmapData(loader.width,loader.height, false,0);
+				bitmap.draw(loader);
+				if(bitmap == null)
+				{
+					LivelyLibrary.ShowMessage("图片上传失败！", 1);
+				}
+				else
+				{
+					ClearCADImage();
+					
+					var position:Point = new Point(12,12);
+					var size:Point = new Point(600,600);
+					if(bitmap.width > bitmap.height)
+					{
+						size.y = size.x * bitmap.height / bitmap.width;
+						position.y += (size.x - size.y)/2;
+					}
+					else
+					{
+						size.x = size.y * bitmap.width / bitmap.height;
+						position.x += (size.y - size.x)/2;
+					}
+					CADImage.x = position.x;
+					CADImage.y = position.y;
+					CADImage.width = size.x;
+					CADImage.height = size.y;					
+					
+					CADImage.graphics.beginBitmapFill(bitmap, CompuBitmapScaleMatrix(bitmap, 600));
+					CADImage.graphics.drawRect(0,0,CADImage.width,CADImage.height);
+					CADImage.graphics.endFill();
+					
+					currentBitmap = bitmap;
+				}
+			}
+			
+			private function ClearCADImage():void
+			{
+				if(currentBitmap != null)
+				{
+					currentBitmap.dispose();
+					currentBitmap = null;
+				}
+				
+				CADImage.x = 12;
+				CADImage.y = 12;
+				CADImage.width = 600;
+				CADImage.height = 600;
+				
+				CADImage.graphics.clear();
+				renderMask.graphics.clear();
+			}
+			
+			private static function CompuBitmapScaleRatio(bmpData:BitmapData, maxLength:int):Number
+			{
+				if(bmpData == null)
+				{
+					return 1;
+				}
+				
+				if(bmpData.width <= maxLength && bmpData.height <= maxLength)
+				{
+					return 1;
+				}
+				
+				var width:int = bmpData.width;
+				var height:int = bmpData.height;
+				if(width > height)
+				{
+					height = maxLength * height / width;
+					width = maxLength;
+				}
+				else
+				{
+					width = maxLength * width / height;
+					height = maxLength;
+				}
+				var scaleX:Number = (width as Number) / (bmpData.width as Number);
+				var scaleY:Number = (height as Number) / (bmpData.height as Number);
+				
+				return scaleX;
+			}
+			
+			private static function CompuBitmapScaleMatrix(bmpData:BitmapData, maxLength:int):Matrix
+			{
+				var matrix:Matrix = new Matrix();
+				matrix.identity();
+				
+				if(bmpData == null)
+				{
+					return matrix;
+				}
+				
+				if(bmpData.width <= maxLength && bmpData.height <= maxLength)
+				{
+					return matrix;
+				}
+
+				var scale:Number = CompuBitmapScaleRatio(bmpData, maxLength);
+				matrix.scale(scale, scale);
+				
+				return matrix;
+			}
+			
+			protected function SetCADScaleButton_clickHandler(event:MouseEvent):void
+			{
+				if(currentBitmap == null)
+				{
+					return;
+				}
+				
+				if(state != 0)
+				{
+					return;
+				}
+
+				state = 1;
+			}
+			
+			protected function ClearCADImageButton_clickHandler(event:MouseEvent):void
+			{
+				if(state != 0)
+				{
+					return;
+				}
+				
+				ClearCADImage();
+			}
+			
+			protected function OKButton_clickHandler(event:MouseEvent):void
+			{
+				if(state != 0)
+				{
+					return;
+				}
+				
+				PopUpManager.removePopUp(this);
+				if(completeFun != null)
+				{
+					completeFun(currentBitmap, scaleRatio);
+				}
+			//	ClearCADImage();
+			}
+			
+			protected function CancelButton_clickHandler(event:MouseEvent):void
+			{
+				if(state != 0)
+				{
+					return;
+				}
+				
+				PopUpManager.removePopUp(this);
+				ClearCADImage();
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<mx:Blur id="blurOn" blurXFrom="0.0" blurXTo="10.0" blurYFrom="0.0" blurYTo="10.0"/>
+		<mx:Blur id="blurOut" blurXFrom="10.0" blurXTo="0.0" blurYFrom="10.0" blurYTo="0.0"/>
+	</fx:Declarations>
+	<s:Group width="900" height="650" horizontalCenter="0" verticalCenter="0">
+		<s:BorderContainer id="CADImageBorder" x="10" y="10" width="751" height="630">
+			<s:Button id="LoadCADImageButton" x="626" y="37" width="110" height="27" label="导入CAD图片"
+					  click="LoadCADImageButton_clickHandler(event)"/>
+			<s:Button id="SetCADScaleButton" x="626" y="72" width="110" height="27" label="设置CAD比例"
+					  click="SetCADScaleButton_clickHandler(event)"/>
+			<s:Button id="ClearCADImageButton" x="626" y="107" width="110" height="27"
+					  label="清除CAD图片" click="ClearCADImageButton_clickHandler(event)"/>
+			<s:Button id="OKButton" x="626" y="142" width="110" height="27" label="确定操作"
+					  click="OKButton_clickHandler(event)"/>
+			<s:Button id="CancelButton" x="626" y="177" width="110" height="27" label="取消操作"
+					  click="CancelButton_clickHandler(event)"/>
+			<mx:Canvas id="CADImage" x="12" y="12" width="600" height="600" />
+			<s:Label id="DistanceRatioLabel" x="626" y="221"/>
+		</s:BorderContainer>
+		<s:Rect x="742.5" y="-2.5" width="35" height="35" radiusX="45">
+			<s:stroke>
+				<s:SolidColorStroke color="#ffffff" caps="none" weight="3" joints="miter" miterLimit="4"/>
+			</s:stroke>	
+			<s:fill>
+				<s:SolidColor color="#000000"/>
+			</s:fill>
+			<s:filters>
+				<s:DropShadowFilter angle="0" blurX="4" blurY="4" color="#888888"
+									distance="0" hideObject="false" inner="false" knockout="false"
+									quality="2" strength="1"/>
+			</s:filters> 	
+		</s:Rect>
+		<s:Image x="751" y="6" buttonMode="true" click="OnCloseDlg();"
+				 mouseDownEffect="{blurOn}" mouseUpEffect="{blurOut}"
+				 source="@Embed('../images/close.png')"/>
+	</s:Group>
+</s:Group>

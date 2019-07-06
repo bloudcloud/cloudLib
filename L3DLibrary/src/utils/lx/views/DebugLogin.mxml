@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:HGroup xmlns:fx="http://ns.adobe.com/mxml/2009"
+		  xmlns:s="library://ns.adobe.com/flex/spark"
+		  xmlns:mx="library://ns.adobe.com/flex/mx"
+		  width="250"
+		  verticalAlign="middle"
+		  gap="0">
+
+	<fx:Script>
+		<![CDATA[
+			import mx.core.FlexGlobals;
+			import mx.managers.PopUpManager;
+			
+			import spark.components.Application;
+			
+			import alternativa.engine3d.core.Camera3D;
+			import alternativa.engine3d.core.Light3D;
+			import alternativa.engine3d.core.Object3D;
+			
+			import utils.lx.managers.GlobalManager;
+			private var main:Application=FlexGlobals.topLevelApplication as Application;
+			private var object3D:Object3D;
+			private var camera3D:Camera3D;
+			private var light3D:Light3D;
+			
+			private var _isLogin:Boolean;
+			
+			public function get isLogin():Boolean
+			{
+				return _isLogin;
+			}
+			
+			private function btn_mouseDownHandler(event:MouseEvent):void
+			{
+				if (password.text == "`123")
+				{
+					_isLogin = true
+					GlobalManager.debugTrackView.popUpOpen(null,object3D,camera3D,light3D);
+					popUpClose();
+				}else
+				{
+					popUpClose();
+				}
+			}
+
+			public function popUpOpen(object3D:Object3D=null,camera3D:Camera3D=null,light3D:Light3D=null):void
+			{
+				if(!main)
+				{
+					main = FlexGlobals.topLevelApplication as Application;
+				}
+				this.object3D=object3D;
+				this.camera3D=camera3D;
+				this.light3D=light3D;
+				
+				if(!this.isPopUp)
+				{
+					PopUpManager.addPopUp(this, main);
+					PopUpManager.centerPopUp(this);
+				}
+			}
+			
+			public function popUpClose():void
+			{
+				if (this.isPopUp)
+				{
+					PopUpManager.removePopUp(this);
+				}
+			}
+		]]>
+	</fx:Script>
+
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	<s:Label text="调试器密码"/>
+	<s:TextInput id="password"/>
+	<s:Button id="btn"
+			  label="确定"
+			  mouseDown="btn_mouseDownHandler(event)"/>
+</s:HGroup>

@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" width="282" height="203"
+		 creationComplete="Init()">	
+	
+	<fx:Script> 
+		<![CDATA[			
+			import flash.display.BitmapData;
+			import flash.display.Loader;
+			import flash.display.LoaderInfo;
+			import flash.display.SimpleButton;
+			import flash.display.Sprite;
+			import flash.display.Stage3D;
+			import flash.display.StageAlign;
+			import flash.display.StageScaleMode;
+			import flash.display3D.Context3D;
+			import flash.display3D.Context3DRenderMode;
+			import flash.events.Event;
+			import flash.events.MouseEvent;
+			import flash.geom.Point;
+			import flash.geom.Rectangle;
+			import flash.geom.Vector3D;
+			import flash.net.FileReference;
+			import flash.net.URLLoader;
+			import flash.net.URLLoaderDataFormat;
+			import flash.net.URLRequest;
+			import flash.text.TextField;
+			import flash.utils.ByteArray;
+			
+			import mx.collections.ArrayCollection;
+			import mx.containers.Canvas;
+			import mx.controls.Alert;
+			import mx.core.DragSource;
+			import mx.core.UIComponent;
+			import mx.events.DragEvent;
+			import mx.graphics.codec.JPEGEncoder;
+			import mx.managers.PopUpManager;
+			
+			import spark.events.TextOperationEvent;
+			
+			public var stage3D:Stage3D;
+			private var windows:L3DWindows;
+			private var windowsLine:Array = null;
+			private var wallIntersectionPoint:Vector3D = new Vector3D();
+			private var leftWallEndPoint:Vector3D = new Vector3D();
+			private var rightWallEndPoint:Vector3D = new Vector3D();
+			private var completeEventListener:Function = null;
+			public var wallThickness:int = 200;
+			
+			[Bindable] 
+			private var windowNames:ArrayCollection = new ArrayCollection( 
+				[ {label:"客厅", data:"客厅窗户"}, 
+				  {label:"餐厅", data:"餐厅窗户"},
+				  {label:"主卧", data:"主卧窗户"},
+				  {label:"卧室", data:"卧室窗户"},
+				  {label:"书房", data:"书房窗户"}] );
+			
+			private function Init():void
+			{	
+				stage.scaleMode = StageScaleMode.NO_SCALE;
+				stage.align = StageAlign.TOP_LEFT;
+				if(stage3D == null)
+				{
+					stage3D = stage.stage3Ds[0];
+				}
+			//	stage3D = stage.stage3Ds[0];
+				if(windows == null)
+				{
+					windows = new L3DWindows();
+				}
+				windows.WallThickness = wallThickness;
+				LeftWindowsLengthTextBox.text = "1500";
+				RightWindowsLengthTextBox.text = "1500";
+				OffGroundHeightTextBox.text = windows.WindowOffGround.toString();
+				WindowsHeightTextBox.text = windows.WindowHeight.toString();
+				WallThicknessTextBox.text = windows.WallThickness.toString();
+				WindowNameComboBox.selectedIndex = 0;
+			}			
+			
+			private function onResize(e:Event = null):void
+			{
+				if(stage == null)
+				{
+					return;
+				}
+			}
+			
+			public function AddCompleteEvent(listener:Function):void
+			{
+				if(windows == null)
+				{
+					windows = new L3DWindows();
+				}
+				completeEventListener = listener;
+			}			
+			
+			protected function CloseButton_clickHandler(event:MouseEvent):void
+			{
+				PopUpManager.removePopUp(this);
+				var evt:Event = new Event(L3DWindows.CloseParamWindowForm);
+				this.dispatchEvent(evt);
+			}
+			
+			protected function OKButton_clickHandler(event:MouseEvent):void
+			{
+				if(windows == null)
+				{
+					windows = new L3DWindows();
+				}
+				
+				windows.WindowOffGround = parseFloat(OffGroundHeightTextBox.text) as int;
+				windows.WindowHeight = parseFloat(WindowsHeightTextBox.text) as int;
+				windows.FloatDistance = 0;
+				var leftLength:Number = parseFloat(LeftWindowsLengthTextBox.text);
+				if(leftLength < 200)
+				{
+					leftLength = 200;
+				}
+				else if(leftLength > 8000)
+				{
+					leftLength = 8000;
+				}
+				var rightLength:Number = parseFloat(RightWindowsLengthTextBox.text);
+				if(rightLength < 200)
+				{
+					rightLength = 200;
+				}
+				else if(rightLength > 8000)
+				{
+					rightLength = 8000;
+				}
+				var leftDir:Vector3D = new Vector3D(leftWallEndPoint.x - wallIntersectionPoint.x, leftWallEndPoint.y - wallIntersectionPoint.y, 0);
+				var rightDir:Vector3D = new Vector3D(rightWallEndPoint.x - wallIntersectionPoint.x, rightWallEndPoint.y - wallIntersectionPoint.y, 0);
+				leftDir.normalize();
+				rightDir.normalize();
+				var leftPoint:Vector3D = new Vector3D(wallIntersectionPoint.x + leftDir.x * leftLength, wallIntersectionPoint.y + leftDir.y * leftLength, 0);
+				var rightPoint:Vector3D = new Vector3D(wallIntersectionPoint.x + rightDir.x * rightLength, wallIntersectionPoint.y + rightDir.y * rightLength, 0);
+				windowsLine = new Array(leftPoint, wallIntersectionPoint, rightPoint);
+				windows.WallThickness = parseFloat(WallThicknessTextBox.text);
+				windows.Build(WindowNameComboBox.selectedItem.data, windowsLine, stage3D);				
+				if(windows.Exist)
+				{	
+					windows.LeftWindowLength = leftLength;
+					windows.RightWindowLength = rightLength;					
+					PopUpManager.removePopUp(this);
+					windows.addEventListener(L3DBuildWindowEvent.BUILDWINDOW, completeEventListener);
+					windows.BuildWindowsComplete(33, leftLength, rightLength);
+				}				
+			}
+			
+			public function get WindowsLine():Array
+			{
+				return windowsLine;
+			}
+			
+			public function set WindowsLine(array:Array):void
+			{
+				windowsLine = array;
+			}
+			
+			public function get WallIntersectionPoint():Vector3D
+			{
+			    return wallIntersectionPoint;	
+			}
+			
+			public function set WallIntersectionPoint(point:Vector3D):void
+			{
+				wallIntersectionPoint = point;
+			}
+			
+			public function get LeftWallEndPoint():Vector3D
+			{
+			    return leftWallEndPoint;   	
+			}
+			
+			public function set LeftWallEndPoint(point:Vector3D):void
+			{
+				leftWallEndPoint = point;
+			}
+			
+			public function get RightWallEndPoint():Vector3D
+			{
+				return rightWallEndPoint;   	
+			}
+			
+			public function set RightWallEndPoint(point:Vector3D):void
+			{
+				rightWallEndPoint = point;
+			}
+			
+			public function get WindowsModel():L3DMesh
+			{
+				if(windows == null || !windows.Exist)
+				{
+					return null;
+				}
+				
+				windows.WindowsModel.rotationX = 0.0;
+				windows.WindowsModel.rotationY = 0.0;
+				windows.WindowsModel.rotationZ = 0.0;
+				windows.WindowsModel.scaleX = 1.0;
+				windows.WindowsModel.scaleY = 1.0;
+				windows.WindowsModel.scaleZ = 1.0;
+				
+				return windows.WindowsModel;
+			}	
+			
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	<s:SpriteVisualElement id="spriteContainer" />
+	<s:Panel id="RenderPanel" x="10" y="10" width="262" height="167" backgroundAlpha="1.0"
+			 backgroundColor="#FFFFFF" color="#000000" contentBackgroundAlpha="1.0" title="转角直窗">
+		<s:Label x="133" y="43" width="55" height="16" text="离地高度"/>
+		<s:Label x="133" y="73" width="55" height="16" text="窗体位置"/>
+		<s:Label x="229" y="43" width="31" height="16" text="mm"/>
+		<s:Label x="8" y="44" width="56" height="16" text="窗体高度"/>
+		<s:Label x="104" y="44" width="31" height="16" text="mm"/>
+		<s:Label x="8" y="74" width="56" height="16" text="墙体厚度"/>
+		<s:Label x="104" y="74" width="31" height="16" text="mm"/>
+		<s:TextInput id="WallThicknessTextBox" x="61" y="70" width="40"/>
+		<s:Label x="133" y="13" width="56" height="16" text="右窗长度"/>
+		<s:Label x="229" y="13" width="31" height="16" text="mm"/>
+		<s:TextInput id="WindowsHeightTextBox" x="61" y="40" width="40"/>
+		<s:TextInput id="RightWindowsLengthTextBox" x="186" y="9" width="40"/>
+		<s:Label x="8" y="14" width="56" height="16" text="左窗长度"/>
+		<s:Label x="104" y="14" width="31" height="16" text="mm"/>
+		<s:TextInput id="LeftWindowsLengthTextBox" x="61" y="10" width="40"/>
+		<s:TextInput id="OffGroundHeightTextBox" x="186" y="39" width="40"/>
+		<s:Button id="OKButton" x="8" y="103" width="103" height="22" label="确定当前操作"
+				  click="OKButton_clickHandler(event)"/>
+		<s:Button id="CloseButton" x="148" y="103" width="103" height="22" label="退出当前操作"
+				  click="CloseButton_clickHandler(event)"/>
+		<s:ComboBox id="WindowNameComboBox" x="186" y="69" width="64" dataProvider="{windowNames}"/>
+	</s:Panel>
+</s:Group>

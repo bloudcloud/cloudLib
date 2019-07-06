@@ -1,0 +1,551 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" 
+		 click="group1_clickHandler(event)"
+		 creationComplete="group1_creationCompleteHandler(event)" xmlns:views="extension.wl.views.*" xmlns:buttons="extension.wl.buttons.*">
+	<fx:Script>
+		<![CDATA[
+			import L3DLibrary.L3DRootNode;
+			
+			import extension.wl.buttons.LabelButton;
+			import extension.wl.buttons.SvgButton;
+			import extension.wl.globalData.allStaticTypes.ColorType;
+			import extension.wl.globalData.allStaticTypes.LivelyType;
+			import extension.wl.globalData.allStaticTypes.SvgType;
+			import extension.wl.globalData.allStaticTypes.UserType;
+			import extension.wl.utils.BrowseUtils;
+			
+			import mx.controls.Spacer;
+			import mx.core.UIComponent;
+			import mx.events.FlexEvent;
+			
+			import spark.components.Image;
+			import spark.components.TextArea;
+			import spark.events.TextOperationEvent;
+			
+			import utils.DatasEvent;
+			
+			public var unitType:int = LOGO_TYPE;//单元块类型
+			public var isEdit:Boolean = false;//是否可编辑
+			public var isBottomLine:Boolean = true;//是否有底线
+			public var isRightLine:Boolean = false;//是否有右边线
+			public var isTopLine:Boolean = false;//是否有顶线
+			public var isLeftLine:Boolean = false;//是否有左边线
+			
+			public var logoUrl:String="assets/others/newlogo.png";//logo
+			public var dataInfo:Object = null;
+			
+			private var keyInput:InputView = null;
+			private var valueInput:InputView = null;
+			private var remarkInput:TextArea = null;
+			private var key1Input:InputView = null;
+			private var value1Input:InputView = null;
+			private var colonLabel:LabelButton = null;
+			private var logoImg:Image = null;
+			
+			public static const UNIT_EDIT_EVENT:String = "unit_Edit_event";
+			public static const UNIT_ADD_EVENT:String = "unit_add_event";
+			public static const UNIT_ADD_OVER:String = "unit_add_over";
+			public static const UNIT_ADD_OUT:String = "unit_add_out";
+			public static const UNIT_CHANGE:String = "unit_change_event";
+			public static const UNIT_SAVE:String = "unit_save";
+			
+			public static const ADD_TYPE:int = 0;//添加按钮单元块
+			public static const LOGO_TYPE:int = 1;//logo单元块
+			public static const INFO_TYPE:int = 2;//文本单元块
+			public static const MC_INFO_TYPE:int = 3;//文本单元块
+			public static const TITIL_TYPE:int = 4;//标题单元块
+			public static const REVIEW_TYPE:int = 5;//审核单元块
+			public static const REMARK_TYPE:int = 6;//备注单元块
+			public static const SAVE_TYPE:int = 7;//保存信息模板
+			
+			protected function group1_creationCompleteHandler(event:FlexEvent):void
+			{
+				switch(unitType)
+				{
+					case ADD_TYPE:
+					{
+						initAdd();
+						break;
+					}
+					case LOGO_TYPE:
+					{
+						initLogo();
+						break;
+					}
+					case INFO_TYPE:
+					case MC_INFO_TYPE:
+					{
+						initText();
+						break;
+					}
+					case TITIL_TYPE:
+					{
+						initTitle();
+						break;
+					}
+					case REVIEW_TYPE:
+					{
+						initReview();
+						break;
+					}
+					case REMARK_TYPE:
+					{
+						initRemark();
+						break;
+					}
+				}
+				styleHandler();
+			}
+			
+			public function styleHandler():void
+			{
+				editBox.visible = isEdit;
+				if(unitType == ADD_TYPE)
+				{
+					editBox.visible = false;
+				}
+				if(unitType == REMARK_TYPE)
+				{
+					editBox.removeAllElements();
+					editBox.addElement(closeBtn);
+				}
+				editBG.visible = isEdit;
+				lineBox.graphics.clear();
+				lineBox.graphics.lineStyle(1,ColorType.Black);
+				if(isLeftLine)
+				{
+					lineBox.graphics.moveTo(0,0);
+					lineBox.graphics.lineTo(0,this.height);
+				}
+				if(isRightLine)
+				{
+					lineBox.graphics.moveTo(this.width,0);
+					lineBox.graphics.lineTo(this.width,this.height);
+				}
+				if(isTopLine)
+				{
+					lineBox.graphics.moveTo(0,0);
+					lineBox.graphics.lineTo(this.width,0);
+				}
+				if(isBottomLine)
+				{
+					lineBox.graphics.moveTo(0,this.height);
+					lineBox.graphics.lineTo(this.width,this.height);
+				}
+				if(unitType == REVIEW_TYPE)
+				{
+					var side:int = int(this.width * 0.5);
+					lineBox.graphics.moveTo(50,0);
+					lineBox.graphics.lineTo(50,this.height);
+					lineBox.graphics.moveTo(side,0);
+					lineBox.graphics.lineTo(side,this.height);
+					lineBox.graphics.moveTo(side + 50,0);
+					lineBox.graphics.lineTo(side + 50,this.height);
+				}
+			}
+			
+			public function clearUnit():void
+			{
+				if(unitType == ADD_TYPE)
+				{
+					for (var i:int = 0; i < unitBox.numElements; i++) 
+					{
+						var child:DisplayObject = unitBox.getChildAt(i);
+						if(child is SvgButton)
+						{
+							var btn:SvgButton = child as SvgButton;
+							btn.removeEventListener(MouseEvent.CLICK,addClickHandler);
+							btn.removeEventListener(MouseEvent.MOUSE_OVER,addOverHandler);
+							btn.removeEventListener(MouseEvent.MOUSE_OUT,addOutHandler);
+						}
+					}
+					
+				}
+				this.removeAllElements();
+				if(keyInput)
+				{
+					keyInput.removeEventListener(InputView.INPUT_CHANGE_EVENT,keyChangeHandler);
+					keyInput = null;
+				}
+				if(valueInput)
+				{
+					valueInput.removeEventListener(InputView.INPUT_CHANGE_EVENT,valueChangeHandler);
+					valueInput = null;
+				}
+				if(remarkInput)
+				{
+					remarkInput.removeEventListener(TextOperationEvent.CHANGE,remarkChangeHandler);
+					remarkInput = null;
+				}
+				if(key1Input)
+				{
+					key1Input.removeEventListener(InputView.INPUT_CHANGE_EVENT,key1ChangeHandler);
+					key1Input = null;
+				}
+				if(value1Input)
+				{
+					value1Input.removeEventListener(InputView.INPUT_CHANGE_EVENT,value1ChangeHandler);
+					value1Input = null;
+				}
+				if(colonLabel)
+				{
+					colonLabel = null;
+				}
+				if(logoImg)
+				{
+					logoImg.removeEventListener(MouseEvent.CLICK,logoImg_clickHandler);
+					logoImg.removeEventListener(Event.COMPLETE,logoImg_completeHandler);
+					logoImg = null;
+				}
+			}
+			
+			private function initRemark():void
+			{
+				if(!keyInput)
+				{
+					keyInput = InputView.buildInputView(dataInfo.key,60,this.height,LivelyType.LivelyStyle,4);
+					keyInput.viewColor = 0xff0000;
+					keyInput.inputEnabled = false;
+					keyInput.addEventListener(InputView.INPUT_CHANGE_EVENT,keyChangeHandler);
+					unitBox.addElement(keyInput);
+				}
+				if(!colonLabel)
+				{
+					colonLabel = LabelButton.buildLabelButton(":",20,this.height,LivelyType.LivelyStyle,4,false);
+					colonLabel.itemColor = 0xff0000;
+					unitBox.addElement(colonLabel);
+				}
+				if(!remarkInput)
+				{
+					remarkInput = new TextArea();
+					remarkInput.text = dataInfo.value;
+					remarkInput.width = this.width - 80;
+					remarkInput.height = this.height;
+					remarkInput.focusEnabled = false;
+					remarkInput.setStyle("borderAlpha",0);
+					remarkInput.setStyle("borderThickness",0);
+					remarkInput.setStyle("borderVisible",false);
+					remarkInput.setStyle("backgroundAlpha",0);
+					remarkInput.setStyle("backgroundVisible",false);
+					remarkInput.setStyle("contentBackgroundAlpha",0);
+					remarkInput.setStyle("contentBackgroundVisible",false);
+					remarkInput.setStyle("fontFamily",LivelyType.Font);
+					remarkInput.setStyle("fontSize",16);
+					remarkInput.setStyle("textAlign","left");
+					remarkInput.setStyle("verticalAlign","middle");
+					remarkInput.enabled = true;
+					remarkInput.setStyle("color",ColorType.Black);
+					remarkInput.addEventListener(TextOperationEvent.CHANGE,remarkChangeHandler);
+					unitBox.addElement(remarkInput);
+				}
+				
+			}
+			
+			protected function remarkChangeHandler(event:TextOperationEvent):void
+			{
+				
+			}
+			
+			public function updateValue(value:String):void
+			{
+				if(valueInput)
+				{
+					valueInput.inputText = value;
+				}
+			}
+			
+			public function getKey():String
+			{
+				if(keyInput)
+				{
+					return keyInput.inputText;
+				}
+				return null;
+			}
+			
+			private function initReview():void
+			{
+				var side:int = int(this.width * 0.5);
+				if(!keyInput)
+				{
+					keyInput = InputView.buildInputView(dataInfo.key,50,this.height,LivelyType.LivelyStyle,4,"名称");
+					keyInput.addEventListener(InputView.INPUT_CHANGE_EVENT,keyChangeHandler);
+					unitBox.addElement(keyInput);
+				}
+				if(!valueInput)
+				{
+					valueInput = InputView.buildInputView(dataInfo.value,side - 50,this.height,LivelyType.LivelyStyle,4);
+					valueInput.addEventListener(InputView.INPUT_CHANGE_EVENT,valueChangeHandler);
+					valueInput.labelAlign = InputView.LEFT;
+					unitBox.addElement(valueInput);
+				}
+				if(!key1Input)
+				{
+					key1Input = InputView.buildInputView("日期",50,this.height,LivelyType.LivelyStyle,4,"名称");
+					key1Input.addEventListener(InputView.INPUT_CHANGE_EVENT,key1ChangeHandler);
+					unitBox.addElement(key1Input);
+				}
+				if(!value1Input)
+				{
+					value1Input = InputView.buildInputView("",side - 50,this.height,LivelyType.LivelyStyle,4);
+					value1Input.addEventListener(InputView.INPUT_CHANGE_EVENT,value1ChangeHandler);
+					value1Input.labelAlign = InputView.LEFT;
+					unitBox.addElement(value1Input);
+				}
+			}
+			
+			private function initTitle():void
+			{
+				if(!keyInput)
+				{
+					keyInput = InputView.buildInputView(dataInfo.value,this.width,this.height,LivelyType.LivelyStyle,4,dataInfo.key);
+					keyInput.addEventListener(InputView.INPUT_CHANGE_EVENT,keyChangeHandler);
+					unitBox.addElement(keyInput);
+				}
+			}
+			
+			private function initLogo():void
+			{
+				if(L3DRootNode.instance.productionJson && L3DRootNode.instance.productionJson.hasOwnProperty("logo"))
+				{
+					logoUrl = L3DRootNode.instance.productionJson.logo;
+				}
+				if(logoUrl)
+				{
+					if(!logoImg)
+					{
+						logoImg = new Image();
+						logoImg.buttonMode = true;
+						logoImg.setStyle("scaleMode","stretch");
+						logoImg.addEventListener(MouseEvent.CLICK,logoImg_clickHandler);
+						logoImg.addEventListener(Event.COMPLETE,logoImg_completeHandler);
+						logoImg.source = logoUrl;
+						unitBox.addElement(logoImg);
+					}
+				}
+			}
+			
+			private function initText():void
+			{
+				var side:int = int(this.width * 0.25);
+				if(!keyInput)
+				{
+					keyInput = InputView.buildInputView(dataInfo.key,side,this.height,LivelyType.LivelyStyle,4,"请输入名称");
+					keyInput.addEventListener(InputView.INPUT_CHANGE_EVENT,keyChangeHandler);
+					unitBox.addElement(keyInput);
+				}
+				if(!colonLabel)
+				{
+					colonLabel = LabelButton.buildLabelButton(":",20,this.height,LivelyType.LivelyStyle,4,false);
+					unitBox.addElement(colonLabel);
+				}
+				if(!valueInput)
+				{
+					valueInput = InputView.buildInputView(dataInfo.value,this.width - side - 20,this.height,LivelyType.LivelyStyle,4,"请输入内容");
+					valueInput.addEventListener(InputView.INPUT_CHANGE_EVENT,valueChangeHandler);
+					valueInput.labelAlign = InputView.LEFT;
+					unitBox.addElement(valueInput);
+				}
+			}
+			
+			private function initAdd():void
+			{
+				var btns:Array = [SvgType.PLOT_ADDPICTURE_EVENT,SvgType.PLOT_ADDINFO_EVENT,SvgType.PLOT_ADDPROJECT_EVENT,SvgType.PLOT_ADDDOORWINDOWINFO_EVENT,SvgType.PLOT_ADDTITLE_EVENT,SvgType.DOORWINDOWEDIT_EVENT,SvgType.BOTTOM_LEJIASTUDY_EVENT];
+				var btnLen:int = btns.length;
+				var spaceWidth:Number = (this.width - this.height * btnLen) / (btnLen - 1);
+				for (var i:int = 0; i < btnLen; i++) 
+				{
+					var btn:SvgButton = SvgButton.buildSvgButton(btns[i],this.height,this.height,LivelyType.LivelyStyle,4);
+					btn.addEventListener(MouseEvent.CLICK,addClickHandler);
+					btn.addEventListener(MouseEvent.MOUSE_OVER,addOverHandler);
+					btn.addEventListener(MouseEvent.MOUSE_OUT,addOutHandler);
+					if(i == btnLen - 2)
+					{
+						btn.svgScale = 30;
+						btn.svgTip = "添加备注";
+					}
+					if(i == btnLen - 1)
+					{
+						btn.svgScale = 30;
+						btn.svgTip = "保存模板";
+					}
+					unitBox.addElement(btn);
+					
+					if(i < btnLen - 1)
+					{
+						var space:Spacer = new Spacer();
+						//						space.width = 8;
+						space.width = spaceWidth;
+						space.height = this.height;
+						unitBox.addElement(space);
+					}
+				}
+			}
+			
+			protected function addClickHandler(event:MouseEvent):void
+			{
+				var btn:SvgButton = event.currentTarget as SvgButton;
+				this.dispatchEvent(new DatasEvent(UNIT_ADD_EVENT,getButtonType(btn)));
+			}
+			
+			protected function addOverHandler(event:MouseEvent):void
+			{
+				var btn:SvgButton = event.currentTarget as SvgButton;
+				this.dispatchEvent(new DatasEvent(UNIT_ADD_OVER,getButtonType(btn)));
+			}
+			
+			protected function addOutHandler(event:MouseEvent):void
+			{
+				var btn:SvgButton = event.currentTarget as SvgButton;
+				this.dispatchEvent(new DatasEvent(UNIT_ADD_OUT,getButtonType(btn)));
+			}
+			
+			private function getButtonType(btn:SvgButton):int
+			{
+				var type:int = 0;
+				switch(btn.svgEvent)
+				{
+					case SvgType.PLOT_ADDPICTURE_EVENT:
+						type = LOGO_TYPE;
+						break;
+					case SvgType.PLOT_ADDINFO_EVENT:
+						type = INFO_TYPE;
+						break;
+					case SvgType.PLOT_ADDPROJECT_EVENT:
+						type = REVIEW_TYPE;
+						break;
+					case SvgType.PLOT_ADDDOORWINDOWINFO_EVENT:
+						type = MC_INFO_TYPE;
+						break;
+					case SvgType.PLOT_ADDTITLE_EVENT:
+						type = TITIL_TYPE;
+						break;
+					case SvgType.DOORWINDOWEDIT_EVENT:
+						type = REMARK_TYPE;
+						break;
+					case SvgType.BOTTOM_LEJIASTUDY_EVENT:
+						type = SAVE_TYPE;
+						break;
+				}
+				return type;
+			}
+			
+			protected function logoImg_clickHandler(event:MouseEvent):void
+			{
+				if(UserType.USER_BRAND == "门窗" || UserType.USER_BRAND == "铺砖")
+				{
+					var browse:BrowseUtils = new BrowseUtils();
+					browse.addEventListener(BrowseUtils.BROWSE_EVENT,browseHandler);
+					browse.browseImages();
+				}
+			}
+			
+			protected function browseHandler(event:Event):void
+			{
+				var browse:BrowseUtils = event.target as BrowseUtils;
+				browse.removeEventListener(BrowseUtils.BROWSE_EVENT,browseHandler);
+				logoImg.source=browse.browseByteArray;
+				browse = null;
+			}
+			
+			protected function logoImg_completeHandler(event:Event):void
+			{
+				var sca:Number=1;
+				var padding:int = 10;
+				var uw:int = this.width - padding;
+				var uh:int = this.height - padding;
+				if(logoImg.sourceWidth * uh > logoImg.sourceHeight * uw)
+				{
+					if(logoImg.sourceWidth > uw)
+					{
+						sca = uw / logoImg.sourceWidth;
+					}
+				}
+				else
+				{
+					if(logoImg.sourceHeight > uh)
+					{
+						sca = uh / logoImg.sourceHeight;
+					}
+				}
+				logoImg.scaleX = logoImg.scaleY = sca;
+			}
+			
+			protected function valueChangeHandler(event:Event):void
+			{
+				dataInfo.value = valueInput.inputText;
+				this.dispatchEvent(new DatasEvent(UNIT_SAVE,dataInfo));
+			}
+			
+			protected function keyChangeHandler(event:Event):void
+			{
+				dataInfo.key = keyInput.inputText;
+				this.dispatchEvent(new DatasEvent(UNIT_SAVE,dataInfo));
+			}
+			
+			protected function value1ChangeHandler(event:Event):void
+			{
+				dataInfo.value1 = value1Input.inputText;
+			}
+			
+			protected function key1ChangeHandler(event:Event):void
+			{
+				dataInfo.key1 = key1Input.inputText;
+			}
+			
+			protected function topBtn_clickHandler(event:MouseEvent):void
+			{
+				this.dispatchEvent(new DatasEvent(UNIT_EDIT_EVENT,"top"));
+			}
+			
+			protected function upBtn_clickHandler(event:MouseEvent):void
+			{
+				this.dispatchEvent(new DatasEvent(UNIT_EDIT_EVENT,"up"));
+			}
+			
+			protected function downBtn_clickHandler(event:MouseEvent):void
+			{
+				this.dispatchEvent(new DatasEvent(UNIT_EDIT_EVENT,"down"));
+			}
+			
+			protected function bottomBtn_clickHandler(event:MouseEvent):void
+			{
+				this.dispatchEvent(new DatasEvent(UNIT_EDIT_EVENT,"bottom"));
+			}
+			
+			protected function closeBtn_clickHandler(event:MouseEvent):void
+			{
+				this.dispatchEvent(new DatasEvent(UNIT_EDIT_EVENT,"close"));
+			}
+			
+			private function group1_clickHandler(event:MouseEvent):void
+			{
+				
+			}
+			
+		]]>
+	</fx:Script>
+	<s:HGroup id="unitBox" gap="0" width="100%" height="100%" horizontalAlign="center" verticalAlign="middle">
+		
+	</s:HGroup>
+	<s:Rect id="editBG" width="100%" height="100%" visible="false">
+		<s:fill>
+			<s:SolidColor color="0xcccccc" alpha="0.7"/>
+		</s:fill>
+	</s:Rect>
+	<s:HGroup id="editBox" width="100%" height="20" verticalAlign="middle" horizontalAlign="right" gap="0" top="1" right="1" visible="false">
+		<buttons:SvgButton id="topBtn" width="20" height="20" svgEvent="{SvgType.PLOT_TOTOP_EVEMT}" viewAlpha="0"
+						   typeStyle="{LivelyType.LivelyStyle}" typeStatus="4" click="topBtn_clickHandler(event)"/>
+		<buttons:SvgButton id="upBtn" width="20" height="20" svgEvent="{SvgType.PLOT_UP_EVENT}" viewAlpha="0"
+						   typeStyle="{LivelyType.LivelyStyle}" typeStatus="4" click="upBtn_clickHandler(event)"/>
+		<buttons:SvgButton id="downBtn" width="20" height="20" svgEvent="{SvgType.PLOT_DOWN_EVENT}" viewAlpha="0"
+						   typeStyle="{LivelyType.LivelyStyle}" typeStatus="4" click="downBtn_clickHandler(event)"/>
+		<buttons:SvgButton id="bottomBtn" width="20" height="20" svgEvent="{SvgType.PLOT_TOBOTTOM_EVENT}" viewAlpha="0"
+						   typeStyle="{LivelyType.LivelyStyle}" typeStatus="4" click="bottomBtn_clickHandler(event)"/>
+		<buttons:SvgButton id="closeBtn" width="20" height="20" svgEvent="{SvgType.CLOSE_EVENT}" viewAlpha="0"
+						   typeStyle="{LivelyType.LivelyStyle}" typeStatus="4" click="closeBtn_clickHandler(event)"/>
+	</s:HGroup>
+	<mx:UIComponent id="lineBox" width="100%" height="100%"/>
+</s:Group>

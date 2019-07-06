@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
+		 xmlns:s="library://ns.adobe.com/flex/spark"
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 width="100%"
+		 height="100%"
+		 creationComplete="group_creationCompleteHandler(event)">
+	<fx:Script>
+		<![CDATA[
+			import mx.collections.ArrayCollection;
+			import mx.core.FlexGlobals;
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+			
+			import utils.lx.managers.GlobalManager;
+			private var switchState:Boolean;
+			private var logLevels:Array;
+			private var logFlags:Array;
+			private var preLogFlags:Array;
+			private var levelBtnArg:Array;
+
+			private function btn_clickHandler(event:MouseEvent):void
+			{
+				var btn:ToggleButton=event.target as ToggleButton;
+				var level:uint = parseInt(btn.name);
+				var index:int = logLevels.indexOf(level);
+				if(btn.selected && index<0)
+				{
+					logLevels.push(level);
+				}else if(!btn.selected && index>-1)
+				{
+					logLevels.removeAt(index);
+				}
+			}
+
+			public function setSwitchState(value:Boolean):void
+			{
+				switchState=value;
+			}
+
+			public function setLogLevels(arg:Array):void
+			{
+				logLevels=arg;
+			}
+
+			public function setPreLogFlags(arg:Array):void
+			{
+				preLogFlags=arg;
+			}
+
+			public function setLogFlags(arg:Array):void
+			{
+				logFlags=arg;
+			}
+
+			private function group_creationCompleteHandler(event:FlexEvent):void
+			{
+				if (!logLevels || !logFlags || !preLogFlags)
+				{
+					return;
+				}
+				init();
+			}
+
+			private function init():void
+			{
+				clearToggleSelect();
+
+				flagList.dataProvider=null;
+				
+				levelBtnArg = [fatalBtn,errorBtn,warnBtn,infoBtn,debugBtn];
+				
+				if (switchState)
+				{
+					btnOff.selected = false;
+					btnOn.selected = true;
+				}
+				else
+				{
+					btnOn.selected = false;
+					btnOff.selected = true;
+				}
+
+				var i:int;
+				for (i=0; i < logLevels.length; i++)
+				{
+					for (var j:int=0; j < levelBtnArg.length; j++)
+					{
+						if (String(logLevels[i]) == levelBtnArg[j].name)
+						{
+							levelBtnArg[j].selected=true;
+						}
+					}
+				}
+
+				var index:int;
+				var label:String;
+				var selected:Boolean;
+				var dataItem:Object;
+				var arg:Array=[];
+				for (i=0; i < preLogFlags.length; i++)
+				{
+					label=preLogFlags[i];
+					index=logFlags.indexOf(label);
+					dataItem={flag: label};
+					dataItem.selected=index > -1 ? true : false;
+					arg.push(dataItem);
+				}
+
+				flagList.dataProvider=new ArrayCollection(arg);
+				
+				levelBtnArg.length = 0;
+			}
+
+			private function clearToggleSelect():void
+			{
+				btnOn.selected=false;
+				btnOff.selected=false;
+				for (var i:int=0; i < btnLayer.numElements; i++)
+				{
+					if(btnLayer.getElementAt(i) is ToggleButton)
+					{
+						(btnLayer.getElementAt(i) as ToggleButton).selected=false;
+					}
+				}
+			}
+
+			public function popUpOpen():void
+			{
+				PopUpManager.addPopUp(this, FlexGlobals.topLevelApplication as DisplayObject, true);
+				PopUpManager.centerPopUp(this);
+			}
+
+			public function popUpClose():void
+			{
+				PopUpManager.removePopUp(this);
+			}
+
+			private function btnClose_clickHandler(event:MouseEvent):void
+			{
+				popUpClose();
+			}
+
+			private function btnOn_clickHandler(event:MouseEvent):void
+			{
+				btnOff.selected = false;
+				switchState = true;
+			}
+
+			private function btnOff_clickHandler(event:MouseEvent):void
+			{
+				btnOn.selected = false;
+				switchState = false;
+			}
+			
+			private function btnModify_clickHandler(event:MouseEvent):void
+			{
+				var total:uint;
+				for (var i:int = 0; i < logLevels.length; i++) 
+				{
+					total+=logLevels[i];
+				}
+				
+				if (switchState)
+				{
+					GlobalManager.log.on();
+				}
+				else
+				{
+					GlobalManager.log.off();
+				}
+				
+				logFlags = [];
+				for (var j:int = 0; j < flagList.dataProvider.length; j++) 
+				{
+					var data:Object = flagList.dataProvider.getItemAt(j);
+					if(data.selected)
+					{
+						logFlags.push(data.flag);
+					}
+				}
+				
+				GlobalManager.log.setLogLevels(total);
+				GlobalManager.log.setLogFlags(logFlags);
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	<s:Rect width="100%"
+			height="100%">
+		<s:fill>
+			<s:SolidColor color="0xffffff"/>
+		</s:fill>
+		<s:stroke>
+			<s:SolidColorStroke/>
+		</s:stroke>
+	</s:Rect>
+	<s:VGroup gap="0"
+			  width="100%"
+			  height="100%">
+		<s:HGroup width="100%"
+				  horizontalAlign="right">
+			<s:Button id="btnModify"
+					  label="临时修改"
+					  click="btnModify_clickHandler(event)"/>
+			<s:Button id="btnClose"
+					  label="关闭"
+					  click="btnClose_clickHandler(event)"/>
+		</s:HGroup>
+		<s:HGroup width="100%"
+				  verticalAlign="middle">
+			<s:Spacer width="10"/>
+			<s:Label text="开关"/>
+			<s:ToggleButton id="btnOn"
+							label="On"
+							click="btnOn_clickHandler(event)"/>
+			<s:ToggleButton id="btnOff"
+							label="Off"
+							click="btnOff_clickHandler(event)"/>
+		</s:HGroup>
+		<s:HGroup id="btnLayer"
+				  width="100%"
+				  verticalAlign="middle">
+			<s:Spacer width="10"/>
+			<s:Label text="日志调试等级"
+					 width="100"/>
+			<s:ToggleButton id="fatalBtn"
+							label="Fatal-2"
+							name="2"
+							click="btn_clickHandler(event)"/>
+			<s:ToggleButton id="errorBtn"
+							label="Error-4"
+							name="4"
+							click="btn_clickHandler(event)"/>
+			<s:ToggleButton id="warnBtn"
+							label="Warn-8"
+							name="8"
+							click="btn_clickHandler(event)"/>
+			<s:ToggleButton id="infoBtn"
+							label="Info-16"
+							name="16"
+							click="btn_clickHandler(event)"/>
+			<s:ToggleButton id="debugBtn"
+							label="Debug-32"
+							name="32"
+							click="btn_clickHandler(event)"/>
+		</s:HGroup>
+		<s:List id="flagList"
+				width="100%"
+				height="100%"
+				itemRenderer="utils.lx.views.LogFlagItem"/>
+	</s:VGroup>
+</s:Group>

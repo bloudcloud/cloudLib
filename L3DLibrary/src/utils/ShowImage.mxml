@@ -1,0 +1,174 @@
+<s:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009"
+			   xmlns:s="library://ns.adobe.com/flex/spark"
+			   xmlns:mx="library://ns.adobe.com/flex/mx" backgroundColor="0x000000"
+			   width="522" height="553" title="图片浏览" close="titlewindow1_closeHandler(event)" creationComplete="titlewindow1_creationCompleteHandler(event)" fontFamily="宋体">
+	<fx:Script>
+		<![CDATA[
+			import mx.controls.Alert;
+			import mx.events.CloseEvent;
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+			
+			public var viewBitmap:BitmapData = null;
+			public var viewBuffer:ByteArray = null;
+			
+			protected function titlewindow1_closeHandler(event:CloseEvent):void
+			{
+				PopUpManager.removePopUp(this);
+			}
+			
+			public function SetupBitmap(bitmap:BitmapData):void
+			{
+				Clear();
+				
+				if(bitmap == null)
+				{
+					return;
+				}
+				
+				var point:Point = new Point(ViewImage.x, ViewImage.y);
+				var size:Point = new Point(ViewImage.width, ViewImage.height);
+				if(bitmap.width > bitmap.height)
+				{
+					size.y = size.x * bitmap.height / bitmap.width;
+					point.y += (size.x - size.y) / 2;
+				}
+				else
+				{
+					size.x = size.y * bitmap.width / bitmap.height;
+					point.x += (size.y - size.x) / 2;
+				}
+				ViewImage.x = point.x;
+				ViewImage.y = point.y;
+				ViewImage.width = size.x;
+				ViewImage.height = size.y;
+				ViewImage.source = bitmap.clone();
+			}
+			
+			public function SetupBuffer(buffer:ByteArray):void
+			{
+				Clear();
+				
+				if(buffer == null || buffer.length == 0)
+				{
+					return;
+				}
+				
+				ViewImage.source = buffer;
+				ViewImage.addEventListener(Event.COMPLETE, LoadImageCompletedHandle);
+			}
+			
+			private function LoadImageCompletedHandle(event:Event):void
+			{
+				ViewImage.removeEventListener(Event.COMPLETE, LoadImageCompletedHandle);
+				var imageSize:Point = new Point(ViewImage.sourceWidth, ViewImage.sourceHeight);
+				if(imageSize.x == 0 || imageSize.y == 0)
+				{
+					return;
+				}
+				
+				var point:Point = new Point(ViewImage.x, ViewImage.y);
+				var size:Point = new Point(ViewImage.width, ViewImage.height);
+				if(imageSize.x > imageSize.y)
+				{
+					size.y = size.x * imageSize.y / imageSize.x;
+					point.y += (size.x - size.y) / 2;
+				}
+				else
+				{
+					size.x = size.y * imageSize.x / imageSize.y;
+					point.x += (size.y - size.x) / 2;
+				}
+				ViewImage.x = point.x;
+				ViewImage.y = point.y;
+				ViewImage.width = size.x;
+				ViewImage.height = size.y;
+			}
+			
+			private function Clear():void
+			{
+				if(ViewImage.source != null)
+				{
+					if(ViewImage.source is BitmapData)
+					{
+						(ViewImage.source as BitmapData).dispose();						
+					}
+					ViewImage.source = null;
+				}
+				ViewImage.x = 10;
+				ViewImage.y = 10;
+				ViewImage.width = 500;
+				ViewImage.height = 500;				
+			}
+			
+			protected function ViewImage_clickHandler(event:MouseEvent):void
+			{
+				if(ViewImage.source == null)
+				{
+					Alert.show("当前图像信息为空");
+					return;
+				}
+				
+				var buffer:ByteArray = null;
+				if(ViewImage.source is BitmapData)
+				{
+					buffer = L3DMaterial.BitmapDataToBuffer(ViewImage.source as BitmapData);
+				}
+				else if(ViewImage.source is ByteArray)
+				{
+					buffer = ViewImage.source as ByteArray;
+				}
+				else
+				{
+					Alert.show("当前图像信息为空");
+				}
+				
+				var file:FileReference=new FileReference();
+				file.save(buffer,"view.jpg");					
+			}
+			
+			public static function ShowBitmap(bitmap:BitmapData, parent:DisplayObject):void
+			{
+				if(bitmap == null || parent == null)
+				{
+					return;
+				}
+				
+				var window:ShowImage = new ShowImage();
+				window.viewBitmap = bitmap;
+				PopUpManager.addPopUp(window, parent);
+				PopUpManager.centerPopUp(window);
+			}	
+			
+			public static function ShowBuffer(buffer:ByteArray, parent:DisplayObject):void
+			{
+				if(buffer == null || buffer.length == 0 || parent == null)
+				{
+					return;
+				}
+				
+				var window:ShowImage = new ShowImage();
+				window.viewBuffer = buffer;
+				PopUpManager.addPopUp(window, parent);
+				PopUpManager.centerPopUp(window);
+			}	
+			
+			protected function titlewindow1_creationCompleteHandler(event:FlexEvent):void
+			{
+				if(viewBitmap != null)
+				{
+					SetupBitmap(viewBitmap);
+				}
+				else if(viewBuffer != null && viewBuffer.length > 0)
+				{
+					SetupBuffer(viewBuffer);
+				}
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	<s:Image id="ViewImage" x="10" y="10" width="500" height="500" click="ViewImage_clickHandler(event)" scaleMode="stretch"/>
+</s:TitleWindow>

@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" width="232" height="132"
+		 creationComplete="Init()">
+	
+	<fx:Script>
+		<![CDATA[
+			import flash.display.BitmapData;
+			import flash.display.Loader;
+			import flash.display.LoaderInfo;
+			import flash.display.SimpleButton;
+			import flash.display.Sprite;
+			import flash.display.Stage3D;
+			import flash.display.StageAlign;
+			import flash.display.StageScaleMode;
+			import flash.display3D.Context3D;
+			import flash.display3D.Context3DRenderMode;
+			import flash.events.Event;
+			import flash.events.MouseEvent;
+			import flash.geom.Point;
+			import flash.geom.Rectangle;
+			import flash.geom.Vector3D;
+			import flash.net.FileReference;
+			import flash.net.URLLoader;
+			import flash.net.URLLoaderDataFormat;
+			import flash.net.URLRequest;
+			import flash.text.*;
+			import flash.text.TextField;
+			import flash.ui.*;
+			import flash.utils.ByteArray;
+			
+			import mx.collections.ArrayCollection;
+			import mx.containers.Canvas;
+			import mx.controls.Alert;
+			import mx.core.DragSource;
+			import mx.core.IVisualElement;
+			import mx.core.UIComponent;
+			import mx.events.*;
+			import mx.events.DragEvent;
+			import mx.flash.UIMovieClip;
+			import mx.graphics.*;
+			import mx.graphics.codec.JPEGEncoder;
+			import mx.managers.*;
+			import mx.rpc.AsyncToken;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+			
+			import spark.events.IndexChangeEvent;
+			import spark.events.TextOperationEvent;
+			
+			private var completeFun:Function = null; 
+			
+			private function Init():void
+			{	
+				stage.scaleMode = StageScaleMode.NO_SCALE;
+				stage.align = StageAlign.TOP_LEFT;	
+			}
+			
+			public function set CompleteFun(v:Function):void
+			{
+				completeFun = v;
+			}
+			
+			protected function OKButton_clickHandler(event:MouseEvent):void
+			{
+				var v:Number = 0;
+				try
+				{
+					v = parseFloat(DistanceTextBox.text);
+				}
+				catch(error:Error)
+				{
+					v = 0;
+				}
+				if(v <= 0)
+				{
+					return;
+				}
+				
+				if(completeFun != null)
+				{
+					completeFun(v);
+				}
+				PopUpManager.removePopUp(this);
+			}
+			
+			protected function CancelButton_clickHandler(event:MouseEvent):void
+			{
+				PopUpManager.removePopUp(this);
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	<s:Panel x="0" y="0" width="230" height="76" title="输入距离">
+		<s:TextInput id="DistanceTextBox" x="10" y="10" width="62"/>
+		<s:Label x="80" y="15" text="毫米"/>
+		<s:Button id="OKButton" x="112" y="10" width="49" label="确定"
+				  click="OKButton_clickHandler(event)"/>
+		<s:Button id="CancelButton" x="167" y="10" width="49" label="取消"
+				  click="CancelButton_clickHandler(event)"/>
+	</s:Panel>
+</s:Group>

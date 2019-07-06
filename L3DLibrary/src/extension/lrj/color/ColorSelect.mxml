@@ -1,0 +1,590 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
+		 xmlns:s="library://ns.adobe.com/flex/spark"
+		 creationComplete="group1_creationCompleteHandler(event)"
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 xmlns:buttons="buttons.*">
+	<fx:Metadata>
+		[Event(name="change",type="utils.DatasEvent")]
+	</fx:Metadata>
+	<fx:Script>
+		<![CDATA[
+			import mx.core.FlexGlobals;
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+			
+			import spark.components.TextInput;
+			
+			import utils.DatasEvent;    
+			
+			private var pixelValue:uint=0;
+			[Bindable]
+			private var colorbod:uint=0xcccccc;
+			[Bindable]
+			private var colorm:uint=0xffffff;
+			[Bindable]
+			public var colorn:uint=0x000000;
+			[Bindable]
+			public var rectWidth:uint=40;
+			[Bindable]
+			public var rectHeight:uint=40;
+			[Bindable]
+			public var TinputWidth:uint=26;
+			[Bindable]
+			public var TinputHeight:uint=22;
+			[Bindable]
+			public var radius:uint=5;
+			[Bindable]
+			private var colorr:uint=255;
+			[Bindable]
+			private var colorg:uint=255;
+			[Bindable]
+			private var colorb:uint=255;
+			
+			
+			private var offsetX:int=0;
+			private var offsetY:int=0;
+			
+			private var colorBoard:Sprite; //颜色板
+			private var s_arrow:Sprite //十字箭头
+			private var bit:BitmapData;
+			
+			public function get Colorm():uint
+			{
+				return colorm;
+			}
+			
+			public function set Colorm(v:uint):void
+			{
+				colorm = v;
+			}
+			
+			private function DrawColorboard():void {
+				var myfill:GraphicsGradientFill=new GraphicsGradientFill();
+				myfill.colors=[0x000000, 0xff0000, 0xffff00, 0x00ff00, 0x00ffff, 0x0000ff, 0xff00ff, 0xffffff];
+				
+				myfill.matrix=new Matrix();
+				myfill.matrix.createGradientBox(200, 200, 0);
+				
+				var myStroke:GraphicsStroke=new GraphicsStroke(1);
+				myStroke.fill=new GraphicsSolidFill(0xffffff);
+				
+				var pathCommands:Vector.<int>=new Vector.<int>(5, true);
+				pathCommands[0]=GraphicsPathCommand.MOVE_TO;
+				pathCommands[1]=GraphicsPathCommand.LINE_TO;
+				pathCommands[2]=GraphicsPathCommand.LINE_TO;
+				pathCommands[3]=GraphicsPathCommand.LINE_TO;
+				pathCommands[4]=GraphicsPathCommand.LINE_TO;
+				
+				var pathCoordinates:Vector.<Number>=new Vector.<Number>(10, true);
+				pathCoordinates[0]=0;
+				pathCoordinates[1]=0;
+				pathCoordinates[2]=0;
+				pathCoordinates[3]=200;
+				pathCoordinates[4]=200;
+				pathCoordinates[5]=200;
+				pathCoordinates[6]=200;
+				pathCoordinates[7]=0;
+				pathCoordinates[8]=0;
+				pathCoordinates[9]=0;
+				
+				var myPath:GraphicsPath=new GraphicsPath(pathCommands, pathCoordinates);
+				
+				var myfill1:GraphicsGradientFill=new GraphicsGradientFill();
+				myfill1.colors=[0xffffff, 0xffffff];
+				myfill1.alphas=[0, 1];
+				myfill1.matrix=new Matrix();
+				
+				myfill1.matrix.createGradientBox(200, 200, 0);
+				myfill1.matrix.rotate(90);
+				
+				var myDrawing:Vector.<IGraphicsData>=new Vector.<IGraphicsData>(3, true);
+				myDrawing[0]=myfill;
+				myDrawing[1]=myStroke;
+				myDrawing[2]=myPath;
+				
+				var myDrawing1:Vector.<IGraphicsData>=new Vector.<IGraphicsData>(3, true);
+				myDrawing1[0]=myfill1;
+				myDrawing1[1]=null;
+				myDrawing1[2]=myPath;
+				
+				colorBoard=new Sprite();
+				colorBoard.graphics.drawGraphicsData(myDrawing);
+				colorBoard.graphics.drawGraphicsData(myDrawing1);
+				colorBoard.blendMode=BlendMode.NORMAL;
+				colorBoard.width=200;
+				colorBoard.height=200;
+				s_arrow=getIcon();
+			}
+			
+			private function getIcon():Sprite{
+				var s:Sprite = new Sprite();
+				s.mouseChildren = false;
+				s.mouseEnabled = false;
+				s.graphics.lineStyle(2, 0x000000);
+				
+				s.graphics.moveTo(10, 0);
+				s.graphics.lineTo(10, 9);
+				
+				s.graphics.moveTo(0, 10);
+				s.graphics.lineTo(9, 10);
+				
+				s.graphics.moveTo(20, 10);
+				s.graphics.lineTo(11, 10);
+				
+				s.graphics.moveTo(10, 20);
+				s.graphics.lineTo(10, 11);
+				return s;
+			}
+			
+			private function group1_creationCompleteHandler(event:FlexEvent):void {
+				offsetX=rectWidth;
+				offsetY=rectHeight;
+				colorr=getColorVector(colorn)[0];
+				colorg=getColorVector(colorn)[1];
+				colorb=getColorVector(colorn)[2]; 
+				textChangeG();
+			}
+			
+			private function getPixelHandler(e:MouseEvent):void {
+				e.stopImmediatePropagation();
+				
+				pixelValue=bit.getPixel(colorBoard.mouseX, colorBoard.mouseY);
+				colorm=pixelValue;
+				colorr=getColorVector(colorm)[0];
+				colorg=getColorVector(colorm)[1];
+				colorb=getColorVector(colorm)[2];
+				
+				s_arrow.x=colorBoard.mouseX - s_arrow.width * 0.5;
+				s_arrow.y=colorBoard.mouseY - s_arrow.height * 0.5;
+				
+				colorn=colorm;
+				dispatchEvent(new DatasEvent(Event.CHANGE, colorn));
+			}
+			
+			private function textChangeR():void {
+				if (int(colorR.text) > 255) {
+					colorR.text="255";
+				}
+				colorm=getColoruint(uint(colorR.text), uint(colorG.text), uint(colorB.text));
+				for(var i:int =colorBoard.x;i<(colorBoard.x+colorBoard.width);i++)
+				{
+					for(var j:int = colorBoard.y;j<(colorBoard.y+colorBoard.height);j++)
+					{
+						if(colorm == bit.getPixel(i, j))
+						{
+							s_arrow.x=i - s_arrow.width * 0.5;
+							s_arrow.y=j - s_arrow.height * 0.5;
+						}
+					}
+				}
+			}
+			
+			private function textChangeG():void {
+				if (int(colorG.text) > 255) {
+					colorG.text="255";
+				}
+				colorm=getColoruint(uint(colorR.text), uint(colorG.text), uint(colorB.text));
+				for(var i:int =colorBoard.x;i<(colorBoard.x+colorBoard.width);i++)
+				{
+					for(var j:int = colorBoard.y;j<(colorBoard.y+colorBoard.height);j++)
+					{
+						if(colorm == bit.getPixel(i, j))
+						{
+							s_arrow.x=i - s_arrow.width * 0.5;
+							s_arrow.y=j - s_arrow.height * 0.5;
+						}
+					}
+				}
+			}
+			
+			private function textChangeB():void {
+				if (int(colorB.text) > 255) {
+					colorB.text="255";
+				}
+				colorm=getColoruint(uint(colorR.text), uint(colorG.text), uint(colorB.text));
+				for(var i:int =colorBoard.x;i<(colorBoard.x+colorBoard.width);i++)
+				{
+					for(var j:int = colorBoard.y;j<(colorBoard.y+colorBoard.height);j++)
+					{
+						if(colorm == bit.getPixel(i, j))
+						{
+							s_arrow.x=i - s_arrow.width * 0.5;
+							s_arrow.y=j - s_arrow.height * 0.5;
+							break;
+						}
+					}
+				}
+			}
+			
+			private function creatUI():void {
+				colorView.visible=true;
+				confirm.visible=true;
+//				cancel.visible=true;
+				colorR.visible=true;
+				colorG.visible=true;
+				colorB.visible=true;
+			}
+			
+			public function removeUI():void {
+				colorView.visible=false;
+				confirm.visible=false;
+				colorR.visible=false;
+				colorG.visible=false;
+				colorB.visible=false;
+			}
+			
+			private function colorConfirm(event:MouseEvent):void {
+				colorn=colorm;
+				PopUpManager.removePopUp(group);
+				removeUI();
+				dispatchEvent(new DatasEvent(Event.CHANGE, colorn));
+			}
+			
+			private function colorCancel(event:MouseEvent):void {
+				event.stopImmediatePropagation();
+				PopUpManager.removePopUp(group);
+				removeUI();
+//				cancel.visible=false;
+			}
+			
+			/**
+			 * 将一个颜色值(24位或32位)分解成RGB或ARGB颜色值的Vector.<uint>数组
+			 * @param colour 颜色值
+			 * @return 分解成RGB或ARGB颜色值的Vector.<uint>数组
+			 */
+			private function getColorVector(colour:uint):Vector.<uint> {
+				var vector:Vector.<uint>=new <uint>[];
+				if (colour > 0xFFFFFF && colour <= 0xFFFFFFFF) {
+					vector.push(colour >> 24 & 0xFF);
+				}
+				vector.push(colour >> 16 & 0xFF);
+				vector.push(colour >> 8 & 0xFF);
+				vector.push(colour & 0xFF);
+				
+				return vector;
+			}
+			
+			private function getColoruint(p1:uint, p2:uint, p3:uint):uint {
+				return (p1 << 16) + (p2 << 8) + p3;
+			}
+			
+			public function set color(value:uint):void {
+				pixelValue=value;
+				colorn=value;
+				solidColor.color=value;
+//				bgSolidColor.color=value;
+			}
+			
+			public function get color():uint {
+				return pixelValue;
+			}
+			
+			public function popState():void {
+//				if (systemManager.stage.stageWidth - point.x - offsetX > colorBoard.width && this.systemManager.stage.stageHeight - point.y - offsetY > colorBoard.height) {
+//					popRightBottom();
+//				} else if (point.y > colorBoard.height && this.systemManager.stage.stageWidth - point.x - offsetX > colorBoard.width) {
+//					popRightTop();
+//				} else if (point.x > colorBoard.width && point.y > colorBoard.height) {
+//					popLeftTop();
+//				} else if (point.x > colorBoard.width && this.systemManager.stage.stageHeight - point.y - offsetY > colorBoard.height) {
+//					popLeftBottom();
+//				}
+//				else {
+//					popRightBottom();
+//				}
+				group.x = this.x;
+				group.y = this.y;
+				
+			}
+			
+//			public function popLeftTop():void {
+//				
+//				group.x=point.x - colorBoard.width;
+//				group.y=point.y - colorBoard.height - TinputHeight;
+//			}
+//			
+//			public function popLeftBottom():void {
+//				
+//				group.x=point.x - colorBoard.width;
+//				group.y=point.y + rectHeight - TinputHeight;
+//			}
+//			
+//			public function popRightTop():void {
+//				
+//				group.x=point.x + rectWidth;
+//				group.y=point.y - colorBoard.height - TinputHeight;
+//			}
+//			
+//			public function popRightBottom():void {
+//				
+//				group.x=point.x + rectWidth;
+//				group.y=point.y + rectHeight - TinputHeight;
+//				
+//			}
+			private var point:Point;
+			
+			private function group_mouseDownHandler(event:MouseEvent):void {
+				event.stopImmediatePropagation();
+				PopUpManager.addPopUp(group, FlexGlobals.topLevelApplication as DisplayObject);
+				point=this.parent.localToGlobal(new Point(this.x, this.y));
+				popState();
+				colorm = colorn;
+				colorr=getColorVector(colorn)[0];
+				colorg=getColorVector(colorn)[1];
+				colorb=getColorVector(colorn)[2];
+				creatUI();
+			}
+			
+			public function InitColorSelectUI():void
+			{
+				PopUpManager.addPopUp(group, FlexGlobals.topLevelApplication as DisplayObject);
+//				point=this.parent.localToGlobal(new Point(this.x, this.y));
+//				popState();
+				colorm = colorn;
+				colorr=getColorVector(colorn)[0];
+				colorg=getColorVector(colorn)[1];
+				colorb=getColorVector(colorn)[2];
+				creatUI();
+			}
+			
+			public function ui_initializeHandler(event:FlexEvent):void {
+				DrawColorboard();
+				colorBoard.addEventListener(MouseEvent.MOUSE_DOWN, getPixelHandler);
+				ui.addChild(colorBoard);
+				s_arrow.x = colorBoard.x+colorBoard.width-s_arrow.width*0.5;
+				s_arrow.y = colorBoard.y+colorBoard.height-s_arrow.height*0.5;
+				ui.addChild(s_arrow);
+				bit=new BitmapData(colorBoard.width, colorBoard.height, false);
+				bit.draw(colorBoard);
+			}
+			
+			private function textInputMouseDownHandler(e:MouseEvent):void {
+				e.stopImmediatePropagation();
+			}
+			
+			private function colorView1_mouseDownHandler(e:MouseEvent):void {
+				e.stopImmediatePropagation();
+				colorViews_mouseDownHandler(solidColor1.color);
+			}
+			
+			private function colorView2_mouseDownHandler(e:MouseEvent):void {
+				e.stopImmediatePropagation();
+				colorViews_mouseDownHandler(solidColor2.color);
+			}
+			
+			private function colorView3_mouseDownHandler(e:MouseEvent):void {
+				e.stopImmediatePropagation();
+				colorViews_mouseDownHandler(solidColor3.color);
+			}
+			
+			private function colorView4_mouseDownHandler(e:MouseEvent):void {
+				e.stopImmediatePropagation();
+				colorViews_mouseDownHandler(solidColor4.color);
+			}
+			
+			private function colorView5_mouseDownHandler(e:MouseEvent):void {
+				e.stopImmediatePropagation();
+				colorViews_mouseDownHandler(solidColor5.color);
+			}
+			
+			private function colorView6_mouseDownHandler(e:MouseEvent):void {
+				e.stopImmediatePropagation();
+				colorViews_mouseDownHandler(solidColor6.color);
+			}
+			
+			private function colorViews_mouseDownHandler(color:uint):void {
+				
+				colorm = colorn = solidColor.color = color;
+				colorr=getColorVector(colorn)[0];
+				colorg=getColorVector(colorn)[1];
+				colorb=getColorVector(colorn)[2];
+				creatUI()
+				for(var i:int =colorBoard.x;i<(colorBoard.x+colorBoard.width);i++)
+				{
+					for(var j:int = colorBoard.y;j<(colorBoard.y+colorBoard.height);j++)
+					{
+						if(colorm == bit.getPixel(i, j))
+						{
+							s_arrow.x=i - s_arrow.width * 0.5;
+							s_arrow.y=j - s_arrow.height * 0.5;
+						}
+					}
+				}
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<s:Group id="group">
+			<s:Rect width="100%"
+					height="100%">
+				<s:fill>
+					<s:SolidColor color="{colorbod}"/>
+				</s:fill>
+			</s:Rect>
+			<s:VGroup gap="2">
+				<s:HGroup verticalAlign="middle"
+						  horizontalAlign="center"
+						  height="30" width="200" gap="12">
+					<s:Group mouseDown="colorView1_mouseDownHandler(event)">
+						<s:Rect id="colorView1"
+								width="20"
+								height="20">
+							<s:fill>
+								<s:SolidColor id="solidColor1"
+											  color="0xffffff"/>
+							</s:fill>
+						</s:Rect>
+					</s:Group>
+					
+					<s:Group mouseDown="colorView2_mouseDownHandler(event)">
+						<s:Rect id="colorView2"
+								width="20"
+								height="20">
+							<s:fill>
+								<s:SolidColor id="solidColor2"
+											  color="0xcceaff"/>
+							</s:fill>
+						</s:Rect>
+					</s:Group>
+					
+					<s:Group mouseDown="colorView3_mouseDownHandler(event)">					
+						<s:Rect id="colorView3"
+								width="20"
+								height="20">
+							<s:fill>
+								<s:SolidColor id="solidColor3"
+											  color="0x89ccff"/>
+							</s:fill>
+						</s:Rect>
+					</s:Group>
+					
+					<s:Group mouseDown="colorView4_mouseDownHandler(event)">
+						<s:Rect id="colorView4"
+								width="20"
+								height="20">
+							<s:fill>
+								<s:SolidColor id="solidColor4"
+											  color="0xfef6e9"/>
+							</s:fill>
+						</s:Rect>
+					</s:Group>
+					
+					<s:Group mouseDown="colorView5_mouseDownHandler(event)">
+						<s:Rect id="colorView5"
+								width="20"
+								height="20">
+							<s:fill>
+								<s:SolidColor id="solidColor5"
+											  color="0xffce87"/>
+							</s:fill>
+						</s:Rect>
+					</s:Group>
+					
+					<s:Group mouseDown="colorView6_mouseDownHandler(event)">
+						<s:Rect id="colorView6"
+								width="20"
+								height="20">
+							<s:fill>
+								<s:SolidColor id="solidColor6"
+											  color="0xffb345"/>
+							</s:fill>
+						</s:Rect>
+					</s:Group>
+				</s:HGroup>
+				
+				<s:HGroup verticalAlign="middle"
+						  horizontalAlign="center" width="200" gap="3">
+					<!--<s:Label text="R" fontSize="14"/>-->
+					<s:TextInput id="colorR"
+								 text="{colorr}"
+								 width="{TinputWidth}"
+								 height="{TinputHeight}"
+								 visible="false"
+								 restrict="/[0-9]/"
+								 textAlign="center"
+								 maxChars="3"
+								 fontSize="12"
+								 mouseDown="textInputMouseDownHandler(event)"
+								 change="textChangeR()"/>
+					<!--<s:Label text="G" fontSize="14"/>-->
+					<s:TextInput id="colorG"
+								 text="{colorg}"
+								 width="{TinputWidth}"
+								 height="{TinputHeight}"
+								 visible="false"
+								 restrict="/[0-9]/"
+								 textAlign="center"
+								 maxChars="3"
+								 fontSize="12"
+								 mouseDown="textInputMouseDownHandler(event)"
+								 change="textChangeG()"/>
+					<!--<s:Label text="B" fontSize="14"/>-->
+					<s:TextInput id="colorB"
+								 text="{colorb}"
+								 width="{TinputWidth}"
+								 height="{TinputHeight}"
+								 visible="false"
+								 restrict="/[0-9]/"
+								 textAlign="center"
+								 maxChars="3"
+								 fontSize="12"
+								 mouseDown="textInputMouseDownHandler(event)"
+								 change="textChangeB()"/>
+					<s:Rect id="colorView"
+							width="20"
+							height="20"
+							radiusX="{radius}"
+							radiusY="{radius}"
+							visible="false">
+						<s:fill>
+							<s:SolidColor id="solidColor"
+										  color="{colorm}"/>
+						</s:fill>
+						<s:stroke>
+							<s:SolidColorStroke color="0"
+												weight="2"/>
+						</s:stroke>
+					</s:Rect>
+					<s:Button id="confirm"
+										 label="确定"
+										 fontSize="12"
+										 visible="false"
+										 mouseDown="colorConfirm(event)"/>
+					<!--<s:Button id="cancel"
+							  			 width="37"
+										 label="取消"										
+										 fontSize="9"
+										 visible="false"
+										 mouseDown="colorCancel(event)"/>
+					-->
+				</s:HGroup>
+				<s:HGroup verticalAlign="middle"
+						  horizontalAlign="center">
+					<mx:UIComponent id="ui"
+									initialize="ui_initializeHandler(event)" left="1" right="1" top="1" bottom="1"/>
+				</s:HGroup>
+			</s:VGroup>
+		</s:Group>
+	</fx:Declarations>
+	<s:HGroup>
+		
+		<!--<s:Group mouseDown="group_mouseDownHandler(event)">
+			<s:Rect id="colorModel"
+					width="{rectWidth}"
+					height="{rectHeight}"
+					radiusX="{radius}"
+					radiusY="{radius}">
+				<s:fill>
+					<s:SolidColor id="bgSolidColor"
+								  color="{colorn}"/>
+				</s:fill>
+				<s:stroke>
+					<s:SolidColorStroke color="0"
+										weight="2"/>
+				</s:stroke>
+			</s:Rect>
+		</s:Group>-->
+	</s:HGroup>
+</s:Group>

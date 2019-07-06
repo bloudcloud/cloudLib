@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark"
+		 xmlns:mx="library://ns.adobe.com/flex/mx" width="144" height="80" creationComplete="group1_creationCompleteHandler(event)">
+	<fx:Style>
+		@namespace s "library://ns.adobe.com/flex/spark";
+		@namespace mx "library://ns.adobe.com/flex/mx";
+		
+		.ilabel{
+			color:#fff;
+			textAlign:center;
+		}
+		
+		.ibutton{
+			color:#fff;
+			font-Size:12;
+			textRollOverColor:#ffffff;
+			textSelectedColor:#ffffff;	
+		}
+		
+		.itextInput{
+			color:#646464;
+			fontSize:12;
+			textIndent:1;
+			focusThickness:0;
+			focusAlpha:0.6;
+			paddingTop:3;
+		}		
+	</fx:Style>
+	
+	<fx:Script>
+		
+		<![CDATA[
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+    		public var CompleteFun:Function = null;
+			public var CancelFun:Function = null;
+			public var ShowNumber:int = 0;
+
+			protected function OKButton_clickHandler(event:MouseEvent):void
+			{
+				PopUpManager.removePopUp(this);
+				if(CompleteFun != null)
+				{
+					CompleteFun(parseInt(NumTextInput.text));
+				}
+			}
+			
+			protected function CancelButton_clickHandler(event:MouseEvent):void
+			{
+				PopUpManager.removePopUp(this);
+				if(CancelFun != null)
+				{
+					CancelFun();
+				}
+			}
+			
+			protected function group1_creationCompleteHandler(event:FlexEvent):void
+			{
+				NumTextInput.text = ShowNumber.toString();
+			}
+			
+		]]>
+	</fx:Script>
+	
+	
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	<s:BorderContainer x="0" y="0" width="143" height="79" backgroundColor="0x53585d">		
+		<s:TextInput id="NumTextInput" x="56" y="10" width="62" styleName="textInput"/>
+		<s:Label x="10" y="14" width="42" height="22" text="数量" styleName="label"/>
+		<s:Button id="OKButton" x="12" y="42" width="49" height="25" label="确定"
+				  click="OKButton_clickHandler(event)" styleName="button"/>
+		<s:Button id="CancelButton" x="80" y="42" width="49" height="25" label="退出"
+				  click="CancelButton_clickHandler(event)" styleName="button"/>
+	</s:BorderContainer>
+</s:Group>

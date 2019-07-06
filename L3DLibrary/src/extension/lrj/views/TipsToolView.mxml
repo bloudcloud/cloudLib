@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" 
+		 creationComplete="group1_creationCompleteHandler(event)">
+	<fx:Script>
+		<![CDATA[
+			import mx.events.FlexEvent;
+			
+			import extension.wl.buttons.LabelButton;
+			import extension.wl.buttons.SvgButton;
+			import extension.wl.globalData.allStaticTypes.ColorType;
+			import extension.wl.globalData.allStaticTypes.LivelyType;
+			import extension.wl.globalData.allStaticTypes.SvgType;
+			
+			import utils.DatasEvent;
+			
+			public var tips:String = "";
+			public var cancelTips:String = "取消";
+			public var confirmTips:String = "确定";
+			public var type:int = 0; //0:确定 取消	1:右上角x
+
+			public var info:Object = ""; //携带数据
+
+			public var isTimer:Boolean = false;
+			public var time:int = 5;
+			private var timer:Timer = null;	
+			
+			private var tipsLabel:LabelButton = null; //提示
+			private var closeSvgBtn:SvgButton = null; //右上角关闭
+			private var confirmBtn:LabelButton = null; //确定
+			private var cancelBtn:LabelButton = null; //取消
+			private var timerLabel:LabelButton = null; //计时
+			
+			public static var DELETE_EVENT:String = "delete_event";
+			public static var DELETE_CANCEL:String = "delete_cancel";
+			
+			protected function group1_creationCompleteHandler(event:FlexEvent):void
+			{
+				// TODO Auto-generated method stub
+				initView();
+			}
+			
+			public function initView():void
+			{
+				if(!tipsLabel)
+				{
+					tipsLabel = LabelButton.buildLabelButton(tips, 400, 50, 2, 0, false, 0, 0, 0, 0, 20);
+					tipsLabel.top = 50;
+					group.addElement(tipsLabel);
+				}
+				
+				switch(type)
+				{
+					case 0: //确定 取消
+					{
+						if(!cancelBtn)
+						{
+							cancelBtn = LabelButton.buildLabelButton(cancelTips, 200, 50, LivelyType.LivelyStyle, 1, true, 1, 1, 1, 1);
+							cancelBtn.labelSelected = true;
+							cancelBtn.left = 0;
+							cancelBtn.bottom = 0;
+							cancelBtn.addEventListener(MouseEvent.CLICK, cancelBtnClickHandler); 
+							group.addElement(cancelBtn);
+						}
+						
+						if(!confirmBtn)
+						{
+							confirmBtn = LabelButton.buildLabelButton(confirmTips, 200, 50, LivelyType.LivelyStyle, 0, true, 1, 1, 1, 1);
+							confirmBtn.labelSelected = true;
+							confirmBtn.left = 200;
+							confirmBtn.bottom = 0;
+							confirmBtn.addEventListener(MouseEvent.CLICK, confirmBtnClickHandler);
+							group.addElement(confirmBtn);
+						}
+					}
+						break;
+					case 1: //关闭
+					{
+						if(!closeSvgBtn)
+						{
+							closeSvgBtn = SvgButton.buildSvgButton(SvgType.CLOSE_EVENT, 25, 25, LivelyType.LivelyStyle);
+							closeSvgBtn.right = 0; 
+							closeSvgBtn.top = 0;
+							closeSvgBtn.addEventListener(MouseEvent.CLICK, closeBtnClickHandler);
+							group.addElement(closeSvgBtn);
+						}
+					}
+						break;
+				}
+				
+				if(isTimer)
+				{
+					var label:String = time + "秒后自动关闭。"
+					timerLabel.top = 75;
+					timerLabel.right = -70;
+					timerLabel = LabelButton.buildLabelButton(label, 400, 50, LivelyType.currentStyle, 0, false);
+					group.addElement(timerLabel);
+					
+					timerStart();
+				}
+			}
+			
+			private function timerStart():void
+			{
+				if(!timer)
+				{
+					timer = new Timer(1000, time);
+				}
+				
+				timer.addEventListener(TimerEvent.TIMER, timerDelayHandler);
+				timer.addEventListener(TimerEvent.TIMER_COMPLETE, timerCompleteHandler);
+				timer.start();
+			}
+			
+			private function timerEnd():void
+			{
+				if(!timer)
+				{
+					return;
+				}
+				
+				timer.removeEventListener(TimerEvent.TIMER, timerDelayHandler);
+				timer.removeEventListener(TimerEvent.TIMER_COMPLETE, timerCompleteHandler);
+				timer.stop();
+				timer = null;
+			}
+			
+			protected function timerDelayHandler(event:TimerEvent):void
+			{
+				// TODO Auto-generated method stub
+				time--;
+				timerLabel.labelText = time + "秒后自动关闭。";
+			}
+			
+//			时间
+			protected function timerCompleteHandler(event:TimerEvent):void
+			{
+				// TODO Auto-generated method stub
+				timerEnd();
+				this.dispatchEvent(new DatasEvent(DELETE_CANCEL));
+			}
+			
+//			关闭
+			protected function closeBtnClickHandler(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				timerEnd();
+				this.dispatchEvent(new DatasEvent(DELETE_CANCEL));
+			}
+			
+//			取消
+			protected function cancelBtnClickHandler(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				timerEnd();
+				this.dispatchEvent(new DatasEvent(DELETE_CANCEL));
+			}
+			
+//			确定
+			protected function confirmBtnClickHandler(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				timerEnd();
+				this.dispatchEvent(new DatasEvent(DELETE_EVENT,info));
+			}
+			
+			public function cleanView():void
+			{
+				if(tipsLabel)
+				{
+					group.removeElement(tipsLabel);
+					tipsLabel = null;
+				}
+				
+				if(closeSvgBtn)
+				{	group.removeElement(closeSvgBtn);
+					closeSvgBtn.removeEventListener(MouseEvent.CLICK, closeBtnClickHandler);
+					closeSvgBtn = null;
+				}
+				
+				if(confirmBtn)
+				{
+					group.removeElement(confirmBtn);
+					confirmBtn.removeEventListener(MouseEvent.CLICK, confirmBtnClickHandler);
+					confirmBtn = null;
+				}
+				
+				if(cancelBtn)
+				{
+					group.removeElement(cancelBtn);
+					cancelBtn.removeEventListener(MouseEvent.CLICK, cancelBtnClickHandler);
+					cancelBtn = null;
+				}
+				
+				if(timerLabel)
+				{
+					group.removeElement(timerLabel);
+					timerLabel = null;
+				}
+				
+				this.removeAllElements();
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	<s:Rect width="100%" height="100%">
+		<s:fill>
+			<s:SolidColor color="{ColorType.LightGreyLively}"/>
+		</s:fill>
+	</s:Rect>
+	<s:HGroup id="hgroup" width="100%" height="100%" verticalAlign="middle" horizontalAlign="center">
+		<s:Group id="group" width="400" height="220">
+			
+		</s:Group>
+	</s:HGroup>
+</s:Group>

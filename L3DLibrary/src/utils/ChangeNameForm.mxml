@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 width="186" height="114" title="更改名称" backgroundColor="0x33373a" fontFamily="宋体" close="titlewindow1_closeHandler(event)" creationComplete="titlewindow1_creationCompleteHandler(event)" mouseDown="titlewindow1_mouseDownHandler(event)">
+	
+	<fx:Script>
+		<![CDATA[
+			import mx.events.CloseEvent;
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+			
+			import skins.ViewButtonSkin;
+			
+			public var inputName:String = "";	
+			public static const ChangeName:String = "ChangeName";
+			
+			protected function titlewindow1_creationCompleteHandler(event:FlexEvent):void
+			{
+				NameTextInput.text = inputName;
+			}
+			
+			protected function OKButton_clickHandler(event:MouseEvent):void
+			{
+				event.stopImmediatePropagation();
+				event.stopPropagation();
+				inputName = NameTextInput.text;
+				PopUpManager.removePopUp(this);
+				var evt:Event = new Event(ChangeName);
+				this.dispatchEvent(evt);
+			}
+			
+			protected function CancelButton_clickHandler(event:MouseEvent):void
+			{
+				event.stopImmediatePropagation();
+				event.stopPropagation();
+				PopUpManager.removePopUp(this);
+			}
+			
+			protected function titlewindow1_closeHandler(event:CloseEvent):void
+			{
+				event.stopImmediatePropagation();
+				event.stopPropagation();
+				PopUpManager.removePopUp(this);
+			}	
+			
+			protected function titlewindow1_mouseDownHandler(event:MouseEvent):void
+			{
+				event.stopImmediatePropagation();
+				event.stopPropagation();
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<s:TextInput id="NameTextInput" x="10" y="10" width="164"/>
+	<s:Button id="OKButton" x="10" y="42" width="72" height="29" label="确定"
+			  click="OKButton_clickHandler(event)" fontFamily="宋体"
+			  skinClass="skins.ViewButtonSkin"/>
+	<s:Button id="CancelButton" x="102" y="42" width="72" height="29" label="取消" fontFamily="宋体" skinClass="skins.ViewButtonSkin"
+			  click="CancelButton_clickHandler(event)"/>
+</s:TitleWindow>

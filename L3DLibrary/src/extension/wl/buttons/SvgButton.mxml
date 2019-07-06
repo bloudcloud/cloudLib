@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" 
+		 creationComplete="group1_creationCompleteHandler(event)">
+	<fx:Script>
+		<![CDATA[
+			import com.lx.SVGFlexRect;
+			
+			import mx.core.UIComponent;
+			import mx.events.FlexEvent;
+			
+			import extension.wl.globalData.allStaticTypes.ColorType;
+			import extension.wl.globalData.allStaticTypes.SvgType;
+			import extension.wl.models.SvgModel;
+			
+			public var typeStyle:int = 2;//默认风格
+			public var typeStatus:int = 0;//
+			public var viewOver:uint = 0;
+			public var viewOut:uint = 0;
+			public var viewAlpha:Number = 1;
+			public var itemOver:uint = 0;
+			public var itemOut:uint = 0;
+			public var itemWidth:Number = 0;
+			public var itemheight:Number = 0;
+			public var lineAlpha:Number = 0;
+			public var lineOver:uint = 0;
+			public var lineOut:uint = 0;
+			private var isColor:Boolean = true;
+			
+			public var model:SvgModel = null;
+			public var svgEvent:String = "";//event唯一
+			public var svgTip:String = "";//用于tips二次赋值
+			public var svgSource:String = "";//用于source二次赋值
+			
+			public var buttonSelected:Boolean = false;
+			public var svgSelected:Boolean = false;
+			public var svgScale:uint = 60;
+			public var svgRadius:int = 2;
+			public var svgBorderThickness:Number = 0;
+			
+			public var svgInfo:Object = null;//按钮附带信息
+			
+			private var svgButton:SVGFlexRect;
+			
+			protected function group1_creationCompleteHandler(event:FlexEvent):void
+			{
+				this.buttonMode = true;
+				
+				typeStyleHandler();
+				modelHandler();
+			}
+			
+			private function modelHandler():void
+			{
+				model = SvgType.getSvgModelFromEvent(svgEvent);
+				if(model.source == "")
+				{
+					return;
+				}
+				
+				if(svgSource == "")
+				{
+					svgSource = model.source;
+				}
+				if(svgTip == "")
+				{
+					svgTip = model.tip;
+				}
+				
+				buildSvg();
+			}
+			
+			public function typeStyleHandler():void
+			{
+				if(!isColor)
+				{
+					return;
+				}
+				isColor = true;
+				var colorObj:Object = ColorType.colorHandler(typeStyle,typeStatus);
+				if(colorObj)
+				{
+					viewOut = colorObj.viewOut;
+					itemOut = colorObj.itemOut;
+					viewOver = colorObj.viewOver;
+					itemOver = colorObj.itemOver;
+				}
+			}
+			
+			private function buildSvg():void
+			{
+				svgButton = new SVGFlexRect();
+				svgButton.width = itemWidth==0?this.width:itemWidth;
+				svgButton.height = itemheight==0?this.height:itemheight;
+				svgButton.x = itemWidth==0?0:this.width - itemWidth >> 1;
+				svgButton.y = itemheight==0?0:this.height - itemheight >> 1;
+				svgButton.backgroundColorOver = viewOver;
+				svgButton.backgroundColorOut = viewOut;
+				svgButton.backgroundAlpha = viewAlpha;
+				if(lineAlpha > 0)
+				{
+					svgButton.borderThickness =svgBorderThickness;
+					svgButton.borderColorOut = lineOut;
+					svgButton.borderColorOver = lineOver;
+				}
+				svgButton.svgColorOver = itemOver;
+				svgButton.svgColorOut = itemOut;
+				svgButton.relativeScale = svgScale;
+				svgButton.radius = svgRadius;
+				svgButton.source = svgSource;
+				if(buttonSelected)
+				{
+					svgButton.selected = svgSelected;
+				}
+				if(svgTip.length>0)
+				{
+					svgButton.toolTip = svgTip;
+				}
+				this.addElement(svgButton);
+			}
+			
+			public function resize():void
+			{
+				if(!svgButton)
+				{
+					return;
+				}
+				svgButton.width = itemWidth==0?this.width:itemWidth;
+				svgButton.height = itemheight==0?this.height:itemheight;
+				svgButton.x = itemWidth==0?0:this.width - itemWidth >> 1;
+				svgButton.y = itemheight==0?0:this.height - itemheight >> 1;
+			}
+	
+			public function svgSelecedHandler():void
+			{
+				if(buttonSelected && svgButton)
+				{
+					svgButton.selected = svgSelected;
+				}
+			}
+			
+			public function setBackGroundHandler(color:uint):void
+			{
+				var ui:UIComponent = new UIComponent();
+				ui.graphics.clear();
+				ui.graphics.beginFill(color);
+				ui.graphics.drawRect(0,0,this.width,this.height);
+				ui.graphics.endFill();
+				this.addElement(ui);
+			}
+			
+			public static function buildSvgButton(event:String,width:Number,height:Number,style:int,status:int = 1,alpha:Number = 0):SvgButton
+			{
+				var svg:SvgButton = new SvgButton();
+				svg.model = SvgType.getSvgModelFromEvent(event);
+				svg.name = event;
+				svg.svgEvent = event;
+				svg.width = width;
+				svg.height = height;
+				svg.typeStatus = status;
+				svg.viewAlpha = alpha;
+				svg.typeStyle = style;
+				return svg;
+			}
+			
+		]]>
+	</fx:Script>
+</s:Group>

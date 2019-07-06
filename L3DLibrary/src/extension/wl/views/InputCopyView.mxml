@@ -1,0 +1,273 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" 
+		 creationComplete="group1_creationCompleteHandler(event)">
+	<fx:Script>
+		<![CDATA[
+			import extension.wl.globalData.allStaticTypes.ColorType;
+			import extension.wl.globalData.allStaticTypes.LivelyType;
+			
+			import mx.events.FlexEvent;
+			
+			import spark.components.Label;
+			import spark.components.TextInput;
+			import spark.events.TextOperationEvent;
+			
+			public var typeStyle:int = 0;//默认风格
+			public var typeStatus:int = 0;
+			public var viewOver:uint = 0;
+			public var viewOut:uint = 0;
+			public var viewAlpha:Number = 1;
+			public var lineOver:uint = 0;
+			public var lineOut:uint = 0;
+			public var lineAlpha:uint = 1;
+			public var itemOver:uint = 0;
+			public var itemOut:uint = 0;
+			
+			public var itemColor:int = -1;
+			public var viewColor:int = -1;
+			
+			[Bindable]
+			public var topLeftRadius:Number = 0;
+			[Bindable]
+			public var topRightRadius:Number = 0;
+			[Bindable]
+			public var bottomLeftRadius:Number = 0;
+			[Bindable]
+			public var bottomRightRadius:Number = 0;
+			
+			public var inputPrompt:String = "";
+			public var promptColor:uint = 0;
+			private var viewText:String = "";
+			public var inputMaxChars:int = 32;
+			public var inputRestrict:String = null;
+			public var inputSize:int = 16;
+			public var inputTips:String = "";
+			public var inputInfo:Object = null;
+			public var input:TextInput;
+			private var promptLabel:Label;
+			private var selectedAll:Boolean = false;//点击全选控制
+			private var isColor:Boolean = true;
+			public var lineweight :Number =0;
+			private var isEnabled:Boolean = true;
+			
+			public var labelAlign:String = CENTER;
+			public var labelVerticalAlign:String = MIDDLE;
+			
+			public static const MIDDLE:String = "middle";
+			public static const TOP:String = "top";
+			public static const BOTTOM:String = "bottom";
+			
+			public static const CENTER:String = "center";
+			public static const LEFT:String = "left";
+			public static const RIGHT:String = "right";
+			public static const JUSTIFY:String = "justify";
+			
+			public static const INPUT_CHANGE_EVENT:String = "input_change_event";
+			
+			protected function group1_creationCompleteHandler(event:FlexEvent):void
+			{
+				typeStyleHandler();
+				buildInput();
+			}
+			
+			public function inputStyleHandler(styleProp:String, newValue:*):void
+			{
+				if(input)
+				{
+					input.setStyle(styleProp,newValue);
+				}
+			}
+			
+			public function set inputText(v:String):void
+			{
+				viewText = v;
+				if(input)
+				{
+					input.text = viewText;
+				}
+			}
+			
+			public function set inputEnabled(v:Boolean):void
+			{
+				isEnabled = v;
+				if(input)
+				{
+					input.enabled = isEnabled;
+				}
+			}
+			
+			public function get inputText():String
+			{
+				return viewText;
+			}
+			
+			public function typeStyleHandler():void
+			{
+				if(!isColor)
+				{
+					return;
+				}
+				isColor = true;
+				var colorObj:Object = ColorType.colorHandler(typeStyle,typeStatus);
+				if(colorObj)
+				{
+					viewOut = colorObj.viewOut;
+					itemOut = colorObj.itemOut;
+					viewOver = colorObj.viewOver;
+					itemOver = colorObj.itemOver;
+				}
+				
+				if(itemColor > 0)
+				{
+					viewOut = itemColor;
+				}
+				if(viewColor > 0)
+				{
+					itemOut = viewColor;
+				}
+			}
+			
+			private function buildInput():void
+			{
+				promptLabel=new Label();
+				promptLabel.alpha = 0.5;
+				promptLabel.mouseEnabled = false;
+				promptLabel.width = this.width-4;
+				promptLabel.height = this.height-4;
+				promptLabel.x = 6;
+				promptLabel.y = 4;
+				promptLabel.setStyle("borderVisible",false);
+				promptLabel.setStyle("contentBackgroundAlpha",0);
+				promptLabel.setStyle("fontFamily",LivelyType.Font);
+				promptLabel.setStyle("fontSize",inputSize-4);
+				promptLabel.setStyle("textAlign",LEFT);
+				promptLabel.setStyle("verticalAlign",MIDDLE);
+				promptLabel.text = inputPrompt;
+				promptLabel.setStyle("color",itemOut);
+				this.addElement(promptLabel);
+				
+				input = new TextInput();
+				input.width = this.width;
+				input.height = this.height;
+				input.focusEnabled = false;
+				input.setStyle("borderAlpha",0);
+				input.setStyle("borderThickness",0);
+				input.setStyle("borderVisible",false);
+				input.setStyle("backgroundAlpha",0);
+				input.setStyle("backgroundVisible",false);
+				input.setStyle("contentBackgroundAlpha",0);
+				input.setStyle("contentBackgroundVisible",false);
+				input.setStyle("fontFamily",LivelyType.Font);
+				input.setStyle("fontSize",inputSize);
+				input.setStyle("textAlign",labelAlign);
+				input.setStyle("verticalAlign",labelVerticalAlign);
+				input.enabled = isEnabled;
+				if(labelAlign == JUSTIFY)
+				{
+					input.setStyle("textAlignLast",labelAlign);
+				}
+				input.text = viewText;
+				input.maxChars = inputMaxChars;
+				input.restrict = inputRestrict;
+				input.setStyle("color",itemOut);
+				input.addEventListener(TextOperationEvent.CHANGE,inputChangeHandler);
+				this.addElement(input);
+				
+				promptLabelShowHandler();
+				
+				viewFill.color = viewOut;
+				viewFill.alpha = viewAlpha;
+				
+				viewLine.color = lineOut;
+				viewLine.alpha = lineAlpha;
+				
+				viewLine.weight = lineweight;
+				addListener();//加入点击全选操作
+			}
+			
+			public function addListener():void
+			{
+				input.addEventListener(MouseEvent.MOUSE_DOWN, clickHandler);
+//				input.addEventListener(FocusEvent.FOCUS_OUT, onFocusOut);
+			}
+			
+			public function removeListener():void{
+				input.removeEventListener(MouseEvent.MOUSE_DOWN, clickHandler);
+//				input.removeEventListener(FocusEvent.FOCUS_OUT, onFocusOut);
+			}
+			
+			public function clickHandler(event:MouseEvent):void
+			{
+//				if(selectedAll){
+//					input.selectRange(input.selectionAnchorPosition,input.selectionAnchorPosition);
+//				}
+//				else{
+					input.setFocus();
+					input.selectAll();
+//				}
+				selectedAll = !selectedAll;
+			}
+			
+			protected function onFocusOut(evt:FocusEvent):void{
+				selectedAll = false;
+			}
+			
+			public function selected():void{
+				input.setFocus();
+				input.selectAll();
+				selectedAll = true;
+			}
+			
+			private function promptLabelShowHandler():void
+			{
+				if(inputPrompt && inputPrompt.length>0 && input && input.text.length==0)
+				{
+					promptLabel.visible = false;
+				}
+				else
+				{
+					promptLabel.visible = false;
+				}
+			}
+			
+			protected function inputChangeHandler(event:TextOperationEvent):void
+			{
+				viewText = input.text;
+				promptLabelShowHandler();
+				this.dispatchEvent(new Event(INPUT_CHANGE_EVENT));
+			}
+			
+			public static function buildInputView(text:String,width:Number,height:Number,style:int,status:int = 0,prompt:String = "",lineAlpha:Number = 0,lineColor:uint = 0,viewAlpha:Number = 0,size:int = 16):InputCopyView
+			{
+				var input:InputCopyView = new InputCopyView();
+				input.inputText = text;
+				input.width = width;
+				input.height = height;
+				input.inputPrompt = prompt;
+				input.viewAlpha = viewAlpha;
+				input.lineAlpha = lineAlpha;
+				input.lineOut = lineColor;
+				input.inputSize = size;
+				input.typeStyle = style;
+				input.typeStatus = status;
+				return input;
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<s:Rect width="100%" height="100%"
+			topLeftRadiusX="{topLeftRadius}" topLeftRadiusY="{topLeftRadius}"
+			topRightRadiusX="{topRightRadius}" topRightRadiusY="{topRightRadius}"
+			bottomLeftRadiusX="{bottomLeftRadius}" bottomLeftRadiusY="{bottomLeftRadius}"
+			bottomRightRadiusX="{bottomRightRadius}" bottomRightRadiusY="{bottomRightRadius}">
+		<s:fill>
+			<s:SolidColor id="viewFill" color="0" alpha="0"/>
+		</s:fill>
+		<s:stroke>
+			<s:SolidColorStroke id="viewLine" color="0" alpha="0"/>
+		</s:stroke>
+	</s:Rect>
+</s:Group>

@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" width="282" height="187"
+		 creationComplete="Init()">
+	
+	<fx:Script> 
+		<![CDATA[			
+			import alternativa.engine3d.core.BoundBox;
+			import alternativa.engine3d.core.Camera3D;
+			import alternativa.engine3d.core.Object3D;
+			import alternativa.engine3d.core.RayIntersectionData;
+			import alternativa.engine3d.core.Resource;
+			import alternativa.engine3d.core.VertexAttributes;
+			import alternativa.engine3d.core.VertexStream;
+			import alternativa.engine3d.core.View;
+			import alternativa.engine3d.lights.OmniLight;
+			import alternativa.engine3d.materials.FillMaterial;
+			import alternativa.engine3d.materials.LightMapMaterial;
+			import alternativa.engine3d.materials.Material;
+			import alternativa.engine3d.materials.StandardMaterial;
+			import alternativa.engine3d.materials.TextureMaterial;
+			import alternativa.engine3d.objects.Mesh;
+			import alternativa.engine3d.objects.Surface;
+			import alternativa.engine3d.objects.WireFrame;
+			import alternativa.engine3d.resources.BitmapTextureResource;
+			import alternativa.engine3d.resources.Geometry;
+			import alternativa.engine3d.resources.TextureResource;
+			import alternativa.engine3d.utils.Object3DUtils;
+			
+			import flash.display.BitmapData;
+			import flash.display.Loader;
+			import flash.display.LoaderInfo;
+			import flash.display.SimpleButton;
+			import flash.display.Sprite;
+			import flash.display.Stage3D;
+			import flash.display.StageAlign;
+			import flash.display.StageScaleMode;
+			import flash.display3D.Context3D;
+			import flash.display3D.Context3DRenderMode;
+			import flash.events.Event;
+			import flash.events.MouseEvent;
+			import flash.geom.Point;
+			import flash.geom.Rectangle;
+			import flash.geom.Vector3D;
+			import flash.net.FileReference;
+			import flash.net.URLLoader;
+			import flash.net.URLLoaderDataFormat;
+			import flash.net.URLRequest;
+			import flash.text.*;
+			import flash.text.TextField;
+			import flash.ui.*;
+			import flash.utils.ByteArray;
+			
+			import mx.collections.ArrayCollection;
+			import mx.containers.Canvas;
+			import mx.controls.Alert;
+			import mx.core.DragSource;
+			import mx.core.UIComponent;
+			import mx.events.*;
+			import mx.events.DragEvent;
+			import mx.graphics.*;
+			import mx.graphics.codec.JPEGEncoder;
+			import mx.managers.*;
+			
+			import spark.events.TextOperationEvent;
+			
+			public var stage3D:Stage3D;
+			private var windows:L3DWindows;
+			private var windowsLine:Array = null;
+			private var windowsSide:int = 0;
+			private var completeEventListener:Function = null;
+			public var wallThickness:int = 200;
+			
+			[Bindable] 
+			private var windowNames:ArrayCollection = new ArrayCollection( 
+				[ {label:"客厅", data:"客厅窗户"}, 
+					{label:"餐厅", data:"餐厅窗户"},
+					{label:"主卧", data:"主卧窗户"},
+					{label:"卧室", data:"卧室窗户"},
+					{label:"书房", data:"书房窗户"}] );
+			
+			private function Init():void
+			{	
+				stage.scaleMode = StageScaleMode.NO_SCALE;
+				stage.align = StageAlign.TOP_LEFT;	
+				if(stage3D == null)
+				{
+					stage3D = stage.stage3Ds[0];
+				}
+			//	stage3D = stage.stage3Ds[0];
+				if(windows == null)
+				{
+					windows = new L3DWindows();
+				}
+				windows.WallThickness = wallThickness;
+				WindowsLengthTextBox.text = "2000";
+				OffGroundHeightTextBox.text = windows.WindowOffGround.toString();
+				WindowsHeightTextBox.text = windows.WindowHeight.toString();
+				FloatDistanceTextBox.text = windows.FloatDistance.toString();
+				WallThicknessTextBox.text = windows.WallThickness.toString();
+				WindowNameComboBox.selectedIndex = 0;
+			}	
+			
+			private function onResize(e:Event = null):void
+			{
+				if(stage == null)
+				{
+					return;
+				}
+			}
+			
+			public function AddCompleteEvent(listener:Function):void
+			{
+				if(windows == null)
+				{
+					windows = new L3DWindows();
+				}
+				completeEventListener = listener;
+			}			
+			
+			protected function CloseButton_clickHandler(event:MouseEvent):void
+			{
+				PopUpManager.removePopUp(this);
+				var evt:Event = new Event(L3DWindows.CloseParamWindowForm);
+				this.dispatchEvent(evt);
+			}
+			
+			protected function OKButton_clickHandler(event:MouseEvent):void
+			{
+				if(windows == null)
+				{
+					windows = new L3DWindows();
+				}
+				
+				windows.WindowOffGround = parseFloat(OffGroundHeightTextBox.text) as int;
+				windows.WindowHeight = parseFloat(WindowsHeightTextBox.text) as int;
+				windows.FloatDistance = parseFloat(FloatDistanceTextBox.text) as int;
+				windows.FloatSide = windowsSide;
+				var length:Number = parseFloat(WindowsLengthTextBox.text);
+				if(length < 200)
+				{
+					length = 200;
+				}
+				else if(length > 8000)
+				{
+					length = 8000;
+				}
+				windowsLine = new Array(new Vector3D(-length * 0.5,0,0), new Vector3D(length * 0.5,0,0));
+				windows.WallThickness = parseFloat(WallThicknessTextBox.text);
+				windows.Build(WindowNameComboBox.selectedItem.data, windowsLine, stage3D);				
+				if(windows.Exist)
+				{	
+					PopUpManager.removePopUp(this);
+					windows.addEventListener(L3DBuildWindowEvent.BUILDWINDOW, completeEventListener);
+					windows.BuildWindowsComplete(35);
+				}				
+			}
+			
+			public function get WindowsLine():Array
+			{
+				return windowsLine;
+			}
+			
+			public function set WindowsLine(array:Array):void
+			{
+				windowsLine = array;
+			}
+			
+			public function get WindowsSide():int
+			{
+				return windowsSide;
+			}
+			
+			public function set WindowsSide(side:int):void
+			{
+				windowsSide = side > 0 ? 1 : 0;
+			}
+			
+			public function get WindowsModel():L3DMesh
+			{
+				if(windows == null || !windows.Exist)
+				{
+					return null;
+				}
+				
+				windows.WindowsModel.rotationX = 0.0;
+				windows.WindowsModel.rotationY = 0.0;
+				windows.WindowsModel.rotationZ = 0.0;
+				windows.WindowsModel.scaleX = 1.0;
+				windows.WindowsModel.scaleY = 1.0;
+				windows.WindowsModel.scaleZ = 1.0;
+				
+				return windows.WindowsModel;
+			}	
+			
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	<s:SpriteVisualElement id="spriteContainer" />
+	<s:Panel id="RenderPanel" x="10" y="10" width="262" height="164" backgroundAlpha="1.0"
+			 backgroundColor="#FFFFFF" color="#000000" contentBackgroundAlpha="1.0" title="飘窗">
+		<s:Label x="8" y="43" width="55" height="16" text="离地高度"/>
+		<s:Label x="104" y="43" width="31" height="16" text="mm"/>
+		<s:Label x="8" y="72" width="55" height="16" text="墙体厚度"/>
+		<s:Label x="104" y="72" width="31" height="16" text="mm"/>
+		<s:TextInput id="WallThicknessTextBox" x="61" y="68" width="40"/>
+		<s:Label x="133" y="14" width="56" height="16" text="窗体高度"/>
+		<s:Label x="229" y="14" width="31" height="16" text="mm"/>
+		<s:Label x="8" y="14" width="56" height="16" text="窗体长度"/>
+		<s:Label x="104" y="14" width="31" height="16" text="mm"/>
+		<s:TextInput id="WindowsLengthTextBox" x="61" y="10" width="40"/>
+		<s:TextInput id="WindowsHeightTextBox" x="186" y="10" width="40"/>
+		<s:TextInput id="OffGroundHeightTextBox" x="61" y="39" width="40"/>
+		<s:Button id="OKButton" x="8" y="99" width="103" height="22" label="确定当前操作"
+				  click="OKButton_clickHandler(event)"/>
+		<s:Button id="CloseButton" x="148" y="99" width="103" height="22" label="退出当前操作"
+				  click="CloseButton_clickHandler(event)"/>
+		<s:Label x="133" y="43" width="56" height="16" text="飘台深度"/>
+		<s:Label x="229" y="43" width="31" height="16" text="mm"/>
+		<s:TextInput id="FloatDistanceTextBox" x="186" y="39" width="40"/>
+		<s:Label x="133" y="72" width="55" height="16" text="窗体位置"/>
+		<s:ComboBox id="WindowNameComboBox" x="186" y="68" width="64" dataProvider="{windowNames}"/>
+	</s:Panel>
+</s:Group>

@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" 
+		 creationComplete="group1_creationCompleteHandler(event)" >
+	<fx:Script>
+		<![CDATA[
+			import mx.events.FlexEvent;
+			
+			import spark.components.HGroup;
+			import spark.layouts.HorizontalAlign;
+			import spark.layouts.VerticalAlign;
+			
+			import extension.wl.buttons.LabelButton;
+			import extension.wl.globalData.allStaticTypes.ColorType;
+			import extension.wl.globalData.allStaticTypes.LivelyType;
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			private var container:HGroup = null;
+			
+			private var tipsData:Array = null; //提示数组
+			private var tipsTotal:int = 0; //提示总个数
+			
+			private var pageLength:int = 4; //每页元素显示
+			private var pageIndex:int = 0; //当前页数
+			private var pageTotal:int = 0; //总页数 
+			
+			private var itemWidth:Number = 0; //每个tipsLabel的宽度
+			private var itemHeight:Number = 0; //每个tipsLabel的高度
+			
+			[Bindable]
+			private var itemsGap:Number = 0; //tipsLabel之间的间隔
+			private var items:Vector.<LabelButton> = null;
+			
+			public var itemStatus:int = 1;//元素配色状态
+			
+//			 弹出条显示一排按钮提示（纯显示组件）
+			protected function group1_creationCompleteHandler(event:FlexEvent):void
+			{
+				// TODO Auto-generated method stub
+				initData();
+				initView();
+			}
+			
+//			初始化数据
+			private function initData():void
+			{
+				// TODO Auto Generated method stub
+				tipsTotal = tipsData.length;
+				pageTotal = Math.ceil(tipsTotal / pageLength);
+				
+				if(!items)	
+				{
+					items = new Vector.<LabelButton>();
+				}
+			}
+			
+//			初始化界面
+			private function initView():void
+			{
+				// TODO Auto Generated method stub
+				if(!container)
+				{
+					container = new HGroup();
+					container.width = itemWidth * (pageLength + 1) + itemsGap * pageLength;
+					container.height = itemHeight;
+					container.verticalAlign = VerticalAlign.MIDDLE;
+					
+					if(tipsTotal > pageLength) //此时需要翻页 
+					{
+						container.right = itemWidth + itemsGap;
+						container.horizontalAlign = HorizontalAlign.RIGHT;
+//						container.paddingRight = itemWidth + itemsGap;
+					}
+					else
+					{
+						container.horizontalAlign = HorizontalAlign.LEFT;
+					}
+					
+					container.gap = itemsGap;
+					this.addElement(container);
+				}
+				
+				for(var i:int = 0; i < tipsTotal; i++)
+				{
+					var label:LabelButton = initLabelButton(tipsData[i], itemWidth, itemHeight, i);
+					label.labelMode = false;
+					items.push(label);
+					
+					if(tipsTotal > pageLength)
+					{
+						if(i < pageLength - 1)
+						{
+							container.addElement(label);
+						}	
+					}
+					else
+					{
+						if(i < pageLength)	
+						{
+							container.addElement(label);
+						}
+					}
+					
+				}
+			}
+			
+//			显示当前页的内容
+			public function showPageHandler():void
+			{
+				container.removeAllElements();
+				
+				for(var i:int = 0; i < pageLength - 1; i++)
+				{
+					if(pageIndex * (pageLength - 1) + i >= tipsTotal)
+					{
+						break;
+					}
+					
+					var index:int = pageIndex * (pageLength - 1) + i;
+					container.addElement(items[index]);
+				}
+			}
+			
+//			上一页
+			private function prePage():void
+			{
+				pageIndex--;
+				
+				if(pageIndex < 0)
+				{
+					pageIndex = pageTotal - 1;
+				}
+				
+				showPageHandler();
+			}
+			
+//			下一页
+			private function nextPage():void
+			{
+				pageIndex++;
+				
+				if(pageIndex > pageTotal - 1)
+				{
+					pageIndex = 0;
+				}
+				
+				showPageHandler();
+			}
+			
+//			创建LabelButton
+			public function initLabelButton(label:String, labelWidth:Number, labelHeight:Number, info:Object = null):LabelButton
+			{
+				var labelButton:LabelButton = LabelButton.buildLabelButton(label, labelWidth, labelHeight, LivelyType.currentStyle, itemStatus);
+				labelButton.labelInfo = info;
+				labelButton.labelSize = 11;
+				
+				return labelButton;
+			}
+			
+//			根据指定页数显示对应的提示
+			public function updateView(currentIndex:int):void
+			{
+				if(pageIndex == currentIndex)
+				{
+					return;
+				}
+				
+				var difference:int = currentIndex - pageIndex;
+				
+				for(var i:int = 0; i < Math.abs(difference); i++)
+				{
+					if(difference > 0)
+					{
+						nextPage();
+					}
+					else if(difference < 0)
+					{
+						prePage();
+					}
+				}
+				
+				pageIndex = currentIndex;
+			}
+			
+//			创建tipsGroupView
+			public static function buildTipsGroupView(tips:Array, itemWidth:Number, itemHeight:Number, gap:Number,pageLength:int, pageIndex:int = 0):TipsGroupView
+			{
+				var view:TipsGroupView = new TipsGroupView();
+				view.tipsData = tips;
+				
+				view.itemWidth = itemWidth; //通过整体width，height和gap计算item的宽和高
+				view.itemHeight = itemHeight;
+				
+				view.itemsGap = gap;
+				view.pageLength = pageLength;
+				view.pageIndex = pageIndex;
+				
+				return view;
+			}
+			
+//			清空tipsGroupView
+			public function removeView():void
+			{
+				if(container)
+				{
+					container.removeAllElements();
+					container = null;
+				}
+				
+				if(items)
+				{
+					var len:int = items.length;
+					for(var i:int = 0; i < len; i++)
+					{
+						var item:LabelButton = items[i];
+						item = null;
+					}
+					
+					items.splice(0, items.length);
+					items = null;
+				}
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	<!--<s:Rect width="100%"
+			height="100%">
+		<s:fill>
+			<s:SolidColor color="{ColorType.DarkGreyLively}"/>
+		</s:fill>
+	</s:Rect>-->
+</s:Group>
