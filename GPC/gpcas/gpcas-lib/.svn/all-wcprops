@@ -1,0 +1,33 @@
+K 26
+svn:wc:ra_dav:activity-url
+V 14
+/svn/!svn/act/
+K 25
+svn:wc:ra_dav:version-url
+V 32
+/svn/!svn/ver/14/trunk/gpcas-lib
+END
+.flexLibProperties
+K 25
+svn:wc:ra_dav:version-url
+V 51
+/svn/!svn/ver/11/trunk/gpcas-lib/.flexLibProperties
+END
+.project
+K 25
+svn:wc:ra_dav:version-url
+V 41
+/svn/!svn/ver/11/trunk/gpcas-lib/.project
+END
+.actionScriptProperties
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/svn/!svn/ver/11/trunk/gpcas-lib/.actionScriptProperties
+END
+build.xml
+K 25
+svn:wc:ra_dav:version-url
+V 42
+/svn/!svn/ver/17/trunk/gpcas-lib/build.xml
+END

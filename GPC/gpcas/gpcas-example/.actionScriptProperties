@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<actionScriptProperties analytics="false" mainApplicationPath="Main.mxml" projectUUID="453c0c62-3849-4958-b25f-0690cc0fddf9" version="11">
+  <compiler additionalCompilerArguments="-locale en_US" autoRSLOrdering="false" copyDependentFiles="true" flex3CompatMode="true" fteInMXComponents="false" generateAccessible="false" htmlExpressInstall="true" htmlGenerate="false" htmlHistoryManagement="true" htmlPlayerVersionCheck="false" includeNetmonSwc="false" outputFolderPath="bin-debug" removeUnusedRSL="true" sourceFolderPath="src" strict="true" targetPlayerVersion="0.0.0" useApolloConfig="false" useDebugRSLSwfs="true" useFlashSDK="false" verifyDigests="true" warn="true">
+    <compilerSourcePath/>
+    <libraryPath defaultLinkType="0">
+      <libraryPathEntry kind="4" path="">
+        <excludedEntries>
+          <libraryPathEntry kind="3" linkType="1" path="${PROJECT_FRAMEWORKS}/libs/flex.swc" useDefaultLinkType="false"/>
+        </excludedEntries>
+      </libraryPathEntry>
+      <libraryPathEntry kind="3" linkType="1" path="/gpcas-lib/bin/gpcas-lib.swc" useDefaultLinkType="true"/>
+    </libraryPath>
+    <sourceAttachmentPath/>
+  </compiler>
+  <applications>
+    <application path="TestSuite.mxml"/>
+    <application path="BritainArrowsExample.mxml"/>
+    <application path="SimpleExample.mxml"/>
+  </applications>
+  <modules/>
+  <workers/>
+  <buildCSSFiles/>
+  <flashCatalyst validateFlashCatalystCompatibility="false"/>
+</actionScriptProperties>

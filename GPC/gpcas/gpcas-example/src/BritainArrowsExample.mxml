@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml" layout="vertical" minWidth="500" minHeight="500"  creationComplete="complete()" xmlns:local="*" backgroundColor="white">
+	<mx:Script>
+		<![CDATA[
+			import pl.bmnet.gpcas.geometry.Poly;
+			[Embed(source="polygons/arrows.gpf",mimeType="application/octet-stream")]
+			private var arrowsClass : Class;
+			
+			[Embed(source="polygons/britain.gpf",mimeType="application/octet-stream")]
+			private var britainClass : Class;
+			
+			private var polyParser : PolyParser;
+			private var britainPoly : Poly ;
+			private var arrowsPoly : Poly;
+			
+			private function complete():void{
+				polyParser = new PolyParser();
+				polyParser.offsetX=-1170;
+				polyParser.offsetY=-1100;
+				polyParser.mirrorOffsetY=300;
+				polyParser.scale=0.8;
+				britainPoly = polyParser.readGPFString(new britainClass());
+				arrowsPoly  = polyParser.readGPFString(new arrowsClass());
+				setTimeout(showDiff,500);
+				
+			}
+			
+			private function showDiff():void{
+				this.invalidateProperties()
+				var diffPoly : Poly = britainPoly.difference(arrowsPoly);
+				diffCanvas.drawPoly(britainPoly,1,0,0,outlineStyle());
+				diffCanvas.drawPoly(arrowsPoly,1,0,0,outlineStyle());
+				diffCanvas.drawPoly(diffPoly,1,0,0,filledStyle(0xbcd4ff));
+				diffLabel.text="DIFFERENCE";
+				setTimeout(showIntersection,500);
+			}
+			
+			private function showIntersection():void{
+				var intersectionPoly : Poly = britainPoly.intersection(arrowsPoly);
+				intersectionCanvas.drawPoly(britainPoly,1,0,0,outlineStyle());
+				intersectionCanvas.drawPoly(arrowsPoly,1,0,0,outlineStyle());
+				intersectionCanvas.drawPoly(intersectionPoly,1,0,0,filledStyle(0xbcf1b0));
+				intersectionLabel.text="INTERSECION";
+				
+				setTimeout(showXor,500);
+			}
+			
+			private function showXor():void{
+				var xorPoly : Poly = britainPoly.xor(arrowsPoly);
+				xorCanvas.drawPoly(britainPoly,1,0,0,outlineStyle());
+				xorCanvas.drawPoly(arrowsPoly,1,0,0,outlineStyle());
+				xorCanvas.drawPoly(xorPoly,1,0,0,filledStyle(0xf4f1b0));
+				xorLabel.text="XOR";
+				setTimeout(showUnion,500);
+			}
+			
+			private function showUnion():void{
+				unionLabel.visible=true;
+				var unionPoly : Poly = britainPoly.union(arrowsPoly);
+				unionCanvas.drawPoly(britainPoly,1,0,0,outlineStyle());
+				unionCanvas.drawPoly(arrowsPoly,1,0,0,outlineStyle());
+				unionCanvas.drawPoly(unionPoly,1,0,0,filledStyle(0xffdbda));
+				unionLabel.text="UNION";
+			}
+			
+			private function outlineStyle():Object{
+				return {
+					lineWidth:1,
+					lineColor:0xb8b8b8,
+					fill:false,
+					fillColor:0xCC92A8,
+					showNodes:false
+				};
+			}
+			
+			private function filledStyle(fillColor:uint):Object{
+				return {
+					lineWidth:1,
+					lineColor:0x000000,
+					fill:true,
+					fillColor:fillColor,
+					showNodes:false
+				};
+			}
+			
+			
+			
+		]]>
+	</mx:Script>
+	<mx:Label text="Calculations are time consuming, so please wait..." textAlign="center" width="100%"/>
+	<mx:Canvas width="500" height="500">
+		<mx:Box x="25" y="25" verticalScrollPolicy="off" horizontalScrollPolicy="off" width="200" height="200" borderStyle="solid" borderThickness="1">
+			<mx:Label visible="true" x="10" y="10" text="CALCULATING DIFFERENCE..." id="diffLabel"/>
+			<local:PolyCanvas width="200" height="200" id="diffCanvas" lineWidth="1"/>
+		</mx:Box>
+		<mx:Box x="250" y="25" verticalScrollPolicy="off" horizontalScrollPolicy="off" width="200" height="200" borderStyle="solid" borderThickness="1">
+			<mx:Label visible="true" x="10" y="10" text="CALCULATING INTERSECTION..." id="intersectionLabel"/>
+			<local:PolyCanvas width="200" height="200"  id="intersectionCanvas"/>
+		</mx:Box>
+		<mx:Box x="25" y="250" verticalScrollPolicy="off" horizontalScrollPolicy="off" width="200" height="200" borderStyle="solid" borderThickness="1">
+			<mx:Label visible="true" x="10" y="10" text="CALCULATING XOR..." id="xorLabel"/>
+			<local:PolyCanvas width="200" height="200"  id="xorCanvas"/>
+		</mx:Box>
+		<mx:Box x="250" y="250" verticalScrollPolicy="off" horizontalScrollPolicy="off" width="200" height="200" borderStyle="solid" borderThickness="1">
+			<mx:Label visible="true" x="10" y="10" text="CALCULATING UNION..." id="unionLabel"/>
+			<local:PolyCanvas width="200" height="200"  id="unionCanvas"/>
+		</mx:Box>
+	</mx:Canvas>
+</mx:Application>

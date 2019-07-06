@@ -1,0 +1,72 @@
+<project name="gpcas-example" basedir=".">
+    <description>
+        Global Polygon Clipper examples
+    </description>
+
+    <!--
+       <property name="warnings" value="false"/>
+    -->
+
+
+    <target name="-flex-init">
+        <taskdef name="mxmlc" classname="flex.ant.MxmlcTask"/>
+        <property file="../flex.properties"/>
+        <echo message="Flex SDK home: ${FLEX_HOME}"/>
+    </target>
+
+    <target name="clean">
+        <delete includeemptydirs="true">
+            <fileset dir="${basedir}/bin-debug" includes="**/*"/>
+        </delete>
+    </target>
+
+    <target name="main" depends="-flex-init">
+
+        <mxmlc
+            file="${basedir}/src/SimpleExample.mxml"
+            output="${basedir}/bin-debug/SimpleExample.swf"
+            compatibility-version="3"
+            warnings="false"
+            >
+            <load-config filename="${FLEX_HOME}/frameworks/flex-config.xml"/>
+            <source-path path-element="${basedir}/src"/>
+            <include-libraries dir="${basedir}/../gpcas-lib/bin" append="true">
+                <include name="gpcas-lib.swc" />
+            </include-libraries>
+        </mxmlc>
+
+        <mxmlc
+            file="${basedir}/src/BritainArrowsExample.mxml"
+            output="${basedir}/bin-debug/BritainArrowsExample.swf"
+            compatibility-version="3"
+            warnings="false"
+            >
+            <load-config filename="${FLEX_HOME}/frameworks/flex-config.xml"/>
+            <source-path path-element="${basedir}/src"/>
+            <include-libraries dir="${basedir}/../gpcas-lib/bin" append="true">
+                <include name="gpcas-lib.swc" />
+            </include-libraries>
+        </mxmlc>
+
+        <mxmlc
+            file="${basedir}/src/TestSuite.mxml"
+            output="${basedir}/bin-debug/TestSuite.swf"
+            compatibility-version="3"
+            warnings="false"
+            >
+            <load-config filename="${FLEX_HOME}/frameworks/flex-config.xml"/>
+            <source-path path-element="${basedir}/src"/>
+            <include-libraries dir="${basedir}/../gpcas-lib/bin" append="true">
+                <include name="gpcas-lib.swc" />
+            </include-libraries>
+        </mxmlc>
+
+    </target>
+
+
+    <target name="build" depends="-flex-init">
+        <antcall target="clean"/>
+        <antcall target="main"/>
+    </target>
+
+</project>

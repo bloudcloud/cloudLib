@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application xmlns:bm="*" xmlns:mx="http://www.adobe.com/2006/mxml" layout="vertical" creationComplete="complete()" backgroundColor="white">
+	<mx:Script>
+		<![CDATA[
+			import mx.messaging.channels.PollingChannel;
+			import pl.bmnet.gpcas.geometry.LineHelper;
+			import pl.bmnet.gpcas.geometry.LineIntersection;
+			import pl.bmnet.gpcas.util.ArrayList;
+			import pl.bmnet.gpcas.util.ArrayHelper;
+			import flash.utils.getDefinitionByName;
+			import pl.bmnet.gpcas.geometry.PolyDefault;
+			import pl.bmnet.gpcas.geometry.Poly;
+			import pl.bmnet.gpcas.geometry.Clip;
+			
+			import mx.controls.Alert;
+			import pl.bmnet.gpcas.geometry.Polygon;
+			
+			public var ct:ClipTest;
+			
+			private function runTests():void{
+			ct = new ClipTest();
+			ct.logFunction=log;
+			ct.resultFunction=resultFuntion;
+			methods=ct.methods;
+			nextMethod();		
+			}
+			
+			private function complete(){
+				runTests();
+				
+			}
+			
+			private function log(msg:String){
+			ta.text=msg;
+			};
+			
+			[Bindable] private var passed : int = 0;
+			[Bindable] private var failed : int = 0;
+			
+			private function resultFuntion(result:Boolean):void{
+				if (result){
+					passed++;
+				} else {
+					failed++;
+				}
+			}
+			
+			private function assertEquals(o1:Object, o2:Object){
+				if ((o1 is PolyDefault)&&(o2 is PolyDefault)){
+					canv.clear();
+					canv.drawPoly(o1 as PolyDefault,30);
+					canv.drawPoly(o2 as PolyDefault,30,200);
+				}
+			};
+			
+			[Bindable] private var i :int = -1;
+			[Bindable] private var methods : Array = null;
+			
+			private function nextMethod():Boolean{
+				if (i==-1){
+					i=0;
+				} else {
+					i++;
+				}
+				if (i>=methods.length){
+					return false;
+				}
+				var methodName = methods[i];
+				ct[methodName]();
+				return true;
+			}
+			
+			private function runAll():void{
+				i = 0;
+				failed = 0;
+				passed = 0;
+				while (nextMethod());
+			}
+		]]>
+		
+	</mx:Script>
+	<mx:HBox>
+		<mx:Label width="300" text="{methods[i]} ({i}/{methods.length})"/><mx:Button enabled="{i&lt;methods.length}" click="nextMethod()" label="Next"/><mx:Button click="runAll()" label="Run all"/>
+	</mx:HBox>
+	<mx:HBox>
+		<mx:Label text="Tests passed"/>
+		<mx:Label id="passedText" text="{passed}" color="green"/>
+		<mx:Label text="Tests failed"/>
+		<mx:Label id="failedText" text="{failed}" color="red"/>
+	</mx:HBox>
+	<mx:TextArea width="100%" height="40%" id="ta"/>
+	<bm:PolyCanvas id="canv" width="100%" height="40%"/>
+</mx:Application>

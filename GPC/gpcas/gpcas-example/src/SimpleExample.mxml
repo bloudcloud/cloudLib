@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml" layout="vertical" backgroundColor="white" width="700" height="500"  xmlns:local="*"
+				creationComplete="showShapes()"
+				>
+	<mx:Script>
+		<![CDATA[
+			import pl.bmnet.gpcas.geometry.Poly;
+			import pl.bmnet.gpcas.geometry.PolyDefault;
+			import pl.bmnet.gpcas.geometry.PolySimple;
+			import pl.bmnet.gpcas.geometry.Polygon;
+			
+			public var POLY1_POINTS : Array = [[100,100],[100,200],[200,200],[200,100]];
+			public var POLY2_POINTS : Array = [[150,40],[250,80],[70,250],[30,300]];
+			
+			
+			
+			public var poly1 			: Poly = createPoly(POLY1_POINTS);
+			public var poly2 			: Poly = createPoly(POLY2_POINTS);
+			
+			
+			/* Simple Array to Poly conversion function , further reading : pl.bmnet.gpcas.geometry.Poly interface*/
+			public static function createPoly(points:Array):Poly{
+				var res : Poly = new PolyDefault();
+				for each (var point : Array in points){
+					res.addPoint(new Point(point[0],point[1]));
+				}
+				return res;
+			}
+			
+			private function showShapes():void{
+				polyCanvas.clear();
+				polyCanvas.drawPoly(poly1);
+				polyCanvas.drawPoly(poly2);
+			}
+			
+			private function showUnion():void{
+				var union 			: Poly = poly1.union(poly2);
+				polyCanvas.clear();
+				polyCanvas.drawPoly(union);
+			}
+			
+			private function showIntersection():void{
+				var intersection 	: Poly = poly1.intersection(poly2);
+				polyCanvas.clear();
+				polyCanvas.drawPoly(intersection);
+			}
+			
+			private function showXor():void{
+				var xor 			: Poly = poly1.xor(poly2);
+				polyCanvas.clear();
+				polyCanvas.drawPoly(xor);
+			}
+			
+			private function showDiff():void{
+				var diff 			: Poly = poly1.difference(poly2);
+				polyCanvas.clear();
+				polyCanvas.drawPoly(diff);
+			}
+			
+		]]>
+	</mx:Script>
+	<local:PolyCanvas width="100%" height="100%" id="polyCanvas"/>
+	<mx:HBox width="100%" height="75">
+		<mx:Button label="Show shapes" click="showShapes()"/>
+		<mx:Button label="Show union"  click="showUnion()"/>
+		<mx:Button label="Show intersection"  click="showIntersection()"/>
+		<mx:Button label="Show xor"  click="showXor()"/>
+		<mx:Button label="Show difference"  click="showDiff()"/>
+	</mx:HBox>
+</mx:Application>

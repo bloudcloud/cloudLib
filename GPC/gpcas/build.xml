@@ -1,0 +1,16 @@
+<project name="gpcas" basedir=".">
+    <description>
+        Global Polygon Clipper
+    </description>
+
+    <target name="clean">
+        <ant dir="gpcas-lib" target="clean" inheritAll="true"/>
+        <ant dir="gpcas-example" target="clean"  inheritAll="true"/>
+    </target>
+
+    <target name="build">
+        <ant dir="gpcas-lib" target="build"  inheritAll="true"/>
+        <ant dir="gpcas-example" target="build"  inheritAll="true"/>
+    </target>
+
+</project>

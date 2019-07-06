@@ -1,0 +1,173 @@
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/!svn/ver/12/trunk/gpcas-lib/src/pl/bmnet/gpcas/geometry
+END
+LineIntersection.as
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/!svn/ver/11/trunk/gpcas-lib/src/pl/bmnet/gpcas/geometry/LineIntersection.as
+END
+VertexType.as
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/!svn/ver/11/trunk/gpcas-lib/src/pl/bmnet/gpcas/geometry/VertexType.as
+END
+IntersectionPoint.as
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/!svn/ver/11/trunk/gpcas-lib/src/pl/bmnet/gpcas/geometry/IntersectionPoint.as
+END
+TopPolygonNode.as
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/!svn/ver/11/trunk/gpcas-lib/src/pl/bmnet/gpcas/geometry/TopPolygonNode.as
+END
+ItNode.as
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svn/!svn/ver/11/trunk/gpcas-lib/src/pl/bmnet/gpcas/geometry/ItNode.as
+END
+Poly.as
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/!svn/ver/12/trunk/gpcas-lib/src/pl/bmnet/gpcas/geometry/Poly.as
+END
+ScanBeamTreeEntries.as
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/!svn/ver/11/trunk/gpcas-lib/src/pl/bmnet/gpcas/geometry/ScanBeamTreeEntries.as
+END
+VertexNode.as
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/!svn/ver/11/trunk/gpcas-lib/src/pl/bmnet/gpcas/geometry/VertexNode.as
+END
+LineHelper.as
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/!svn/ver/11/trunk/gpcas-lib/src/pl/bmnet/gpcas/geometry/LineHelper.as
+END
+Line.as
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/!svn/ver/11/trunk/gpcas-lib/src/pl/bmnet/gpcas/geometry/Line.as
+END
+Clip.as
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/!svn/ver/12/trunk/gpcas-lib/src/pl/bmnet/gpcas/geometry/Clip.as
+END
+Polygon.as
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/!svn/ver/11/trunk/gpcas-lib/src/pl/bmnet/gpcas/geometry/Polygon.as
+END
+HState.as
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svn/!svn/ver/11/trunk/gpcas-lib/src/pl/bmnet/gpcas/geometry/HState.as
+END
+PolyDefault.as
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/!svn/ver/12/trunk/gpcas-lib/src/pl/bmnet/gpcas/geometry/PolyDefault.as
+END
+AetTree.as
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/!svn/ver/11/trunk/gpcas-lib/src/pl/bmnet/gpcas/geometry/AetTree.as
+END
+ScanBeamTree.as
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/!svn/ver/11/trunk/gpcas-lib/src/pl/bmnet/gpcas/geometry/ScanBeamTree.as
+END
+ItNodeTable.as
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/!svn/ver/11/trunk/gpcas-lib/src/pl/bmnet/gpcas/geometry/ItNodeTable.as
+END
+StNode.as
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svn/!svn/ver/11/trunk/gpcas-lib/src/pl/bmnet/gpcas/geometry/StNode.as
+END
+WeilerAtherton.as
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/!svn/ver/11/trunk/gpcas-lib/src/pl/bmnet/gpcas/geometry/WeilerAtherton.as
+END
+PolySimple.as
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/!svn/ver/12/trunk/gpcas-lib/src/pl/bmnet/gpcas/geometry/PolySimple.as
+END
+PolygonNode.as
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/!svn/ver/11/trunk/gpcas-lib/src/pl/bmnet/gpcas/geometry/PolygonNode.as
+END
+OperationType.as
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/svn/!svn/ver/11/trunk/gpcas-lib/src/pl/bmnet/gpcas/geometry/OperationType.as
+END
+LmtNode.as
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/!svn/ver/11/trunk/gpcas-lib/src/pl/bmnet/gpcas/geometry/LmtNode.as
+END
+LmtTable.as
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/!svn/ver/11/trunk/gpcas-lib/src/pl/bmnet/gpcas/geometry/LmtTable.as
+END
+Rectangle.as
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/!svn/ver/11/trunk/gpcas-lib/src/pl/bmnet/gpcas/geometry/Rectangle.as
+END
+EdgeNode.as
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/!svn/ver/11/trunk/gpcas-lib/src/pl/bmnet/gpcas/geometry/EdgeNode.as
+END
+BundleState.as
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/!svn/ver/11/trunk/gpcas-lib/src/pl/bmnet/gpcas/geometry/BundleState.as
+END
+EdgeTable.as
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/!svn/ver/11/trunk/gpcas-lib/src/pl/bmnet/gpcas/geometry/EdgeTable.as
+END

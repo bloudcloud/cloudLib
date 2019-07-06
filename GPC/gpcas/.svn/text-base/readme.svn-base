@@ -1,0 +1,6 @@
+To build project you need 
+
+Apache Ant >=1.6
+Adobe Flex SDK >=3.0
+
+Before building you have to set FLEX_HOME variable in flex.properties file

@@ -1,0 +1,32 @@
+<project name="gpcas-lib" basedir=".">
+    <description>
+        General Polygon Clipping Action Script library
+    </description>
+    <property name="warnings" value="false"/>
+
+    <target name="-flex-init">
+        <taskdef name="compc" classname="flex.ant.CompcTask"/>
+        <property file="../flex.properties"/>
+        <echo message="Flex SDK home: ${FLEX_HOME}"/>
+    </target>
+
+    <target name="clean">
+        <delete includeemptydirs="true">
+            <fileset dir="dist" includes="**/*"/>
+        </delete>
+    </target>
+
+    <target name="build" depends="-flex-init">
+        <compc
+            output="bin/gpcas-lib.swc"
+            warnings="false"
+            >
+            <include-sources dir="src/pl/bmnet/gpcas/geometry" includes="*.as"/>
+            <include-sources dir="src/pl/bmnet/gpcas/util" includes="*.as"/>
+            <load-config filename="${FLEX_HOME}/frameworks/flex-config.xml"/>
+            <source-path path-element="${FLEX_HOME}/frameworks"/>
+        </compc>
+    </target>
+
+
+</project>
