@@ -1,0 +1,52 @@
+<root>
+  <Elem ID="0" TextureNo="2" W="600" L="80">
+    <list id="0" xvalue="0" yvalue="0" wvalue="100" lvalue="80"/>
+    <list id="1" xvalue="100" yvalue="0" wvalue="100" lvalue="80"/>
+    <list id="2" xvalue="200" yvalue="0" wvalue="200" lvalue="80"/>
+  </Elem>
+  <Elem ID="1" TextureNo="1" W="600" L="300">
+    <list id="0" xvalue="0" yvalue="0" wvalue="100" lvalue="300"/>
+    <list id="1" xvalue="100" yvalue="0" wvalue="100" lvalue="300"/>
+    <list id="2" xvalue="200" yvalue="0" wvalue="100" lvalue="300"/>
+    <list id="3" xvalue="300" yvalue="0" wvalue="100" lvalue="300"/>
+    <list id="4" xvalue="400" yvalue="0" wvalue="100" lvalue="300"/>
+    <list id="5" xvalue="500" yvalue="0" wvalue="100" lvalue="300"/>
+  </Elem>
+  <Elem ID="2" TextureNo="1" W="600" L="300">
+    <list id="0" xvalue="0" yvalue="0" wvalue="100" lvalue="300"/>
+    <list id="1" xvalue="100" yvalue="0" wvalue="100" lvalue="300"/>
+    <list id="2" xvalue="200" yvalue="0" wvalue="100" lvalue="300"/>
+    <list id="3" xvalue="300" yvalue="0" wvalue="100" lvalue="300"/>
+    <list id="4" xvalue="400" yvalue="0" wvalue="100" lvalue="300"/>
+    <list id="5" xvalue="500" yvalue="0" wvalue="100" lvalue="300"/>
+  </Elem>
+  <Elem ID="3" TextureNo="1" W="600" L="300">
+    <list id="0" xvalue="0" yvalue="0" wvalue="100" lvalue="300"/>
+    <list id="1" xvalue="100" yvalue="0" wvalue="100" lvalue="300"/>
+    <list id="2" xvalue="200" yvalue="0" wvalue="100" lvalue="300"/>
+    <list id="3" xvalue="300" yvalue="0" wvalue="100" lvalue="300"/>
+    <list id="4" xvalue="400" yvalue="0" wvalue="100" lvalue="300"/>
+    <list id="5" xvalue="500" yvalue="0" wvalue="100" lvalue="300"/>
+  </Elem>
+  <Elem ID="4" TextureNo="1" W="600" L="300">
+    <list id="0" xvalue="0" yvalue="0" wvalue="200" lvalue="300"/>
+    <list id="1" xvalue="200" yvalue="0" wvalue="200" lvalue="300"/>
+    <list id="2" xvalue="400" yvalue="0" wvalue="200" lvalue="300"/>
+  </Elem>
+  <Elem ID="5" TextureNo="1" W="600" L="300">
+    <list id="0" xvalue="0" yvalue="0" wvalue="200" lvalue="300"/>
+    <list id="1" xvalue="200" yvalue="0" wvalue="200" lvalue="300"/>
+    <list id="2" xvalue="400" yvalue="0" wvalue="200" lvalue="300"/>
+  </Elem>
+  <Elem ID="6" TextureNo="1" W="600" L="300">
+    <list id="0" xvalue="0" yvalue="0" wvalue="200" lvalue="300"/>
+    <list id="1" xvalue="200" yvalue="0" wvalue="200" lvalue="300"/>
+    <list id="2" xvalue="400" yvalue="0" wvalue="200" lvalue="300"/>
+  </Elem>
+  <Elem ID="7" TextureNo="1" W="600" L="300">
+    <list id="0" xvalue="0" yvalue="0" wvalue="20" lvalue="100"/>
+    <list id="1" xvalue="0" yvalue="100" wvalue="20" lvalue="100"/>
+    <list id="2" xvalue="0" yvalue="200" wvalue="600" lvalue="20"/>
+    <list id="3" xvalue="20" yvalue="0" wvalue="20" lvalue="200"/>
+  </Elem>
+</root>

@@ -1,0 +1,108 @@
+<Lejia type="TileCuttingStock">
+  <Elem W="600" L="300" TextureNo="1">
+    <list id="0" type="Rect">
+      <value l="300" w="100"/>
+    </list>
+    <list id="1" type="Rect">
+      <value l="300" w="100"/>
+    </list>
+    <list id="2" type="Rect">
+      <value l="300" w="100"/>
+    </list>
+    <list id="3" type="Rect">
+      <value l="300" w="100"/>
+    </list>
+    <list id="4" type="Rect">
+      <value l="300" w="100"/>
+    </list>
+    <list id="5" type="Rect">
+      <value l="300" w="100"/>
+    </list>
+    <list id="6" type="Rect">
+      <value l="300" w="100"/>
+    </list>
+    <list id="7" type="Rect">
+      <value l="300" w="100"/>
+    </list>
+    <list id="8" type="Rect">
+      <value l="300" w="100"/>
+    </list>
+    <list id="9" type="Rect">
+      <value l="300" w="100"/>
+    </list>
+    <list id="10" type="Rect">
+      <value l="300" w="100"/>
+    </list>
+    <list id="11" type="Rect">
+      <value l="300" w="100"/>
+    </list>
+    <list id="12" type="Rect">
+      <value l="300" w="100"/>
+    </list>
+    <list id="13" type="Rect">
+      <value l="300" w="100"/>
+    </list>
+    <list id="14" type="Rect">
+      <value l="300" w="100"/>
+    </list>
+    <list id="15" type="Rect">
+      <value l="300" w="100"/>
+    </list>
+    <list id="16" type="Rect">
+      <value l="300" w="100"/>
+    </list>
+    <list id="17" type="Rect">
+      <value l="300" w="100"/>
+    </list>
+    <list id="18" type="Rect">
+      <value l="300" w="200"/>
+    </list>
+    <list id="19" type="Rect">
+      <value l="300" w="200"/>
+    </list>
+    <list id="20" type="Rect">
+      <value l="300" w="200"/>
+    </list>
+    <list id="21" type="Rect">
+      <value l="300" w="200"/>
+    </list>
+    <list id="22" type="Rect">
+      <value l="300" w="200"/>
+    </list>
+    <list id="23" type="Rect">
+      <value l="300" w="200"/>
+    </list>
+    <list id="24" type="Rect">
+      <value l="300" w="200"/>
+    </list>
+    <list id="25" type="Rect">
+      <value l="300" w="200"/>
+    </list>
+    <list id="26" type="Rect">
+      <value l="300" w="200"/>
+    </list>
+    <list id="27" type="Rect">
+      <value l="20" w="100"/>
+    </list>
+    <list id="28" type="Rect">
+      <value l="20" w="100"/>
+    </list>
+    <list id="29" type="Rect">
+      <value l="20" w="600"/>
+    </list>
+    <list id="30" type="Rect">
+      <value l="20" w="200"/>
+    </list>
+  </Elem>
+  <Elem W="600" L="80" TextureNo="2">
+    <list id="0" type="Rect">
+      <value l="80" w="100"/>
+    </list>
+    <list id="1" type="Rect">
+      <value l="80" w="100"/>
+    </list>
+    <list id="2" type="Rect">
+      <value l="80" w="200"/>
+    </list>
+  </Elem>
+</Lejia>

@@ -1,0 +1,40 @@
+var atObj:AsyncToken = L3DLibraryWebService.LibraryService.TileCS(xml.toXMLString());
+			var rpObj:mx.rpc.Responder = new mx.rpc.Responder(TileCSResult, TileCSFault);
+			atObj.addResponder(rpObj);
+
+
+private function TileCSResult(reObj:ResultEvent):void
+		{
+			var xml:XML = XML(reObj.result);
+			if(xml == null)
+				return;
+			var xmlListColl:XMLListCollection = new XMLListCollection(xml.children());
+			var tempXML:XML = null;
+			var yuliaoArray:Array = [];
+			if( xmlListColl && xmlListColl.length > 0)
+			{
+				for( var i:int = 0 ; i < xmlListColl.length ; i ++ )
+				{
+					tempXML = xmlListColl[i];
+					yuliaoArray.push(tempXML.@TextureNo);
+				}
+			}
+			
+			for( var j:int = 0 ; j < yuliaoArray.length ; j ++ )
+			{
+				var textureNo:String = yuliaoArray[j];
+				for( var k:int = 0 ; k < textureNoToCodeArray.length ; k ++ )
+				{
+					if( textureNo == String(textureNoToCodeArray[k].textureNo) )
+					{
+						textureNoToCodeArray[k].count = int(textureNoToCodeArray[k].count) + 1;
+					}
+				}
+			}
+			if(!_cutWin){
+				_cutWin = new TileCut;
+			}
+			_cutWin.setup(recodeCutTileArray,textureNoToCodeArray);
+			_cutWin.addEventListener("CLOSE_REPORT_WIN",clearTxt);
+			PopUpManager.addPopUp(_cutWin,parentWnd==null?(FlexGlobals.topLevelApplication as DisplayObject):parentWnd);
+		}

@@ -1,0 +1,19 @@
+<structShape code="tjx2016" name="tjx2016" type="0" catalog="1" texLength="100">
+  <point x="0.01" y="78.01"/>
+  <point x="6.53" y="78.01"/>
+  <point x="7.89" y="77.55"/>
+  <point x="9.02" y="76.67"/>
+  <point x="9.82" y="75.48"/>
+  <point x="10.18" y="74.09"/>
+  <point x="10.09" y="72.66"/>
+  <point x="12.01" y="70.80"/>
+  <point x="13.51" y="68.59"/>
+  <point x="14.54" y="66.12"/>
+  <point x="15.05" y="63.50"/>
+  <point x="15.01" y="60.82"/>
+  <point x="15.01" y="46.91"/>
+  <point x="12.88" y="45.90"/>
+  <point x="15.01" y="45.01"/>
+  <point x="15.01" y="0.01"/>
+  <point x="0.01" y="0.01"/>
+</structShape>
