@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
+		 xmlns:s="library://ns.adobe.com/flex/spark"
+		 creationComplete="group1_creationCompleteHandler(event)"
+		 resize="group1_resizeHandler(event)"
+		 xmlns:mx="library://ns.adobe.com/flex/mx">
+	<fx:Script>
+		<![CDATA[
+			import mx.events.FlexEvent;
+			import mx.events.ResizeEvent;
+
+			import spark.events.TextOperationEvent;
+
+			[Bindable]
+			private var ellipseSize:Number=12;
+			[Bindable]
+			private var circleColor:uint=0xFFA500;
+
+			private var _type:String="";
+
+			private function group1_creationCompleteHandler(event:FlexEvent):void
+			{
+				textInput.visible=false;
+			}
+
+			private function group1_mouseOverHandler(event:MouseEvent):void
+			{
+				circleColor=0xFFFF00
+			}
+
+			protected function group1_mouseOutHandler(event:MouseEvent):void
+			{
+				circleColor=0xFFA500;
+			}
+
+			private function group1_resizeHandler(event:ResizeEvent):void
+			{
+				if (type == "left")
+				{
+					textInput.x=(this.width - ellipseSize) * 0.5 - textInput.width;
+					textInput.y=(this.height - textInput.height) * 0.5;
+				}
+				else if (type == "right")
+				{
+					textInput.x=(this.width + ellipseSize) * 0.5;
+					textInput.y=(this.height - textInput.height) * 0.5;
+				}
+				else if (type == "top")
+				{
+					textInput.x=(this.width - textInput.width) * 0.5;
+					textInput.y=(this.height - ellipseSize) * 0.5 - textInput.height;
+				}
+				else if (type == "bottom")
+				{
+					textInput.x=(this.width - textInput.width) * 0.5;
+					textInput.y=(this.height + ellipseSize) * 0.5;
+				}
+			}
+
+			public function get type():String
+			{
+				return _type;
+			}
+
+			public function set type(value:String):void
+			{
+				_type=value;
+			}
+
+			public var inputChangeFun:Function;
+
+			private function textInput_changeHandler(event:TextOperationEvent):void
+			{
+				if (inputChangeFun != null)
+					inputChangeFun(Number(textInput.text), type);
+			}
+
+			private function textInput_focusInHandler(event:FocusEvent):void
+			{
+				// TODO Auto-generated method stub
+				textInput.selectAll();
+			}
+		]]>
+	</fx:Script>
+	<s:Rect width="100%"
+			height="100%">
+		<s:fill>
+			<s:SolidColor color="0xFFFFFF"/>
+		</s:fill>
+	</s:Rect>
+	<s:Ellipse width="{ellipseSize+2}"
+			   height="{ellipseSize+2}"
+			   x="{(this.width-ellipseSize -2)*0.5}"
+			   y="{(this.height-ellipseSize -2)*0.5}">
+		<s:fill>
+			<s:SolidColor color="0"
+						  alpha="1"/>
+		</s:fill>
+	</s:Ellipse>
+	<s:Ellipse width="{ellipseSize}"
+			   height="{ellipseSize}"
+			   id="e_b"
+			   x="{(this.width-ellipseSize)*0.5}"
+			   y="{(this.height-ellipseSize)*0.5}">
+		<s:fill>
+			<s:SolidColor color="{circleColor}"
+						  alpha="1"/>
+		</s:fill>
+	</s:Ellipse>
+	<s:Button width="{ellipseSize}"
+			  height="{ellipseSize}"
+			  id="lineBtn"
+			  mouseOver="group1_mouseOverHandler(event)"
+			  mouseOut="group1_mouseOutHandler(event)"
+			  alpha="0"
+			  x="{(this.width-ellipseSize)*0.5}"
+			  y="{(this.height-ellipseSize)*0.5}"/>
+	<s:TextInput id="textInput"
+				 restrict="0-9"
+				 width="32"
+				 height="20"
+				 focusIn="textInput_focusInHandler(event)"
+				 fontFamily="黑体"
+				 change="textInput_changeHandler(event)"/>
+</s:Group>

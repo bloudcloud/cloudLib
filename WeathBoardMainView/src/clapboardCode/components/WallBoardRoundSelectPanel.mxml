@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
+		 xmlns:s="library://ns.adobe.com/flex/spark"
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 xmlns:buttons="buttons.*"
+		 width="440" height="550" creationComplete="group_creationCompleteHandler(event)">
+	<fx:Script>
+		<![CDATA[
+			import mx.core.FlexGlobals;
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+			
+			import buttons.ButtonColor;
+			
+			private function group_creationCompleteHandler(event:FlexEvent):void
+			{
+				
+			}
+			
+			public function popOpen():void
+			{
+				PopUpManager.addPopUp(this,FlexGlobals.topLevelApplication as DisplayObject,true);
+				PopUpManager.centerPopUp(this);
+			}
+			
+			public function popClose():void
+			{
+				if(this.isPopUp){
+					PopUpManager.removePopUp(this);
+				}
+			}
+			
+			private function getBtn():ButtonColor
+			{
+				var btn:ButtonColor = new ButtonColor();
+				btn.lineWeight = 2;
+				btn.overLineColor = 0xbdbdbd;
+				btn.outLineColor = 0x47515b;
+				btn.overColor = 0x292929;
+				btn.outColor = 0xeeeeee;
+				btn.overFontColor = 0xc79d7c;
+				btn.outFontColor = 0x47515b;
+				btn.width = 90;
+				btn.height = 70;
+				btn.fontSize = 22;
+				btn.topLeftRadius = 10;
+				btn.topRightRadius = 10;
+				btn.bottomLeftRadius = 10;
+				btn.bottomRightRadius = 10;
+				return btn;
+			}
+			public var partnerFun:Function = null;
+			//压缩
+			protected function compress_clickHandler(event:MouseEvent):void
+			{
+				partner_handler(0);
+			}
+			//拉伸
+			protected function stretch_clickHandler(event:MouseEvent):void
+			{
+				partner_handler(1);
+			}
+			//留空
+			protected function space_clickHandler(event:MouseEvent):void
+			{
+				partner_handler(2);
+			}
+			//满铺			
+			protected function full_clickHandler(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				partner_handler(3);
+			}
+			
+			private function partner_handler(value:int):void
+			{
+				if(partnerFun != null )
+				{
+					partnerFun(value);
+				}
+			}
+			
+		]]>
+	</fx:Script>
+	<s:VGroup width="100%" height="100%" gap="0">
+		<s:Group width="100%" height="28">
+			<s:Rect width="100%" height="100%" topLeftRadiusX="10" topLeftRadiusY="10"
+					topRightRadiusX="10" topRightRadiusY="10">
+				<s:fill>
+					<s:SolidColor color="0x292929"/>
+				</s:fill>
+			</s:Rect>
+			<s:VGroup width="100%" height="100%" horizontalAlign="center" verticalAlign="middle">
+				<s:Label width="100%" fontFamily="宋体" fontSize="18" mouseChildren="false"
+						 color="0xc79d7c"
+						 mouseEnabled="false" text="取整方式" textAlign="center"/>
+			</s:VGroup>
+		</s:Group>
+		<s:Group width="100%" height="522">
+			<s:Rect width="100%" height="100%" bottomLeftRadiusX="10" bottomLeftRadiusY="10"
+					bottomRightRadiusX="10" bottomRightRadiusY="10">
+				<s:fill>
+					<s:SolidColor alpha="1" color="0xeeeeee"/>
+				</s:fill>
+				<s:stroke>
+					<s:SolidColorStroke color="0x47515b"/>
+				</s:stroke>
+			</s:Rect>
+			<s:VGroup width="100%" height="100%" gap="38">
+					<s:HGroup width="100%" gap="25" horizontalAlign="center" verticalAlign="middle">
+						<buttons:ButtonColor id="compress" width="90" height="70" label="压缩"
+											 bottomLeftRadius="10" bottomRightRadius="10"
+											 click="compress_clickHandler(event)" fontSize="22"
+											 lineWeight="2" outColor="0xeeeeee"
+											 outFontColor="0x47515b" outLineColor="0x47515b"
+											 overColor="0x535353" overFontColor="0xc79d7c"
+											 overLineColor="0xbdbdbd" topLeftRadius="10"
+											 topRightRadius="10"/>
+						<s:Image id="compressSourece" source="resources/legend_compress.png"/>
+					</s:HGroup>
+				<s:HGroup width="100%" gap="25" horizontalAlign="center" verticalAlign="middle">
+					<buttons:ButtonColor id="stretch" width="90" height="70" label="拉伸"
+										 bottomLeftRadius="10" bottomRightRadius="10"
+										 click="stretch_clickHandler(event)" fontSize="22"
+										 lineWeight="2" outColor="0xeeeeee" outFontColor="0x47515b"
+										 outLineColor="0x47515b" overColor="0x535353"
+										 overFontColor="0xc79d7c" overLineColor="0xbdbdbd"
+										 topLeftRadius="10" topRightRadius="10"/>
+					<s:Image id="stretchSourece" source="resources/legend_stretch.png"/>
+				</s:HGroup>
+				<s:HGroup width="100%" gap="25" horizontalAlign="center" verticalAlign="middle">
+					<buttons:ButtonColor id="space" width="90" height="70" label="留空"
+										 bottomLeftRadius="10" bottomRightRadius="10"
+										 click="space_clickHandler(event)" fontSize="22"
+										 lineWeight="2" outColor="0xeeeeee" outFontColor="0x47515b"
+										 outLineColor="0x47515b" overColor="0x535353"
+										 overFontColor="0xc79d7c" overLineColor="0xbdbdbd"
+										 topLeftRadius="10" topRightRadius="10"/>
+					<s:Image id="spaceSourece" source="resources/legend_space.png"/>
+				</s:HGroup>
+				<s:HGroup width="100%" gap="25" horizontalAlign="center" verticalAlign="middle">
+					<buttons:ButtonColor id="full" width="90" height="70" label="满铺"
+										 bottomLeftRadius="10" bottomRightRadius="10"
+										 click="full_clickHandler(event)" fontSize="22"
+										 lineWeight="2" outColor="0xeeeeee" outFontColor="0x47515b"
+										 outLineColor="0x47515b" overColor="0x535353"
+										 overFontColor="0xc79d7c" overLineColor="0xbdbdbd"
+										 topLeftRadius="10" topRightRadius="10"/>
+					<s:Image id="fullSourece" source="resources/legend_space.png"/>
+				</s:HGroup>
+				
+			</s:VGroup>
+			
+		</s:Group>
+	</s:VGroup>
+</s:Group>

@@ -1,0 +1,3849 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
+		 xmlns:s="library://ns.adobe.com/flex/spark"
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 xmlns:ui="com.lejia.wallTile.ui.*"
+		 initialize="initWallData(event)"
+		 xmlns:local="*"
+		 creationComplete="application1_creationCompleteHandler(event)"
+		 xmlns:cloudExtension="cloudExtension.*">
+	<fx:Script>
+		<![CDATA[
+			import com.lejia.wallTile.uiNew.TilePanel;
+			
+			import flash.utils.setTimeout;
+			
+			import mx.core.FlexGlobals;
+			import mx.core.UIComponent;
+			import mx.events.FlexEvent;
+			import mx.events.ResizeEvent;
+			import mx.managers.PopUpManager;
+			
+			import spark.components.Group;
+			import spark.components.Image;
+			import spark.components.RichEditableText;
+			import spark.components.TextInput;
+			import spark.primitives.Graphic;
+			
+			import L3DLibrary.Brand;
+			import L3DLibrary.L3DLibraryEvent;
+			import L3DLibrary.L3DMaterialInformations;
+			
+			import clapboardCode.components.BasicWallBoard;
+			import clapboardCode.components.WallBoardAssembly;
+			import clapboardCode.components.WallBoardCalculate;
+			import clapboardCode.components.WallBoardLine;
+			import clapboardCode.components.WallBoardRectangle;
+			import clapboardCode.components.WallBoardRoundSelectPanel;
+			import clapboardCode.components.WallBoardUnit;
+			import clapboardCode.models.WallBoardConfig;
+			import clapboardCode.models.WallBoardPartType;
+			import clapboardCode.models.WallBoardPriceData;
+			import clapboardCode.models.WeatherBoardDimension;
+			import clapboardCode.sdObject.BoardComp;
+			import clapboardCode.sdObject.DrawUtil;
+			import clapboardCode.sdObject.PartitionArea;
+			
+			import cloud.core.datas.maps.CHashMap;
+			
+			import components.BoardItem;
+			
+			import extension.cloud.dict.CL3DConstDict;
+			import extension.cloud.singles.C3DUtil;
+			import extension.cloud.singles.CL3DModuleUtil;
+			import extension.wl.globalData.allStaticTypes.UserType;
+			
+			import itemrenderers.ImageLabelVerticalItemRenderer;
+			
+			import model.geom.Trianglulate;
+			
+			import utils.DatasEvent;
+			import utils.ObjectTool;
+			import utils.lx.managers.GlobalManager;
+			
+			import walltile.regionEditorNew.L3DRegionView;
+
+
+			/**2D材质哈希表*/
+			public var wallViewPanel:ClapboardWallViewPanel;
+			public var getWallXmlDataFun:Function;
+			private var points:Array;
+			private var wallH:Number;
+			private var leftSpape:Shape=new Shape();
+			private var topSpape:Shape=new Shape();
+			private var rightSpape:Shape=new Shape();
+			private var bottomSpape:Shape=new Shape();
+			private var lefttext:TextInput=new TextInput();
+			private var toptext:TextInput=new TextInput();
+			private var righttext:TextInput=new TextInput();
+			private var bottomtext:TextInput=new TextInput();
+			private var assembly:WallBoardAssembly=new WallBoardAssembly();
+			public var wallboardcalculate:WallBoardCalculate=new WallBoardCalculate();
+			public var hasSelectedWall:Array=new Array();
+			//护墙板方案数据 
+			public var xmlObjArr:Array;
+			//材质库信息数据哈希图
+			public var materialHashMap:CHashMap;
+			public var pw:PanelWireBar=new PanelWireBar();
+			public var tempObjArr:Array; //临时存放的 数据
+			public var tempInfo:L3DMaterialInformations;
+			public var wallBoardPriceArray:Array;
+			//是否开启画区域功能
+			private var isDrawingArea:Boolean = false;
+			//区域点集
+			private var AreaRegionPoints:Array = [];
+			//临时点
+			private var tempFirstPoint:Point;
+			public var dataObjHashMap:CHashMap;//公用数据hash
+			private var isFromRight:Boolean = false;
+			private var isFromMiddle:Boolean = false;
+			
+			private var temp_size_width:String = "0";
+			private var temp_size_height:String = "0";
+			private var numCount:int = 0;
+			public var currRoomId:String;
+			public var tempHashMap:CHashMap = new CHashMap();
+			protected function initWallData(event:FlexEvent):void
+			{
+				materialHashMap=new CHashMap();
+				dataObjHashMap = new CHashMap();
+				assembly.readyToStageFunc=addToTilePanel;
+				//				TileSystem.useRegion3D = false;	
+				//				board.AddItem = boardAddItem;
+				board.zhenlieFunc=zhenlieFun;
+				board.pasteFun=matrixFun;
+				board.confirmCallback=doClickConfirmBtn;
+				board.rotateFun=rotateFun;
+				board.closeFunc=closeFunc;
+				pw.replaceBtnFun=replaceBtnFunc;
+				pw.panelWireFun=panelWireFunc;
+				board.deleteFunc=deleteFunc;
+				this.systemManager.stage.addEventListener(ResizeEvent.RESIZE, resizeHandler);
+				this.addEventListener(MouseEvent.RIGHT_MOUSE_DOWN, rightMouseDownHandler);
+				//				GlobalManager.Instance.addEventListener(ControlPanel.wallChangEvent,drawWall);
+			}
+
+			private var wallHeight:Number=0;
+
+			private function initClapboardWallViewPanel(wallHeight:Number, holePoints:Array):void
+			{
+				this.wallHeight=wallHeight;
+				wallViewPanel=new ClapboardWallViewPanel();
+				wallViewPanel.initCompleteCallback=initClapboard2D;
+				wallViewPanel.initData(points, wallHeight, null, holePoints);
+				wallViewPanel.width=this.width - board.width;
+				wallViewPanel.height=this.height;
+				this.addElement(wallViewPanel);
+			}
+
+			private function initClapboard2D():void
+			{
+				wallViewPanel.addEventListener(MouseEvent.CLICK, onMouseDown);
+				wallViewPanel.addEventListener(MouseEvent.RIGHT_MOUSE_DOWN, onRightDown);
+				if(AreaRegionPoints == null)
+				{
+					AreaRegionPoints = [];
+				}
+				AreaRegionPoints.length = wallViewPanel.wallPanel.tilePanels.length;
+				setfirstArea();
+				setDataFrom3DTo2D();
+			}
+
+			private function clearItem():void
+			{
+				for (var i:int=0; i < allData.length; i++)
+				{
+					if (allData[i].item.isPopUp)
+					{
+						PopUpManager.removePopUp(allData[i].item);
+					}
+				}
+			}
+
+			public function rotateFun():void
+			{
+				if (!_cur_sel_board_comp)
+					return;
+				if (_cur_sel_board_comp.board.hasOwnProperty("paramBoardRectangle") || (_cur_sel_board_comp.board.parentUnit && _cur_sel_board_comp.board.parentUnit.type == WallBoardPartType.INTO_BOARD))
+				{
+					_cur_sel_board_comp.board.texRotation-=90;
+					if (_cur_sel_board_comp.board.texRotation <= -270)
+						_cur_sel_board_comp.board.texRotation == 0;
+					_cur_sel_board_comp.bitmap=ObjectTool.bitmapdataRotate(_cur_sel_board_comp.bitmap, -90);
+					_cur_sel_board_comp.onDraw();
+					_cur_sel_board_comp.onRefresh();
+					return;
+				}
+			}
+
+			private function doParseRectanglePriceData(board:WallBoardRectangle):void
+			{
+				var priceData:WallBoardPriceData;
+				var materialInfo:L3DMaterialInformations;
+				priceData=board.wallBoardPriceData;
+				if (priceData != null)
+				{
+					materialInfo=materialHashMap.get(priceData.material) as L3DMaterialInformations;
+					priceData.price=materialInfo.price;
+					priceData.size=materialInfo.GetSizeVector();
+					priceData.name=materialInfo.name;
+					priceData.previewBuffer=materialInfo.previewBuffer;
+					wallBoardPriceArray.push(priceData);
+				}
+
+				priceData=board.getWallBoardPriceData(board.lineCode);
+				if (priceData != null)
+				{
+					materialInfo=materialHashMap.get(priceData.material) as L3DMaterialInformations;
+					priceData.price=materialInfo.price;
+					priceData.size=materialInfo.GetSizeVector();
+					priceData.name=materialInfo.name;
+					priceData.previewBuffer=materialInfo.previewBuffer;
+					wallBoardPriceArray.push(priceData);
+				}
+
+				priceData=board.getWallBoardPriceData(board.cornerCode);
+				if (priceData != null)
+				{
+					materialInfo=materialHashMap.get(priceData.material) as L3DMaterialInformations;
+					if (materialInfo == null)
+					{
+						var tmp:BoardComp=new BoardComp(materialHashMap, board, 0);
+					}
+					else
+					{
+						priceData.price=materialInfo.price;
+						priceData.size=materialInfo.GetSizeVector();
+						priceData.name=materialInfo.name;
+						priceData.previewBuffer=materialInfo.previewBuffer;
+						wallBoardPriceArray.push(priceData);
+					}
+				}
+
+				if (board.paramBoard && board.paramBoard.length > 0)
+				{
+					for each (var childBoard:WallBoardRectangle in board.paramBoard)
+					{
+						doParseRectanglePriceData(childBoard);
+					}
+				}
+			}
+
+			public function doClickConfirmBtn():void
+			{
+				var xml:XML;
+				var arr:Array;
+				var obj:Object;
+				var i:int=0;
+				var j:int=0;
+				var testArray:Array=[];
+				if (_unit && wallBoardPriceArray != null)
+				{
+					updateObjArr(_unit);
+					if(!dataObjHashMap.containsKey(xmlObjArr))
+					{
+						dataObjHashMap.put(xmlObjArr,copyObjArr(xmlObjArr));
+					}
+					else
+					{
+						dataObjHashMap.remove(xmlObjArr);
+						dataObjHashMap.put(xmlObjArr,copyObjArr(xmlObjArr));
+
+					}
+					if(currRoomId != "")
+					{
+						if(!tempHashMap.containsKey(currRoomId))
+						{
+							tempHashMap.put(currRoomId,copyObjArr(xmlObjArr));
+						}
+						else
+						{
+							tempHashMap.remove(currRoomId);
+							tempHashMap.put(currRoomId,copyObjArr(xmlObjArr));
+						}
+					}
+					var materialInfo:L3DMaterialInformations;
+					wallBoardPriceArray.length=0;
+					var zero:Vector3D=new Vector3D();
+					for (i=0; i < _unit.length; i++)
+					{
+						if (_unit[i] == null)
+							continue;
+						for (j=0; j < _unit[i].length; j++)
+						{
+							if (_unit[i][j] == null)
+								continue;
+							testArray[i]||=[];
+							var wbu:WallBoardUnit=_unit[i][j] as WallBoardUnit;
+							xml=wallboardcalculate.onGetXMLData(wbu);
+							//							assembly.parseXML(xml,i,wbu.areaUnitIndex);
+							if (wbu)
+							{
+								testArray[i][j]=wallboardcalculate.onGetXMLData(wbu);
+								var wCount:int=wbu.count;
+								for (var xx:int=0; xx < wCount; xx++)
+								{
+									var priceData:WallBoardPriceData;
+									priceData=wbu.wallBoardPriceData;
+									materialInfo=materialHashMap.get(priceData.material) as L3DMaterialInformations;
+									priceData.price||=materialInfo.price;
+									if (priceData.size.equals(zero))
+										priceData.size=materialInfo.GetSizeVector();
+									if (priceData.name == null || priceData.name.length == 0)
+										priceData.name=materialInfo.name;
+									priceData.previewBuffer||=materialInfo.previewBuffer;
+									wallBoardPriceArray.push(priceData);
+									var pblArray:Vector.<WallBoardLine>=wbu.paramBoardLine;
+									var pbrArray:Vector.<WallBoardRectangle>=wbu.paramBoardRectangle;
+									if (pblArray)
+									{
+										for (var kk:int=0; kk < pblArray.length; kk++)
+										{
+											var wbl:WallBoardLine=pblArray[kk];
+											if (wbl)
+											{
+												var priceData2:WallBoardPriceData;
+												priceData2=wbl.wallBoardPriceData;
+												materialInfo=materialHashMap.get(priceData2.material) as L3DMaterialInformations;
+												priceData2.price=materialInfo.price;
+												priceData2.size=materialInfo.GetSizeVector();
+												priceData2.name=materialInfo.name;
+												priceData2.previewBuffer=materialInfo.previewBuffer;
+												wallBoardPriceArray.push(priceData2);
+											}
+										}
+									}
+									if (pbrArray)
+									{
+										for (var kk2:int=0; kk2 < pbrArray.length; kk2++)
+										{
+											doParseRectanglePriceData(pbrArray[kk2]);
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+				for (i=0; i < _unit.length; i++)
+				{
+					if (_unit[i] == null)
+						continue;
+					for (j=0; j < _unit[i].length; j++)
+					{
+						if (_unit[i][j].isNeedToScale == true)
+						{
+							xml=wallboardcalculate.onGetXMLData(_unit[i][j]);
+							arr=hasSelectedWall[i][_unit[i][j].areaUnitIndex];
+							obj=wallboardcalculate.create3DObject(xml, arr, 0, 1, 1);
+							insertArr(obj, wallViewPanel.currentIndex, _cur_Select_Area.index);
+						}
+					}
+				}
+				CL3DModuleUtil.Instance.showSaveSuccessMessage();
+			}
+			
+			private function updateObjArr(units:Vector.<Vector.<Object>>):void
+			{
+				xmlObjArr.length=0;
+				var i:int=0;
+				for (i=0; i < units.length; i++)
+				{
+					var tempunits:Vector.<Object>=units[i];
+					if (!tempunits)
+						continue;
+					for (var j:int=0; j < tempunits.length; j++)
+					{
+						var uunit:WallBoardUnit=tempunits[j] as WallBoardUnit;
+						if (uunit)
+						{
+							xmlObjArr[i]||=[];
+							var xml:XML=wallboardcalculate.onGetXMLData(uunit);
+							var obj:Object=new Object();
+							obj["mode"]=uunit.TilingMode;
+							obj["points"]=uunit.TilingPoint;
+							obj["startTilePointX"]=uunit.origPoint.x;
+							obj["startTilePointY"]=uunit.origPoint.y;
+							obj["xml"]=xml;
+							obj["scaleX"]=uunit.scX;
+							obj["scaleY"]=uunit.scY;
+							obj["isAddArea"] = (AreaRegionPoints[i] == null || AreaRegionPoints[i].length == 0)?CL3DConstDict.REGION_TYPE_NORMAL:CL3DConstDict.REGION_TYPE_FREE;
+							xmlObjArr[i][uunit.areaUnitIndex]=obj;
+						}
+					}
+				}
+			}
+
+			private function getOffGround(position:Number, MainH:Number, h:Number):Number
+			{
+				var vo:Number=position + h;
+				var off:Number=MainH - vo;
+				return off;
+			}
+
+			public function closeFunc():void
+			{
+				//清除数据
+				clearAllUnitDataBy3D();
+				//清除显示
+				clearItem();
+			
+				if (wallViewPanel && wallViewPanel.parent)
+				{
+					wallViewPanel.removeEventListener(MouseEvent.CLICK, onMouseDown);
+					wallViewPanel.removeEventListener(MouseEvent.RIGHT_MOUSE_DOWN, onRightDown);
+					this.removeElement(wallViewPanel);
+				}
+//				lrj 18.5.16
+				if (wallViewPanel)
+				{
+					wallViewPanel.clearAll();
+					wallViewPanel=null;
+				}
+			}
+
+			public function replaceBtnFunc():void
+			{
+				if (tempInfo && _cur_sel_board_comp)
+				{
+					var tempRect:WallBoardRectangle=_cur_sel_board_comp.board as WallBoardRectangle;
+					tempRect.lineCode=tempInfo.code;
+					var temparr:Array=tempInfo.spec.split("X");
+					tempRect.lineWidth=temparr[0];
+					wallboardcalculate.setAllRectBoard(tempRect);
+					for each (var comp:BoardComp in _boards_comp)
+					{
+						if (comp.board)
+							comp.onRefresh();
+					}
+				}
+			}
+
+			public function panelWireFunc():void
+			{
+				if (tempInfo && _cur_sel_board_comp)
+				{
+					//origPoint =(_cur_Select_Area&&_cur_Select_Area.point)?new Point(_cur_Select_Area.point[0].x/scale,_cur_Select_Area.point[0].y/scale): new Point(0, 2800/scale);
+					var WBRect:WallBoardRectangle=new WallBoardRectangle();
+					WBRect.type=WallBoardPartType.INTO_BOARD;
+					//							WBRect.type = WallBoardPartType.PANEL_BOARD;
+					WBRect.lineType=WallBoardPartType.INTOLINE_BOARD;
+					WBRect.lineCode=tempInfo.code;
+					var temparr:Array=tempInfo.spec.split("X");
+					WBRect.lineMaterial="MLX001-1";
+					WBRect.lineWidth=temparr[0];
+					WBRect.L=900;
+					WBRect.W=0;
+					WBRect.H=600;
+					var boardCom:BoardComp=new BoardComp(materialHashMap, WBRect, scale);
+					boardCom.buttonMode=true;
+					this.addBoardEventListener(boardCom);
+					setCurrentPart(boardCom);
+					var WBasic:BasicWallBoard=new BasicWallBoard();
+					WBasic.type=WallBoardPartType.UNIT_BOARD;
+					WBasic.material="78801-1";
+					WBasic.W=0;
+					WBasic.H=WBRect.H - WBRect.lineWidth * 2;
+					WBasic.L=WBRect.L - WBRect.lineWidth * 2;
+					WBasic.parentUnit=WBRect;
+					var boardCom1:BoardComp=new BoardComp(materialHashMap, WBasic, scale);
+					boardCom1.buttonMode=true;
+					WBRect.paramBasicBoard=WBasic;
+					this.addBoardEventListener(boardCom1);
+					setCurrentPart(boardCom1, false);
+				}
+
+			}
+
+			public function deleteFunc():void
+			{
+				deleBoardComFormView(_cur_sel_board_comp);
+			}
+
+			public function refreshLengthHeightOffGround(a:Array, isInput:Boolean=false):void
+			{
+				var dx:Number;
+				var dy:Number;
+				if (_cur_sel_board_comp == null)
+					return;
+
+				dx=a[0] / _cur_sel_board_comp.board.L;
+				_cur_sel_board_comp.board.L=a[0];
+
+				if (_cur_sel_board_comp.board.hasOwnProperty("paramBoardLine"))
+				{
+					_cur_sel_board_comp.board.setOrigPoint(new Point(a[0] / 2, _cur_sel_board_comp.board.origPoint.y));
+				}
+				dy=a[1] / _cur_sel_board_comp.board.H;
+				_cur_sel_board_comp.board.H=a[1];
+				if (_cur_sel_board_comp.board.hasOwnProperty("paramBoardLine"))
+				{
+					_cur_sel_board_comp.board.setOrigPoint(new Point(_cur_sel_board_comp.board.origPoint.x, _cur_sel_board_comp.board.origPoint.y - a[1]));
+					var u:WallBoardUnit=_cur_sel_board_comp.board as WallBoardUnit;
+					wallboardcalculate.setAllBoardPosition(u, dx, dy);
+				}
+				_cur_sel_board_comp.board.setOrigPoint(new Point(_cur_sel_board_comp.board.origPoint.x, a[2]));
+				if (_cur_sel_board_comp.board.hasOwnProperty("paramBasicBoard"))
+				{
+					wallboardcalculate.setAllRectBoard(_cur_sel_board_comp.board as WallBoardRectangle);
+				}
+				for each (var comp:BoardComp in _boards_comp)
+				{
+					if (comp.board)
+						comp.onRefresh();
+
+				}
+
+
+				var obj:Object=onGetCurArea();
+				if (obj == null)
+					return;
+				drawLine(this._cur_sel_board_comp.board as BasicWallBoard, obj as WallBoardUnit);
+				//_cur_sel_board_comp.onRefresh(this.origPoint);
+
+			}
+
+			protected function resizeHandler(event:Event):void
+			{
+				if (wallViewPanel != null)
+				{
+					wallViewPanel.wallPanel.resize();
+				}
+			}
+
+			protected function application1_creationCompleteHandler(event:FlexEvent):void
+			{
+				_unit.length=19;
+				this.systemManager.stage.addEventListener(KeyboardEvent.KEY_DOWN, onKeyDown);
+			}
+
+			public function setup(arg:Array, h:Number=2800, holePoints:Array=null, title:String=""):void
+			{
+				if (arg == null || arg.length == 0)
+					return;
+				points=arg;
+				initClapboardWallViewPanel(h, holePoints);
+			}
+
+			private var allData:Array=[];
+			private var noDingzhiData:Object={};
+			private var copyObj:Object={};
+			private var tempobj:Object=new Object();
+			private var unit:WallBoardUnit=new WallBoardUnit(); //所有的unit
+
+			private var _scale:Number=1.0;
+
+			public function get scale():Number
+			{
+				return _scale;
+			}
+
+			public function set scale(value:Number):void
+			{
+				_scale=value;
+			}
+
+			private var _boards_comp:Vector.<BoardComp>=new Vector.<BoardComp>();
+			private var _cur_Select_Area:Object=new Object;
+			private var _unit:Vector.<Vector.<Object>>=new Vector.<Vector.<Object>>();
+
+			private function addUnit(WBunit:Object):void
+			{
+				if (_unit[currentWallIndex] != null)
+					_unit[currentWallIndex].push(WBunit);
+				else
+				{
+					var tempU:Vector.<Object>=new Vector.<Object>;
+					tempU.push(WBunit);
+					_unit[currentWallIndex]=tempU;
+				}
+			}
+
+			public function get cur_Select_Area():Object
+			{
+				return _cur_Select_Area;
+			}
+
+			private function drawLine(currentBoard:BasicWallBoard, currentUnit:WallBoardUnit):void
+			{
+				if(UserType.USER_BRAND == Brand.YaYi)
+				{
+					return;
+				}
+				var RegionView:L3DRegionView=getRegionView();
+				if (RegionView.contains(leftSpape))
+				{
+					RegionView.removeChild(leftSpape);
+					RegionView.removeChild(topSpape);
+					RegionView.removeChild(rightSpape);
+					RegionView.removeChild(bottomSpape);
+					RegionView.removeChild(lefttext);
+					RegionView.removeChild(righttext);
+					RegionView.removeChild(toptext);
+					RegionView.removeChild(bottomtext);
+				}
+				if (currentBoard.hasOwnProperty("paramBoardLine"))
+					return;
+				scale=(wallViewPanel.wallPanel.tilePanels[wallViewPanel.wallPanel._index][0] as TilePanel).scale
+				var firstP:Vector3D=_cur_Select_Area.point[0];
+				var lastP:Vector3D=_cur_Select_Area.point[3];
+				if (currentBoard == null)
+					return;
+				var leftPoint:Point;
+				var rightPoint:Point;
+				var topPoint:Point;
+				var bottomPoint:Point;
+				var leftPointU:Point;
+				var rightPointU:Point;
+				var topPointU:Point;
+				var bottomPointU:Point;
+				bottomPoint=new Point(currentBoard.origPoint.x, currentUnit.H - currentBoard.origPoint.y - currentBoard.H);
+				topPoint=new Point(bottomPoint.x, bottomPoint.y + currentBoard.H);
+				leftPoint=new Point(bottomPoint.x - currentBoard.L / 2, bottomPoint.y + currentBoard.H / 2);
+				rightPoint=new Point(bottomPoint.x + currentBoard.L / 2, bottomPoint.y + currentBoard.H / 2);
+				bottomPoint.x+=firstP.x;
+				topPoint.x+=firstP.x;
+				leftPoint.x+=firstP.x;
+				rightPoint.x+=firstP.x;
+				bottomPointU=new Point(0, currentUnit.origPoint.y);
+				topPointU=new Point(bottomPointU.x + currentUnit.L, bottomPointU.y + currentUnit.H);
+				leftPointU=new Point(bottomPointU.x, topPointU.y);
+				rightPointU=new Point(topPointU.x, bottomPointU.y);
+				bottomPointU.x+=firstP.x;
+				topPointU.x+=firstP.x;
+				leftPointU.x+=firstP.x;
+				rightPointU.x+=firstP.x;
+				leftSpape.graphics.clear();
+				topSpape.graphics.clear();
+				rightSpape.graphics.clear();
+				bottomSpape.graphics.clear();
+				leftSpape.graphics.lineStyle(1.5, 0xCE0000);
+				topSpape.graphics.lineStyle(1.5, 0xCE0000);
+				rightSpape.graphics.lineStyle(1.5, 0xCE0000);
+				bottomSpape.graphics.lineStyle(1.5, 0xCE0000);
+				RegionView.addChild(leftSpape);
+				RegionView.addChild(topSpape);
+				RegionView.addChild(rightSpape);
+				RegionView.addChild(bottomSpape);
+				RegionView.addChild(lefttext);
+				RegionView.addChild(righttext);
+				RegionView.addChild(toptext);
+				RegionView.addChild(bottomtext);
+				leftSpape.graphics.moveTo(leftPointU.x / scale, leftPoint.y / scale);
+				leftSpape.graphics.lineTo(leftPoint.x / scale, leftPoint.y / scale);
+				topSpape.graphics.moveTo(topPoint.x / scale, topPointU.y / scale);
+				topSpape.graphics.lineTo(topPoint.x / scale, topPoint.y / scale);
+				rightSpape.graphics.moveTo(rightPointU.x / scale, rightPoint.y / scale);
+				rightSpape.graphics.lineTo(rightPoint.x / scale, rightPoint.y / scale);
+				bottomSpape.graphics.moveTo(bottomPoint.x / scale, bottomPointU.y / scale);
+				bottomSpape.graphics.lineTo(bottomPoint.x / scale, bottomPoint.y / scale);
+				lefttext.text=String(Math.abs(int(leftPointU.x - leftPoint.x)));
+				lefttext.x=leftPoint.x / scale - 10;
+				lefttext.y=leftPoint.y / scale;
+				lefttext.width=32;
+				lefttext.height=20;
+				if (Math.abs(int(leftPointU.x - leftPoint.x)) == 0)
+					lefttext.visible=false;
+				else
+					lefttext.visible=true;
+				lefttext.setStyle("fontSize", 10);
+				lefttext.setStyle("fontFamily", "宋体");
+				lefttext.addEventListener(FocusEvent.FOCUS_IN, onfocusleft);
+				lefttext.addEventListener(Event.CHANGE, onchangeLeft);
+				righttext.text=String(Math.abs(int(rightPointU.x - rightPoint.x)));
+				righttext.x=rightPoint.x / scale;
+				righttext.y=rightPoint.y / scale;
+				righttext.width=32;
+				righttext.height=20;
+				if (Math.abs(int(rightPointU.x - rightPoint.x)) == 0)
+					righttext.visible=false;
+				else
+					righttext.visible=true;
+				righttext.setStyle("fontSize", 10);
+				righttext.setStyle("fontFamily", "宋体");
+				righttext.addEventListener(Event.CHANGE, onchangeRight);
+				righttext.addEventListener(FocusEvent.FOCUS_IN, onfocusright);
+
+				toptext.text=String(Math.abs(int(topPointU.y - topPoint.y)));
+				toptext.x=topPoint.x / scale;
+				toptext.y=topPoint.y / scale;
+				toptext.width=32;
+				toptext.height=20;
+				if (Math.abs(int(topPointU.y - topPoint.y)) == 0)
+					toptext.visible=false;
+				else
+					toptext.visible=true;
+				toptext.setStyle("fontSize", 10);
+				toptext.setStyle("fontFamily", "宋体");
+				toptext.addEventListener(Event.CHANGE, onchangeTop);
+				toptext.addEventListener(FocusEvent.FOCUS_IN, onfocustop);
+
+				bottomtext.text=String(Math.abs(int(bottomPointU.y - bottomPoint.y)));
+				bottomtext.x=bottomPoint.x / scale;
+				bottomtext.y=bottomPoint.y / scale - 10;
+				bottomtext.width=32;
+				bottomtext.height=20;
+				bottomtext.setStyle("fontSize", 10);
+				bottomtext.setStyle("fontFamily", "宋体");
+				if (Math.abs(int(bottomPointU.y - bottomPoint.y)) == 0)
+					bottomtext.visible=false;
+				else
+					bottomtext.visible=true;
+				bottomtext.addEventListener(Event.CHANGE, onchangeBottom);
+				bottomtext.addEventListener(FocusEvent.FOCUS_IN, onfocusbottom);
+
+				lidigao=int(topPointU.y - topPoint.y);
+				revlidigao=int(bottomPointU.y - bottomPoint.y);
+				rightwidth=int(rightPointU.x - rightPoint.x);
+				leftwidth=int(leftPointU.x - leftPoint.x);
+			}
+			private var textStr:Number=0;
+			private var type:String="";
+			private var lidigao:Number=0;
+			private var revlidigao:Number=0;
+			private var rightwidth:Number=0;
+
+			private var leftwidth:Number=0;
+
+			private function onchangeLeft(evt:Event):void
+			{
+				textStr=Number(evt.target.text);
+				type="left";
+				changeOK();
+
+			}
+
+			private function onfocusleft(evt:Event):void
+			{
+				lefttext.selectAll();
+			}
+
+			private function onfocusright(evt:Event):void
+			{
+				righttext.selectAll();
+			}
+
+			private function onfocustop(evt:Event):void
+			{
+				toptext.selectAll();
+			}
+
+			private function onfocusbottom(ev:Event):void
+			{
+				bottomtext.selectAll();
+			}
+
+			public function setDataFrom3DTo2D():void
+			{
+				if (xmlObjArr == null || xmlObjArr.length == 0)
+				{
+					AreaRegionPoints.length = 0;
+					tempObjArr = [];
+					return;
+				}
+				var arr:Array;
+				var i:int, j:int;
+				if(dataObjHashMap.containsKey(xmlObjArr))
+				{
+					arr = dataObjHashMap.get(xmlObjArr) as Array;
+				}
+				else
+				{
+					dataObjHashMap.put(xmlObjArr,copyObjArr(xmlObjArr));
+					arr = dataObjHashMap.get(xmlObjArr) as Array;
+				}
+				tempObjArr = copyObjArr(arr);
+				_unit=new Vector.<Vector.<Object>>;
+				_unit.length=19;
+				if (!arr || arr.length == 0)
+					return;
+
+				_unit=wallboardcalculate.deserilizeAndSetUNIT(arr);
+
+				if (_unit.length == 0)
+					return;
+				for (i=0; i < _unit.length; i++)
+				{
+					if (_unit[i] == null)
+						continue;
+					for (j=0; j < _unit[i].length; j++)
+					{
+						var temUnit:WallBoardUnit=_unit[i][j] as WallBoardUnit;
+						deserilizeFrom3DToUnit(temUnit, i, arr[i][temUnit.areaUnitIndex].points, j);
+					}
+				}
+				autoZhenLieFun(_unit, arr);
+			}
+			private function copyObjArr(arr:Array):Array
+			{
+				if (arr == null || arr.length == 0)
+				{
+					return new Array();
+				}
+				var i:int, j:int;
+				var outputArr:Array = [];
+				for (i=0; i < arr.length; i++)
+				{
+					if (arr[i] == null || arr[i].length == 0)
+						continue;
+					outputArr[i]||=[];
+					for (j=0; j < arr[i].length; j++)
+					{
+						if (arr[i][j] == null)
+							continue;
+						//初始化墙体区域的方案数据结构(自己的)
+						outputArr[i][j]=new Object();
+						outputArr[i][j].mode=arr[i][j].mode;
+						outputArr[i][j].isAddArea=arr[i][j].isAddArea;
+						outputArr[i][j].xml=arr[i][j].xml;
+						outputArr[i][j].points||=[];
+						for (var o:int=0; o < arr[i][j].points.length; o++)
+						{
+							outputArr[i][j].points.push(arr[i][j].points[o]);
+							
+						}
+						outputArr[i][j].scaleX=arr[i][j].scaleX;
+						outputArr[i][j].scaleY=arr[i][j].scaleY;
+					}
+				}
+				return outputArr;
+			}
+			public var zhenlieArr:Array;
+			public var is3DZhenlie:int=-1;
+
+			private function autoZhenLieFun(unit:Vector.<Vector.<Object>>, arr:Array):void
+			{
+				is3DZhenlie=0;
+				zhenlieArr=new Array();
+				if (unit.length == 0)
+					return;
+				for (var i:int=0; i < unit.length; i++)
+				{
+					if (unit[i] == null)
+						continue;
+					for (var j:int=0; j < unit[i].length; j++)
+					{
+						var temUnit:WallBoardUnit=_unit[i][j] as WallBoardUnit;
+						if (temUnit.TilingMode == -1)
+							continue;
+						var xml:XML=wallboardcalculate.onGetXMLData(temUnit);
+						assembly.parseXML(xml, i, temUnit.areaUnitIndex, arr[i][temUnit.areaUnitIndex].points, arr[i][temUnit.areaUnitIndex].mode, temUnit.L, temUnit);
+					}
+				}
+			}
+
+			public function clearAllUnitDataBy3D():void
+			{
+				_unit=new Vector.<Vector.<Object>>;
+				_unit.length=19;
+				_cur_Select_Area=new Object;
+				_cur_sel_unit=null;
+				xmlObjArr=null;
+			}
+
+			private function onchangeRight(evt:Event):void
+			{
+				textStr=Number(evt.target.text);
+				type="right";
+				changeOK();
+
+			}
+
+			private function onchangeBottom(evt:Event):void
+			{
+				textStr=Number(evt.target.text);
+				type="bottom";
+				changeOK();
+
+			}
+
+			private function onchangeTop(evt:Event):void
+			{
+				textStr=Number(evt.target.text);
+				type="top";
+				changeOK();
+			}
+
+			private function changeOK():void
+			{
+				var dy:Number=0;
+				var dx:Number=0;
+				//放入相应的位置
+				switch (type)
+				{
+					case "top":
+					{
+						dy=textStr - Math.abs(lidigao);
+
+						break;
+					}
+					case "left":
+					{
+						dx=textStr - Math.abs(leftwidth);
+						break;
+					}
+					case "bottom":
+					{
+						dy=Math.abs(revlidigao) - textStr;
+						break;
+					}
+					case "right":
+					{
+						dx=Math.abs(rightwidth) - textStr;
+						break;
+					}
+				}
+				if (dx != 0)
+				{
+					print(dx);
+					onMoveCurrentBoard(dx, 0);
+				}
+				if (dy != 0)
+				{
+					print(dy);
+					onMoveCurrentBoard(0, dy);
+				}
+			}
+
+			private function addRectBoard(board:WallBoardRectangle):void
+			{
+				if (_cur_sel_unit)
+					_cur_sel_unit.paramBoardRectangle.push(board);
+			}
+
+			private function addLineBoard(board:WallBoardLine):void
+			{
+				if (_cur_sel_unit)
+					_cur_sel_unit.paramBoardLine.push(board);
+			}
+
+			public function boardAddItem(obj:Object):void
+			{
+				if (!_cur_Select_Area.point)
+					setfirstArea();
+				var xml1:XML;
+				var temparr:Array;
+				var index:int=0;
+				var pArea:PartitionArea=new PartitionArea();
+				if (obj == null)
+					return;
+				var infor:L3DMaterialInformations=obj.information;
+				scale=(wallViewPanel.wallPanel.tilePanels[wallViewPanel.wallPanel._index][0] as TilePanel).scale;
+				origPoint=(_cur_Select_Area && _cur_Select_Area.point) ? new Point(_cur_Select_Area.point[0].x / scale, _cur_Select_Area.point[0].y / scale) : new Point(0, 2800 / scale);
+				var boardCom:BoardComp=new BoardComp(materialHashMap);
+				var WBunit:WallBoardUnit=new WallBoardUnit();
+				var WBasic:BasicWallBoard=new BasicWallBoard();
+				var WBRect:WallBoardRectangle=new WallBoardRectangle();
+				var WBline:WallBoardLine=new WallBoardLine();
+				if (_unit[currentWallIndex] && _unit[currentWallIndex].length > 0)
+					this.cur_sel_unit=onGetCurArea();
+				if (WallBoardConfig.getBoardSetFunc(obj.firstName) == WallBoardConfig.ADD_BOARD)
+				{
+					for each (var bdp:BoardComp in this._boards_comp)
+					{
+						bdp.unhighlight();
+					}
+					copyObj.firstName=obj.firstName;
+					copyObj.secondName=obj.secondName;
+					copyObj.information=infor;
+					var RUnit:Object;
+					switch (WallBoardConfig.getWallBoardType(copyObj.secondName))
+					{
+						case WallBoardConfig.MAIN_BOARD:
+						{
+							//添加面板
+							if (null != this._unit && this._unit.length > currentWallIndex && _unit[currentWallIndex] != null && this.cur_sel_unit && this.cur_sel_unit.uiObject && _cur_Select_Area.index == this.cur_sel_unit.areaUnitIndex)
+							{
+								var BC:BoardComp=this.cur_sel_unit.uiObject as BoardComp;
+								BC.board.material=infor.code;
+								BC.loadTexture();
+								BC.onRefresh(this.origPoint);
+								break;
+							}
+							WBunit=new WallBoardUnit();
+							WBunit.type=WallBoardPartType.BOARD_BOARD;
+							var a:Array=getAreaSize();
+							temparr=infor.spec.split("X");
+							WBunit.L=(temparr[0] > a[0]) ? a[0] : temparr[0];
+							WBunit.isNeedToScale=(temparr[0] > a[0]) ? true : false;
+							WBunit.W=0;
+							WBunit.H=temparr[1];
+							WBunit.material=infor.code;
+							WBunit.uvPoints.push(new Vector3D(0,0),new Vector3D(0,temparr[1]),new Vector3D(temparr[0],temparr[1]),new Vector3D(temparr[0],0));
+							WBunit.code = infor.code;
+							WBunit.areaUnitIndex=_cur_Select_Area.index;
+							WBunit.uniqueID=currentWallIndex + "_" + _cur_Select_Area.index + "_" + "0"; //最后面的0用来扩展一个区域增加不同护墙板。
+							boardCom=new BoardComp(materialHashMap, WBunit, scale);
+							this.addBoardComponent(boardCom);
+							var p:Point=new Point();
+							if (this._unit.length == 0)
+							{
+								p=new Point(WBunit.L / 2, 0);
+							}
+							else
+							{
+								p=new Point(WBunit.L / 2, 0);
+									//								p = this._unit[this._unit.length - 1].origPoint;						
+									//								var len:Number = this._unit[this._unit.length - 1].L;	
+									//								p = new Point(p.x+len,p.y);
+							}
+							boardCom.board.setOrigPoint(p);
+							boardCom.onRefresh(this.origPoint);
+							WBunit.TilingPoint=copyArray(_cur_Select_Area.point);
+							addUnit(WBunit);
+							this.addBoardEventListener(boardCom);
+
+							this.cur_sel_unit=WBunit;
+							break;
+						}
+						case WallBoardConfig.LINE_BOARD:
+						{
+							if (_cur_sel_board_comp != null && _cur_sel_board_comp.board.type == WallBoardPartType.INTO_BOARD)
+							{
+								tempInfo=infor;
+								pw.popOpen(1, true);
+								return;
+							}
+							//添加嵌板
+							WBRect=new WallBoardRectangle();
+							WBRect.type=WallBoardPartType.INTO_BOARD;
+							//							WBRect.type = WallBoardPartType.PANEL_BOARD;
+							WBRect.lineType=WallBoardPartType.INTOLINE_BOARD;
+							WBRect.lineNum=4;
+							WBRect.lineCode=infor.code;
+							temparr=infor.spec.split("X");
+							WBRect.lineMaterial="MLX001-1";
+							WBRect.lineWidth=temparr[0];
+							WBRect.material="78801-1";
+							WBRect.L=900;
+							WBRect.W=0;
+							WBRect.H=600;
+							boardCom=new BoardComp(materialHashMap, WBRect, scale);
+							boardCom.buttonMode=true;
+							this.addBoardEventListener(boardCom);
+							setCurrentPart(boardCom);
+							WBasic=new BasicWallBoard();
+							WBasic.type=WallBoardPartType.UNIT_BOARD;
+							WBasic.material="78801-1";
+							WBasic.W=0;
+							WBasic.H=WBRect.H - WBRect.lineWidth * 2;
+							WBasic.L=WBRect.L - WBRect.lineWidth * 2;
+							WBasic.parentUnit=WBRect;
+							var boardCom1:BoardComp=new BoardComp(materialHashMap, WBasic, scale);
+							boardCom1.buttonMode=true;
+							WBRect.paramBasicBoard=WBasic;
+							this.addBoardEventListener(boardCom1);
+							setCurrentPart(boardCom1, false);
+							break;
+						}
+						case WallBoardConfig.BELT_BOARD:
+						{
+							//判断是否是替换还是添加
+							if (_cur_sel_board_comp != null && _cur_sel_board_comp.board.type == WallBoardPartType.BELTLINE_BOARD)
+							{
+								_cur_sel_board_comp.board.material="MLX001-1";
+								WBline.code=infor.code;
+								temparr=infor.spec.split("X");
+								_cur_sel_board_comp.board.H=temparr[0];
+								_cur_sel_board_comp.loadTexture();
+								_cur_sel_board_comp.onRefresh(this.origPoint);
+								removehighlight();
+								break;
+							}
+							//添加腰线
+							WBline=new WallBoardLine();
+							WBline.type=WallBoardPartType.BELTLINE_BOARD;
+							temparr=infor.spec.split("X");
+							WBline.L=1100;
+							WBline.W=0;
+							WBline.H=temparr[0];
+							WBline.code=infor.code;
+							WBline.material="MLX001-1";
+							boardCom=new BoardComp(materialHashMap, WBline, scale);
+							boardCom.buttonMode=true;
+							this.addBoardEventListener(boardCom);
+							boardCom.mouseChildren=true;
+							boardCom.mouseEnabled=true;
+							setCurrentPart(boardCom);
+							break;
+						}
+						case WallBoardConfig.TOP_BOARD:
+						{
+							//判断是否是替换还是添加
+							if (_cur_sel_board_comp != null && _cur_sel_board_comp.board.type == WallBoardPartType.TOPLINE_BOARD)
+							{
+								_cur_sel_board_comp.board.material="MLX001-1";
+								WBline.code=infor.code;
+								temparr=infor.spec.split("X");
+								_cur_sel_board_comp.board.H=temparr[0];
+								_cur_sel_board_comp.loadTexture();
+								_cur_sel_board_comp.onRefresh(this.origPoint);
+								removehighlight();
+								break;
+							}
+							if (_cur_sel_board_comp != null)
+							{
+								//添加顶线
+								RUnit=findRootUnit2(_cur_sel_board_comp.board);
+								if (RUnit != null && RUnit as WallBoardUnit)
+								{
+									var wbunit:WallBoardUnit=RUnit as WallBoardUnit;
+									if (wbunit.paramBoardLine && wbunit.paramBoardLine.length > 0)
+									{
+										for (var w:int=0; w < wbunit.paramBoardLine.length; w++)
+										{
+											var wbLine:WallBoardLine=wbunit.paramBoardLine[w];
+											if (wbLine.type == WallBoardPartType.TOPLINE_BOARD)
+											{
+												return;
+											}
+										}
+									}
+								}
+
+
+								WBline=new WallBoardLine();
+								WBline.type=WallBoardPartType.TOPLINE_BOARD;
+								temparr=infor.spec.split("X");
+								WBline.L=1100;
+								WBline.W=0;
+								WBline.H=temparr[0];
+								WBline.code=infor.code;
+								WBline.material="MLX001-1";
+								boardCom=new BoardComp(materialHashMap, WBline, scale);
+								boardCom.buttonMode=true;
+								this.addBoardEventListener(boardCom);
+								boardCom.mouseChildren=true;
+								boardCom.mouseEnabled=true;
+								setCurrentPart(boardCom);
+							}
+
+							break;
+						}
+						case WallBoardConfig.BOTTOM_BOARD:
+						{
+							//判断是否是替换还是添加
+							if (_cur_sel_board_comp != null && _cur_sel_board_comp.board.type == WallBoardPartType.BOTTOMLINE_BOARD)
+							{
+								_cur_sel_board_comp.board.material="MLX001-1";
+								WBline.code=infor.code;
+								temparr=infor.spec.split("X");
+								_cur_sel_board_comp.board.H=temparr[0];
+								_cur_sel_board_comp.loadTexture();
+								_cur_sel_board_comp.onRefresh(this.origPoint);
+								removehighlight();
+								break;
+							}
+							//添加地脚线
+							if (_cur_sel_board_comp != null)
+							{
+
+								RUnit=findRootUnit2(_cur_sel_board_comp.board);
+								if (RUnit != null && RUnit as WallBoardUnit)
+								{
+									var wbunit2:WallBoardUnit=RUnit as WallBoardUnit;
+									if (wbunit2.paramBoardLine && wbunit2.paramBoardLine.length > 0)
+									{
+										for (var k:int=0; k < wbunit2.paramBoardLine.length; k++)
+										{
+											var wbLine2:WallBoardLine=wbunit2.paramBoardLine[k];
+											if (wbLine2.type == WallBoardPartType.BOTTOMLINE_BOARD)
+											{
+												return;
+											}
+										}
+									}
+								}
+
+								WBline=new WallBoardLine();
+								WBline.type=WallBoardPartType.BOTTOMLINE_BOARD;
+								WBline.L=1100;
+								WBline.W=0;
+								WBline.H=150;
+								WBline.code=infor.code;
+								WBline.material="MLX001-1";
+								boardCom=new BoardComp(materialHashMap, WBline, scale);
+								boardCom.buttonMode=true;
+								this.addBoardEventListener(boardCom);
+								boardCom.mouseChildren=true;
+								boardCom.mouseEnabled=true;
+								setCurrentPart(boardCom);
+							}
+							break;
+						}
+						case WallBoardConfig.CORNER_BOARD:
+						{
+							if (_cur_sel_board_comp != null && _cur_sel_board_comp.board.type == WallBoardPartType.INTO_BOARD)
+							{
+								if (_cur_sel_board_comp.board.paramCornerBoard && _cur_sel_board_comp.board.paramCornerBoard.length > 0)
+								{
+									//替换角花 
+
+									for each (var BC2:BoardComp in _boards_comp)
+									{
+										if (BC2.board.parentUnit == _cur_sel_board_comp.board && BC2.board.type == WallBoardPartType.FLOWER_BOARD)
+										{
+											BC2.board.code=infor.code;
+											BC2.loadTexture();
+											BC2.onRefresh();
+
+										}
+									}
+								}
+								else
+								{
+									//添加角花 
+									/*for( index = 0 ; index < 4 ; index ++ )
+									{
+									WBasic = new BasicWallBoard();
+									WBasic.type = WallBoardPartType.FLOWER_BOARD;
+									WBasic.code = infor.code;
+									WBasic.material = _cur_sel_board_comp.board.lineMaterial;
+									WBasic.W = 0;
+									temparr = infor.spec.split("X");
+									WBasic.H = temparr[2];
+									WBasic.L = temparr[0];
+									WBasic.parentUnit = _cur_sel_board_comp.board;
+									var boardCom2:BoardComp = new BoardComp(_materialHashMap,WBasic,scale);
+									boardCom2.buttonMode = true;
+									_cur_sel_board_comp.board.paramCornerBoard.push( WBasic);
+									this.addBoardEventListener(boardCom2);
+									setCurrentPart(boardCom2,true,index);
+									}*/
+								}
+							}
+							else if (_cur_sel_board_comp != null && _cur_sel_board_comp.board.type == WallBoardPartType.UNIT_BOARD)
+							{
+								if (_cur_sel_board_comp.board.parentUnit.paramCornerBoard && _cur_sel_board_comp.board.parentUnit.paramCornerBoard.length > 0)
+								{
+									//替换角花 
+									for each (var BC3:BoardComp in _boards_comp)
+									{
+										if (BC3.board.parentUnit == _cur_sel_board_comp.board.parentUnit && BC3.board.type == WallBoardPartType.FLOWER_BOARD)
+										{
+											BC3.board.code=infor.code;
+											BC3.loadTexture(null, BC3.board.cornerRotation);
+											BC3.board.parentUnit.cornerCode=infor.code;
+												//												BC3.onRefresh();
+										}
+									}
+									/*(_cur_sel_board_comp.board.parentUnit.paramCornerBoard[index] as BasicWallBoard).code = infor.code;
+									_cur_sel_board_comp.loadTexture();
+									_cur_sel_board_comp.onRefresh(this.origPoint);*/
+
+								}
+								else
+								{
+									for (index=0; index < 4; index++)
+									{
+										WBasic=new BasicWallBoard();
+										WBasic.type=WallBoardPartType.FLOWER_BOARD;
+										WBasic.code=infor.code;
+										WBasic.material=_cur_sel_board_comp.board.parentUnit.lineMaterial;
+										if (index == 2)
+											WBasic.cornerRotation=-90;
+										else if (index == 3)
+											WBasic.cornerRotation=180;
+										else
+											WBasic.cornerRotation=index * 90;
+										WBasic.W=0;
+										temparr=infor.spec.split("X");
+										WBasic.H=temparr[2];
+										WBasic.L=temparr[0];
+										WBasic.parentUnit=_cur_sel_board_comp.board.parentUnit;
+										var rect:WallBoardRectangle=(_cur_sel_board_comp.board.parentUnit) as WallBoardRectangle;
+										rect.cornerCode=infor.code;
+										rect.cornerMaterial=WBasic.material;
+										rect.cornerLength=WBasic.L;
+										rect.cornerWidth=WBasic.H;
+										var boardCom3:BoardComp=new BoardComp(materialHashMap, WBasic, scale);
+										boardCom3.buttonMode=true;
+										_cur_sel_board_comp.board.parentUnit.paramCornerBoard.push(WBasic);
+										this.addBoardEventListener(boardCom3);
+										setCurrentPart(boardCom3, true, index);
+									}
+										//添加角花 
+								}
+							}
+
+							break;
+						}
+
+					}
+					_cur_sel_board_comp=null;
+
+				}
+				else if (WallBoardConfig.getBoardSetFunc(obj.firstName) == WallBoardConfig.CHANGE_BOARD_COLOR)
+				{
+					if (this._cur_sel_board_comp != null)
+					{
+						var BC1:BoardComp=_cur_sel_board_comp as BoardComp;
+						if (BC1.board.type != WallBoardPartType.INTO_BOARD)
+						{
+
+							if (BC1.board.type == WallBoardPartType.FLOWER_BOARD)
+							{
+								if (BC1.board.parentUnit && BC1.board.parentUnit.paramCornerBoard && BC1.board.parentUnit.paramCornerBoard.length > 0)
+								{
+									for each (var BC4:BoardComp in _boards_comp)
+									{
+										if (BC4.board.parentUnit == BC1.board.parentUnit && BC4.board.type == WallBoardPartType.FLOWER_BOARD)
+										{
+											BC4.board.material=infor.code;
+											BC4.loadTexture(null, BC4.board.cornerRotation);
+											BC4.onRefresh();
+										}
+									}
+
+								}
+							}
+
+							else
+							{
+								BC1.board.material=infor.code;
+								BC1.loadTexture();
+								BC1.onRefresh(this.origPoint);
+								if(BC1.board.type == WallBoardPartType.BOARD_BOARD)
+								{
+									BC1.board.uvPoints.length = 0;
+									temparr=infor.spec.split("X");
+									BC1.board.uvPoints.push(new Vector3D(0,0),new Vector3D(0,temparr[1]),new Vector3D(temparr[0],temparr[1]),new Vector3D(temparr[0],0));
+								}
+								if (BC1.board.type == WallBoardPartType.UNIT_BOARD)
+								{
+									BC1.board.parentUnit.material=infor.code;
+								}
+							}
+
+						}
+						else
+						{
+							BC1.board.lineMaterial=infor.code;
+							if (BC1.board.paramCornerBoard && BC1.board.paramCornerBoard.length > 0)
+							{
+								for (index=0; index < BC1.board.paramCornerBoard.length; index++)
+								{
+									(BC1.board.paramCornerBoard[index] as BasicWallBoard).code=infor.code;
+								}
+							}
+							BC1.loadTexture();
+							BC1.onRefresh(this.origPoint);
+						}
+					}
+
+				}
+				else if (WallBoardConfig.getBoardSetFunc(obj.firstName) == WallBoardConfig.SOLUTION_PLAN)
+				{
+					tempobj=new Object();
+					xml1=new XML();
+					infor.addEventListener(L3DMaterialInformations.DownloadLinkedData, downloadLinkedDataHandler);
+					infor.DownloadLinkedDataBuffer();
+				}
+				else
+				{
+					noDingzhiData=obj;
+					addImage(obj);
+				}
+
+			}
+
+			private function isAddBoard(type:String):Boolean
+			{
+				if (_cur_sel_board_comp.parent is L3DRegionView)
+				{
+					if (_cur_sel_board_comp.board && _cur_sel_board_comp.board.paramBoardLine && _cur_sel_board_comp.board.paramBoardLine.length > 0)
+					{
+						for (var c:int=0; c < _cur_sel_board_comp.board.paramBoardLine.length; c++)
+						{
+							var wbl:WallBoardLine=_cur_sel_board_comp.board.paramBoardLine[c];
+							if (wbl && wbl.type == WallBoardPartType.TOPLINE_BOARD)
+							{
+								_cur_sel_board_comp=null;
+								return true;
+							}
+
+						}
+					}
+				}
+				return false;
+			}
+
+			//调节添加的显示顺序
+			private function addBoardComponent(bdp:BoardComp):void
+			{
+				bdp.mouseChildren=true;
+				bdp.mouseEnabled=true;
+				designfillWallBoard(bdp);
+				_boards_comp.push(bdp);
+				//				this.addElement(bdp);
+			}
+
+			//调节添加的显示顺序
+			private function addBoardComponentFrom3D(bdp:BoardComp, index:int):void
+			{
+				bdp.mouseChildren=true;
+				bdp.mouseEnabled=true;
+				fillWallBoardFrom3D(bdp, index);
+				_boards_comp.push(bdp);
+				//				this.addElement(bdp);
+			}
+
+			//添加板件事件监听
+			private function addBoardEventListener(ucomp:BoardComp):void
+			{
+				ucomp.addEventListener(MouseEvent.MOUSE_DOWN, onBoardMouseDown);
+			}
+
+			/*移除板件事件监听*/
+			private function removeBoardEventListener(ucomp:BoardComp):void
+			{
+				ucomp.removeEventListener(MouseEvent.MOUSE_DOWN, onBoardMouseDown);
+			}
+			//单击某块板时的处理事件
+			private var _cur_sel_board_comp:BoardComp=null;
+			private var _cur_sel_unit:Object=null;
+			private var _board_mouse_old_x:Number=0;
+			private var _board_mouse_old_y:Number=0;
+			private var _bMoveBoard:Boolean=false;
+			private var _isNotAddStageKeyEventListener:Boolean=false;
+			private var first:Boolean=true;
+
+			//鼠标按下
+			private function onBoardMouseDown(evt:MouseEvent):void
+			{
+				setCurSelectArea(this.mouseX, this.mouseY);
+				for each (var bdp:BoardComp in this._boards_comp)
+				{
+					bdp.unhighlight();
+				}
+				if (_cur_sel_board_comp)
+					_cur_sel_board_comp.unhighlight();
+				var ucomp:BoardComp=evt.currentTarget as BoardComp;
+				if (!ucomp)
+					return;
+				/*if( ucomp.board.type == "角花" )
+				return;*/
+				addListener();
+				ucomp.highlight();
+				_cur_sel_board_comp=ucomp;
+				_isNotAddStageKeyEventListener=true;
+				this._board_mouse_old_x=this.mouseX;
+				this._board_mouse_old_y=this.mouseY;
+				var arr:Array=[];
+				getOrigPoint();
+				arr.push(_cur_sel_board_comp.board.L, _cur_sel_board_comp.board.H, _cur_sel_board_comp.board.offGround);
+				GlobalManager.Instance.dispatchEvent(new DatasEvent("SETWALLLENGTHDATA", arr))
+				var arr1:Array=[];
+				var y:Number=Math.abs(currentWallPointObject.pointA.y - currentWallPointObject.pointB.y);
+				arr1.push(y, wallH);
+				GlobalManager.Instance.dispatchEvent(new DatasEvent("GETWALLLENGTHDATA", arr1))
+				stage.addEventListener(MouseEvent.MOUSE_UP, onBoardMouseUp);
+				stage.addEventListener(MouseEvent.MOUSE_MOVE, onBoardMouseMove);
+				this.mouseEnabled=false;
+				var obj:Object=onGetCurArea();
+				if (obj == null)
+					return;
+				drawLine(this._cur_sel_board_comp.board as BasicWallBoard, obj as WallBoardUnit);
+			}
+
+			private function getOrigPoint():void
+			{
+				if (_cur_Select_Area && _cur_Select_Area.point)
+				{
+					if (_cur_Select_Area.areaHeight > 2800)
+					{
+						this.origPoint=new Point(_cur_Select_Area.point[0].x / scale, (_cur_Select_Area.point[0].y + (_cur_Select_Area.areaHeight - 2800)) / scale);
+					}
+					else
+					{
+						this.origPoint=new Point(_cur_Select_Area.point[0].x / scale, _cur_Select_Area.point[0].y / scale);
+					}
+				}
+				else
+				{
+					this.origPoint=new Point(0, 2800 / scale);
+				}
+				this.origPoint=(_cur_Select_Area && _cur_Select_Area.point) ? new Point(_cur_Select_Area.point[0].x / scale, _cur_Select_Area.point[0].y / scale) : new Point(0, 2800 / scale);
+
+			}
+
+			//鼠标移动板件
+			protected function onBoardMouseMove(event:MouseEvent):void
+			{
+				this._bMoveBoard=true;
+				if (!this._bMoveBoard)
+					return;
+				var ucomp:BoardComp=_cur_sel_board_comp;
+				if (ucomp == null)
+					return;
+				if (ucomp.board.hasOwnProperty("paramBoardLine"))
+				{
+					onAllBoardMouseMove();
+					return;
+				}
+				var p:Point=new Point(ucomp.x, ucomp.y);
+				var dx:Number=this.mouseX - this._board_mouse_old_x;
+				var dy:Number=this.mouseY - this._board_mouse_old_y;
+				this._board_mouse_old_x=this.mouseX;
+				this._board_mouse_old_y=this.mouseY;
+				if (ucomp.dat != null)
+					ucomp.dat.visible=false;
+				var isTopOver:Boolean=false;
+				var isBottomOver:Boolean=false;
+				var isLeftOver:Boolean=false;
+				var isRightOver:Boolean=false;
+
+				var v2d:Point=null;
+				v2d=new Point(0, dy);
+				var realDis:Point=this.vplane2wcsv(v2d);
+				ucomp.board.setTranslation(realDis);
+				ucomp.onRefresh(this.origPoint);
+				for each (var BC:BoardComp in _boards_comp)
+				{
+					if (BC == ucomp)
+						continue;
+					if (null != BC.board.parentUnit && (BC.board.parentUnit == ucomp.board || findUnitForUnit(BC.board, ucomp.board)))
+					{
+						BC.board.setTranslation(realDis);
+						BC.onRefresh(null);
+					}
+				}
+				var obj:Object=onGetCurArea();
+				if (obj == null)
+					return;
+				drawLine(this._cur_sel_board_comp.board as BasicWallBoard, obj as WallBoardUnit);
+			}
+
+			//移动全部板件
+			protected function onAllBoardMouseMove():void
+			{
+				return;
+				this._bMoveBoard=true;
+				if (!this._bMoveBoard)
+					return;
+				var ucomp:BoardComp=_cur_sel_board_comp;
+				var p:Point=new Point(ucomp.x, ucomp.y);
+				if (ucomp == null)
+					return;
+				var dx:Number=this.mouseX - this._board_mouse_old_x;
+				var dy:Number=this.mouseY - this._board_mouse_old_y;
+				this._board_mouse_old_x=this.mouseX;
+				this._board_mouse_old_y=this.mouseY;
+				var isTopOver:Boolean=false;
+				var isBottomOver:Boolean=false;
+				var isLeftOver:Boolean=false;
+				var isRightOver:Boolean=false;
+				var v2d:Point=null;
+				v2d=new Point(0, dy);
+				var comMove:Point=this.origPoint.clone();
+				var realDis:Point=this.vplane2wcsv(v2d);
+				ucomp.board.setTranslation(realDis);
+				var p1:Point=new Point;
+				this.origPoint.x=this.origPoint.x + v2d.x;
+				this.origPoint.y=comMove.y + dy / 2;
+				ucomp.onRefresh(this.origPoint);
+				for each (var comp:BoardComp in _boards_comp)
+				{
+					if (comp == ucomp)
+						continue;
+					comp.onRefresh(this.origPoint);
+				}
+			}
+
+			//鼠标抬起
+			protected function onBoardMouseUp(event:MouseEvent):void
+			{
+				var ucomp:BoardComp=_cur_sel_board_comp;
+				if (ucomp == null)
+					return;
+				if (this._bMoveBoard)
+				{
+					//	removehighlight();
+					_cur_sel_board_comp.unhighlight();
+						//_cur_sel_board_comp = null;		
+				}
+				stage.removeEventListener(MouseEvent.MOUSE_MOVE, onBoardMouseMove);
+				stage.removeEventListener(MouseEvent.MOUSE_UP, onBoardMouseUp);
+				this.mouseEnabled=true;
+				this._bMoveBoard=false;
+			}
+
+			//坐标原点
+			private var _origPoint:Point=new Point(0, 0);
+
+			public function get origPoint():Point
+			{
+				return _origPoint;
+			}
+
+			public function set origPoint(value:Point):void
+			{
+				_origPoint=value;
+			}
+
+			public function vplane2wcsv(v2d:Point):Point
+			{
+				return new Point(v2d.x * _scale, -v2d.y * _scale);
+			}
+
+			/*
+			将舞台坐改变为自定义坐标
+			*/
+			private function xplane2wcsx(x:Number):Number
+			{
+				return (x - origPoint.x) * _scale;
+			}
+
+			private function yplane2wcsy(y:Number):Number
+			{
+				return (origPoint.y - y) * _scale;
+			}
+
+			public function get cur_sel_unit():Object
+			{
+				return _cur_sel_unit;
+			}
+
+			public function set cur_sel_unit(value:Object):void
+			{
+				_cur_sel_unit=value;
+			}
+			private var count:int=0;
+
+			private function onLoadBitmapDataHandler(evt:Event):void
+			{
+				evt.target.removeEventListener(Event.COMPLETE, onLoadBitmapDataHandler);
+				var obj:Bitmap=(evt.currentTarget as LoaderInfo).content as Bitmap;
+				var item:BoardItem=new BoardItem();
+				item.addEventListener(MouseEvent.MOUSE_DOWN, itemMouseDown);
+				item.addEventListener(MouseEvent.MOUSE_MOVE, itemMouseMove);
+				item.addEventListener(MouseEvent.MOUSE_UP, itemMouseUp);
+				PopUpManager.addPopUp(item, FlexGlobals.topLevelApplication as DisplayObject);
+				item.img.source=obj;
+				var tilePanel:TilePanel=wallViewPanel.wallPanel.tilePanels[wallViewPanel.wallPanel._index][0] as TilePanel;
+				item.img.scaleX/=tilePanel.scale;
+				item.img.scaleY/=tilePanel.scale;
+				item.x=(this.width - item.width) * 0.5;
+				item.y=(this.height - item.height) * 0.5;
+
+				copyObj.item=item;
+				allData.push(copyObj);
+			}
+
+			/**
+			 * 下载配置文件
+			 */
+			private function downloadLinkedDataHandler(evt:L3DLibraryEvent):void
+			{
+				evt.target.removeEventListener(L3DMaterialInformations.DownloadLinkedData, downloadLinkedDataHandler);
+				var xml:XML;
+				var obj:Object;
+				var tilePanel:TilePanel=getTilePanel();
+				tilePanel.graphics.clear();
+				var i:int;
+				var regionview:L3DRegionView=getRegionView();
+				for (i=0; i < regionview.numChildren; i++)
+				{
+					if (regionview.getChildAt(i).name == "W" + wallViewPanel.currentIndex + "A" + _cur_Select_Area.index)
+					{
+						regionview.removeChildAt(i);
+						i--;
+					}
+				}
+				xml=XML(evt.data);
+				var temUnit:WallBoardUnit=wallboardcalculate.deserilizeXMLData(xml, _cur_Select_Area.index);
+				var a:Array=getAreaSize();
+				var dx:Number=1;
+				var dy:Number=1;
+				dx=a[0] / temUnit.L;
+				dy=a[1] / temUnit.H;
+				if (temUnit.L > a[0])
+					temUnit.L=a[0];
+				if (temUnit.H > a[1])
+					temUnit.H=a[1];
+				if (dx < .5)
+					temUnit.paramBoardRectangle=null;
+				else if (dy < .5)
+					temUnit=wallboardcalculate.DelUnitByPosition(a[2], temUnit);
+
+				wallboardcalculate.setAllBoardPosition(temUnit, dx > 1 ? 1 : dx, dy > 1 ? 1 : dy);
+				deserilizeFromXML2Unit(temUnit);
+				//区域放不下方案，压缩后自动阵列
+				if (dx < 1)
+				{
+					obj=wallboardcalculate.findUnitFromAllUnit(_cur_Select_Area.index, _unit[wallViewPanel.currentIndex]);
+					if (obj != null)
+						var u:WallBoardUnit=obj.wbu;
+					var ucomp:BoardComp=wallboardcalculate.findBoardCompByUnit(_boards_comp, u);
+					if (ucomp != null)
+					{
+						ucomp.highlight();
+						_cur_sel_board_comp=ucomp;
+					}
+					selectTilingFunc(1);
+						//					xml = wallboardcalculate.onGetXMLData(temUnit);
+						//					sendXMLDataTo3D(xml,1,dx,dy);
+						//					obj = wallboardcalculate.create3DObject(xml,_cur_Select_Area.point,1,dx,dy);
+						//					insertArr(obj,wallViewPanel.currentIndex,_cur_Select_Area.index);	
+				}
+				else if (dx >= 1 && dy < 0.5)
+				{
+					if (_cur_sel_board_comp)
+						_cur_sel_board_comp.unhighlight();
+					addListener();
+					obj=wallboardcalculate.findUnitFromAllUnit(_cur_Select_Area.index, _unit[wallViewPanel.currentIndex]);
+					if (obj != null)
+						var u:WallBoardUnit=obj.wbu;
+					var ucomp:BoardComp=wallboardcalculate.findBoardCompByUnit(_boards_comp, u);
+					if (ucomp != null)
+					{
+						ucomp.highlight();
+						_cur_sel_board_comp=ucomp;
+					}
+					selectTilingFunc(1);
+				}
+			}
+
+			/**
+			 * 添加护墙板
+			 */
+			private function addToTilePanel(wallboardunit:WallBoardUnit):void
+			{
+//				var tilePanel:TilePanel
+				if (wallboardunit.tempWall >= 0 && wallboardunit.tempArea >= 0)
+				{
+					fillAllWallBoard(wallboardunit, true);
+//					tilePanel = wallViewPanel.wallPanel.tilePanels[wallboardunit.tempWall][0] as TilePanel;
+				}
+				else
+				{
+					fillWallBoard(wallboardunit, true);
+//					tilePanel = getTilePanel();
+				}
+			}
+
+			private function fillAllWallBoard(wallboardunit:WallBoardUnit, isRepeat:Boolean=false):void
+			{
+				if (wallboardunit.width <= 0)
+					return;
+				var tilePanel:TilePanel=wallViewPanel.wallPanel.tilePanels[wallboardunit.tempWall][0] as TilePanel;
+				var sx:Number=wallboardunit.scaleX / tilePanel.scale;
+				var sy:Number=wallboardunit.scaleY / tilePanel.scale;
+				var transY:Number=0;
+				if (_cur_Select_Area.areaHeight > 2800)
+					transY=(_cur_Select_Area.areaHeight - 2800) / tilePanel.scale;
+
+				var bmd:BitmapData=wallboardunit.getBitmapData();
+				tilePanel.graphics.clear();
+				//test
+				var arr:Array=new Array();
+				arr.length=4;
+				var matrix:Matrix=new Matrix();
+				matrix.scale(sx, sy);
+				var P:Point=new Point();
+				var len:Number=new Number;
+				var hei:Number=new Number;
+				fillFirstPoint=new Point();
+				fillFirstPoint.x=wallboardunit.tempPoint.x;
+				fillFirstPoint.y=wallboardunit.tempPoint.y;
+				fillLength=wallboardunit.tempLength;
+				if (isRepeat)
+				{
+					var sp:Sprite=new Sprite();
+					sp.name="W" + wallboardunit.tempWall + "A" + wallboardunit.tempArea;
+					var wid:Number=fillLength / tilePanel.scale;
+					hei=wallboardunit.height / tilePanel.scale;
+					sp.x=fillFirstPoint.x / tilePanel.scale;
+					sp.y=fillFirstPoint.y / tilePanel.scale + transY;
+					if(wallboardunit.height < wallboardunit.tempHeight)
+					{
+						sp.y = sp.y + (wallboardunit.tempHeight - wallboardunit.height - wallboardunit.offGround)/tilePanel.scale;
+					}
+					sp.graphics.beginBitmapFill(bmd, matrix, true, true);
+					//注意填充宽度用fillLength
+					sp.graphics.drawRect(0, 0, wid, hei);
+					sp.graphics.endFill();
+					tilePanel.addChild(sp);
+						//注意填充宽度用fillLength
+				}
+				else
+				{
+					tilePanel.graphics.beginBitmapFill(bmd, matrix, false, true);
+					tilePanel.graphics.drawRect(0, 0, bmd.width * sx, bmd.height * sy);
+				}
+				showTilingFlowerCornerFrom3D(wallboardunit, tilePanel.scale);
+			}
+
+			private function showTilingFlowerCornerFrom3D(wallboardunit:WallBoardUnit, unitScale:Number):void
+			{
+				var graphic:Graphic;
+				var uic:UIComponent=new UIComponent();
+				var cornerMateralInfo:L3DMaterialInformations;
+				var cornerCodeInfo:L3DMaterialInformations;
+				var isOutRect:Boolean=false;
+				var origPointX:Number;
+				var origPointY:Number;
+				var unitLen:Number;
+				var unitHei:Number;
+				var cornerLen:Number;
+				var cornerHei:Number;
+
+				var oriUnit:WallBoardUnit=wallboardunit.originObj as WallBoardUnit;
+				var i:int;
+				if (oriUnit == null)
+					return;
+				var regionview:L3DRegionView=wallViewPanel.wallPanel.tilePanels[wallboardunit.tempWall][1] as L3DRegionView;
+				for (i=0; i < regionview.numChildren; i++)
+				{
+					if (regionview.getChildAt(i).name == "W" + wallViewPanel.currentIndex + "A" + _cur_Select_Area.index)
+					{
+						regionview.removeChildAt(i);
+						i--;
+					}
+				}
+				for (i=0; i < oriUnit.paramBoardRectangle.length; i++)
+				{
+					var rectangle:WallBoardRectangle=oriUnit.paramBoardRectangle[i];
+					if (rectangle.cornerMaterial != "")
+					{
+						cornerMateralInfo=materialHashMap.get(rectangle.cornerMaterial) as L3DMaterialInformations;
+						cornerCodeInfo=materialHashMap.get(rectangle.cornerCode) as L3DMaterialInformations;
+						isOutRect=true;
+					}
+					else
+					{
+						if (rectangle.paramBoard.length == 0)
+							continue;
+						if (rectangle.paramBoard[0].cornerMaterial == null)
+							continue;
+						cornerMateralInfo=materialHashMap.get(rectangle.paramBoard[0].cornerMaterial) as L3DMaterialInformations;
+						cornerCodeInfo=materialHashMap.get(rectangle.paramBoard[0].cornerCode) as L3DMaterialInformations;
+						isOutRect=false;
+					}
+					var fillFirstPoint:Point=new Point();
+					fillFirstPoint.x=wallboardunit.tempPoint.x;
+					fillFirstPoint.y=wallboardunit.tempPoint.y;
+					fillLength=wallboardunit.tempLength;
+					oriUnit.count=int(fillLength / oriUnit.L);
+					if (cornerMateralInfo != null)
+					{
+						for (var j:int=0; j < oriUnit.count; j++)
+						{
+							uic.name="W" + wallboardunit.tempWall + "A" + wallboardunit.tempArea;
+							uic.width=regionview.width;
+							uic.height=regionview.height;
+							regionview.addChildAt(uic, 0);
+							if (isOutRect)
+							{
+								origPointX=(oriUnit.L - rectangle.L) / 2 + j * oriUnit.L + rectangle.lineWidth + fillFirstPoint.x;
+								origPointY=wallHeight - rectangle.origPoint.y - rectangle.H + rectangle.lineWidth + fillFirstPoint.y;
+							}
+							else
+							{
+								origPointX=(oriUnit.L - rectangle.paramBoard[0].L + rectangle.paramBoard[0].lineWidth * 2) / 2 + j * oriUnit.L + fillFirstPoint.x;
+								origPointY=wallHeight - rectangle.paramBoard[0].origPoint.y - rectangle.paramBoard[0].H + fillFirstPoint.y + rectangle.paramBoard[0].lineWidth;
+							}
+							var origPoint:Point=new Point(origPointX, origPointY);
+							unitLen=(isOutRect) ? rectangle.L - rectangle.lineWidth : rectangle.paramBoard[0].L - rectangle.paramBoard[0].lineWidth * 2 + rectangle.paramBoard[0].cornerWidth;
+							unitHei=(isOutRect) ? rectangle.H - rectangle.lineWidth : rectangle.paramBoard[0].H - rectangle.paramBoard[0].lineWidth * 2 + rectangle.paramBoard[0].cornerLength;
+							cornerLen=(isOutRect) ? rectangle.cornerLength : rectangle.paramBoard[0].cornerLength;
+							cornerHei=(isOutRect) ? rectangle.cornerWidth : rectangle.paramBoard[0].cornerWidth;
+							DrawUtil.Instance.drawSVGCornerUnit(uic, cornerMateralInfo.Preview, cornerCodeInfo.userData8.toString(), unitLen, unitHei, cornerLen, cornerLen, unitScale, origPoint);
+//							DrawUtil.Instance.drawSVGCornerUnit(uic,cornerMateralInfo.Preview,cornerCodeInfo.userData8.toString(),(isOutRect)?rectangle.L-rectangle.lineWidth:rectangle.L,(isOutRect)?rectangle.H-rectangle.lineWidth:rectangle.H,(isOutRect)?rectangle.cornerLength:rectangle.paramBoard[0].cornerLength,(isOutRect)?rectangle.cornerWidth:rectangle.paramBoard[0].cornerWidth,unitScale,origPoint);
+						}
+					}
+				}
+			}
+
+			/**
+			 * 填充护墙板
+			 * @param isRepeat 是否完全填充
+			 */
+			private function fillWallBoard(wallboardunit:WallBoardUnit, isRepeat:Boolean=false):void
+			{
+				if (wallboardunit.width <= 0)
+					return;
+				var tilePanel:TilePanel=getTilePanel();
+				var transY:Number=0;
+				if (_cur_Select_Area.areaHeight > 2800)
+					transY=(_cur_Select_Area.areaHeight - 2800) / tilePanel.scale;
+				var sx:Number=wallboardunit.scaleX / tilePanel.scale;
+				var sy:Number=wallboardunit.scaleY / tilePanel.scale;
+				var bmd:BitmapData=wallboardunit.getBitmapData();
+
+				tilePanel.graphics.clear();
+				//				var arr:Array =getDoorWindowArrFromWall();
+				//test
+				var arr:Array=new Array();
+				arr.length=4;
+				var matrix:Matrix=new Matrix();
+				matrix.scale(sx, sy);
+				if (isRepeat)
+				{
+					for (var i:int=0; i < tilePanel.numChildren; i++)
+					{
+						var sp:Sprite=new Sprite();
+						if (tilePanel.getChildAt(i).name == "W" + wallViewPanel.currentIndex + "A" + _cur_Select_Area.index)
+						{
+							sp=(tilePanel.getChildAt(i) as Sprite);
+							sp.graphics.clear();
+							var wid1:Number=fillLength / tilePanel.scale;
+							var hei1:Number=wallboardunit.height / tilePanel.scale;
+							sp.x=fillFirstPoint.x / tilePanel.scale;
+							sp.y=fillFirstPoint.y / tilePanel.scale + transY;
+							if(wallboardunit.height < _cur_Select_Area.areaHeight)
+							{
+								sp.y = sp.y + (_cur_Select_Area.areaHeight - wallboardunit.height - wallboardunit.offGround)/tilePanel.scale;
+							}
+							sp.graphics.beginBitmapFill(bmd, matrix, true, false);
+							//注意填充宽度用fillLength
+							sp.graphics.drawRect(0, 0, wid1, hei1);
+							sp.graphics.endFill();
+							showTilingFlowerCorner();
+							return;
+						}
+					}
+					sp=new Sprite();
+					sp.name="W" + wallViewPanel.currentIndex + "A" + _cur_Select_Area.index;
+					var wid:Number=fillLength / tilePanel.scale;
+					var hei:Number=wallboardunit.height / tilePanel.scale;
+					sp.x=fillFirstPoint.x / tilePanel.scale;
+					sp.y=fillFirstPoint.y / tilePanel.scale + transY;
+					if(wallboardunit.height < _cur_Select_Area.areaHeight)
+					{
+						sp.y = sp.y + (_cur_Select_Area.areaHeight - wallboardunit.height - wallboardunit.offGround)/tilePanel.scale;
+					}
+					sp.graphics.beginBitmapFill(bmd, matrix, true, false);
+					//注意填充宽度用fillLength
+					if(isFromRight == false && isFromMiddle == false)
+					{
+						sp.graphics.drawRect(0, 0, wid, hei);
+						sp.graphics.endFill();
+					}
+					else if(isFromRight == true)
+					{
+						isFromRight = false;
+						isFromMiddle = false;
+						var indices:Vector.<int> = new Vector.<int>();
+						var vertexes:Vector.<Number> = new Vector.<Number>();
+						var points:Array = [];
+						points.push(new Vector3D(0,0),new Vector3D(0,hei),new Vector3D(wid,hei),new Vector3D(wid,0));
+						Trianglulate.getTristrip(points, vertexes, indices);
+						var uvs:Vector.<Number>=new Vector.<Number>();
+						var uDir:Vector3D = new Vector3D(-1,0,0);
+						var vDir:Vector3D = new Vector3D(0,1,0);
+						var widddd:Number = wallboardunit.width/tilePanel.scale;
+						C3DUtil.Instance.getUV(points[0],points[3],uDir,vDir,widddd,hei,uvs);
+						C3DUtil.Instance.getUV(points[1],points[3],uDir,vDir,widddd,hei,uvs);
+						C3DUtil.Instance.getUV(points[2],points[3],uDir,vDir,widddd,hei,uvs);
+						C3DUtil.Instance.getUV(points[3],points[3],uDir,vDir,widddd,hei,uvs);
+						sp.graphics.drawTriangles(vertexes, indices, uvs);
+						sp.graphics.endFill();
+					}
+					else if(isFromMiddle == true)
+					{
+						isFromRight = false;
+						isFromMiddle = false;
+						var indices:Vector.<int> = new Vector.<int>();
+						var vertexes:Vector.<Number> = new Vector.<Number>();
+						var points:Array = [];
+						points.push(new Vector3D(0,0),new Vector3D(0,hei),new Vector3D(wid,hei),new Vector3D(wid,0));
+						Trianglulate.getTristrip(points, vertexes, indices);
+						var uvs:Vector.<Number>=new Vector.<Number>();
+						var uDir:Vector3D = new Vector3D(-1,0,0);
+						var vDir:Vector3D = new Vector3D(0,1,0);
+						var widddd:Number = wallboardunit.width/tilePanel.scale;
+						var startPoint:Vector3D = new Vector3D(wid/2 - widddd/2,0)
+						C3DUtil.Instance.getUV(points[0],startPoint,uDir,vDir,widddd,hei,uvs);
+						C3DUtil.Instance.getUV(points[1],startPoint,uDir,vDir,widddd,hei,uvs);
+						C3DUtil.Instance.getUV(points[2],startPoint,uDir,vDir,widddd,hei,uvs);
+						C3DUtil.Instance.getUV(points[3],startPoint,uDir,vDir,widddd,hei,uvs);
+						sp.graphics.drawTriangles(vertexes, indices, uvs);
+						sp.graphics.endFill();
+					}
+				}
+				else
+				{
+					tilePanel.graphics.beginBitmapFill(bmd, matrix, false, true);
+					tilePanel.graphics.drawRect(0, 0, bmd.width * sx, bmd.height * sy);
+				}
+
+				tilePanel.addChild(sp);
+				showTilingFlowerCorner();
+				//tilePanel.graphics.endFill();
+			}
+
+			private function showTilingFlowerCorner():void
+			{
+				var graphic:Graphic;
+				var uic:UIComponent=new UIComponent();
+				var cornerMateralInfo:L3DMaterialInformations;
+				var cornerCodeInfo:L3DMaterialInformations;
+				var isOutRect:Boolean=false;
+				var origPointX:Number;
+				var origPointY:Number;
+				var regionview:L3DRegionView=getRegionView();
+				var unitLen:Number;
+				var unitHei:Number;
+				var cornerLen:Number;
+				var cornerHei:Number;
+				for (var i:int=0; i < regionview.numChildren; i++)
+				{
+					if (regionview.getChildAt(i).name == "W" + wallViewPanel.currentIndex + "A" + _cur_Select_Area.index)
+					{
+						regionview.removeChildAt(i);
+						i--;
+					}
+				}
+				for (i=0; i < _cur_sel_unit.paramBoardRectangle.length; i++)
+				{
+					var rectangle:WallBoardRectangle=_cur_sel_unit.paramBoardRectangle[i];
+					if (rectangle.cornerMaterial != "")
+					{
+						cornerMateralInfo=materialHashMap.get(rectangle.cornerMaterial) as L3DMaterialInformations;
+						cornerCodeInfo=materialHashMap.get(rectangle.cornerCode) as L3DMaterialInformations;
+						isOutRect=true;
+					}
+					else
+					{
+						if (rectangle.paramBoard.length == 0)
+							continue;
+						if (rectangle.paramBoard[0].cornerMaterial == null)
+							continue;
+						cornerMateralInfo=materialHashMap.get(rectangle.paramBoard[0].cornerMaterial) as L3DMaterialInformations;
+						cornerCodeInfo=materialHashMap.get(rectangle.paramBoard[0].cornerCode) as L3DMaterialInformations;
+						isOutRect=false;
+					}
+					if (cornerMateralInfo != null)
+					{
+						for (var j:int=0; j < _cur_sel_unit.count; j++)
+						{
+							uic.name="W" + wallViewPanel.currentIndex + "A" + _cur_Select_Area.index;
+							uic.width=regionview.width;
+							uic.height=regionview.height;
+							regionview.addChildAt(uic, 0);
+							if (isOutRect)
+							{
+								origPointX=(_cur_sel_unit.L - rectangle.L) / 2 + j * _cur_sel_unit.L + rectangle.lineWidth + fillFirstPoint.x;
+								origPointY=wallHeight - rectangle.origPoint.y - rectangle.H + rectangle.lineWidth + fillFirstPoint.y;
+							}
+							else
+							{
+								origPointX=(_cur_sel_unit.L - rectangle.paramBoard[0].L + rectangle.paramBoard[0].lineWidth * 2) / 2 + j * _cur_sel_unit.L + fillFirstPoint.x;
+								origPointY=wallHeight - rectangle.paramBoard[0].origPoint.y - rectangle.paramBoard[0].H + fillFirstPoint.y + rectangle.paramBoard[0].lineWidth;
+							}
+							var origPoint:Point=new Point(origPointX, origPointY);
+							unitLen=(isOutRect) ? rectangle.L - rectangle.lineWidth * 2 + rectangle.cornerLength : rectangle.paramBoard[0].L - rectangle.paramBoard[0].lineWidth * 2 + rectangle.paramBoard[0].cornerWidth;
+							unitHei=(isOutRect) ? rectangle.H - rectangle.lineWidth * 2 + rectangle.cornerWidth : rectangle.paramBoard[0].H - rectangle.paramBoard[0].lineWidth * 2 + rectangle.paramBoard[0].cornerLength;
+							cornerLen=(isOutRect) ? rectangle.cornerLength : rectangle.paramBoard[0].cornerLength;
+							cornerHei=(isOutRect) ? rectangle.cornerWidth : rectangle.paramBoard[0].cornerWidth;
+							DrawUtil.Instance.drawSVGCornerUnit(uic, cornerMateralInfo.Preview, cornerCodeInfo.userData8.toString(), unitLen, unitHei, cornerLen, cornerHei, scale, origPoint);
+						}
+					}
+				}
+			}
+
+			private function wallBoardFill(wallboardunit:WallBoardUnit, isRepeat:Boolean=false):void
+			{
+				var tilePanel:TilePanel=getTilePanel();
+				var sx:Number=wallboardunit.scaleX / tilePanel.scale;
+				var sy:Number=wallboardunit.scaleY / tilePanel.scale;
+
+				var bmd:BitmapData=wallboardunit.getBitmapData();
+
+				tilePanel.graphics.clear();
+				//				var arr:Array =getDoorWindowArrFromWall();
+				//test
+				var arr:Array=new Array();
+				arr.length=4;
+				//				arr[2] =
+				var matrix:Matrix=new Matrix();
+				matrix.scale(sx, sy);
+				if (isRepeat)
+				{
+					tilePanel.graphics.beginBitmapFill(bmd, matrix, true, true);
+					tilePanel.graphics.drawRect(0, 0, tilePanel.wid / tilePanel.scale, tilePanel.hgt / tilePanel.scale);
+				}
+				else
+				{
+					tilePanel.graphics.beginBitmapFill(bmd, matrix, false, true);
+					tilePanel.graphics.drawRect(0, 0, bmd.width * sx, bmd.height * sy);
+				}
+				tilePanel.graphics.endFill();
+			}
+
+			/**
+			 * 填充护墙板
+			 * @param isRepeat 是否完全填充
+			 */
+			private function designfillWallBoard(WBC:BoardComp, isRepeat:Boolean=false):void
+			{
+				var RegionView:L3DRegionView=getRegionView();
+				RegionView.addChild(WBC);
+				return;
+			}
+
+			private function fillWallBoardFrom3D(WBC:BoardComp, index:int=0):void
+			{
+				if (!wallViewPanel)
+				{
+					return;
+				}
+				var RegionView:L3DRegionView=wallViewPanel.wallPanel.tilePanels[index][1] as L3DRegionView;
+				RegionView.addChild(WBC);
+				return;
+			}
+			private var selectPanel:WallBoardRoundSelectPanel;
+			public var tilingPlanCallback:Function;
+			public var deletePlanCallback:Function;
+
+			//墙的填充长度
+			private var fillLength:Number;
+			//墙的填充初始坐标
+			private var fillFirstPoint:Point;
+
+			/**
+			 * 选择铺护墙板的方式
+			 * @value 0-缩 1-扩 2-留白 -1不使用阵列 3-全铺
+			 * @
+			 */
+			public function selectTilingFunc(value:int):void
+			{
+				if (selectPanel)
+					selectPanel.popClose();
+				var xml:XML;
+				var xml1:XML;
+				var obj:Object;
+				var unit:WallBoardUnit=new WallBoardUnit;
+				var wu:WallBoardUnit;
+				if (null != _unit && _unit.length > 0)
+				{
+					if (_unit[currentWallIndex] != null)
+					{
+						obj=onGetCurArea();
+						wu=obj as WallBoardUnit;
+						if (obj == null)
+							return;
+						wu.TilingMode=value;
+						xml=wallboardcalculate.onGetXMLData(wu);
+					}
+					else
+					{
+						return;
+					}
+					unit=wallboardcalculate.deserilizeXMLData(xml, _cur_Select_Area.index);
+						//assembly.parseXML(xml);
+				}
+				//					if(tilingPlanCallback!=null)
+				//						tilingPlanCallback.call(xml);
+				//				}
+				//				if(assembly.wallBoardUnit==null){
+				//					return;
+				//				}
+				var AreaL:Number=Math.abs(_cur_Select_Area.point[0].x - _cur_Select_Area.point[1].x);
+				var tempUnit:WallBoardUnit=unit;
+				//				if(_cur_sel_board_comp&&_cur_sel_board_comp.board.hasOwnProperty("paramBoardLine"))
+				//					tempUnit = _cur_sel_board_comp.board as WallBoardUnit;				
+				var allNum:Number;
+				var dx:Number;
+				var scx:Number=1;
+				var scy:Number=1;
+				var tilePanel:TilePanel=getTilePanel();
+				fillFirstPoint=new Point(_cur_Select_Area.point[3].x, _cur_Select_Area.point[3].y);
+				//判断是不是整除。
+				if ((AreaL / unit.L) * 10 % 10 == 0)
+				{
+					allNum=Math.ceil(AreaL / unit.L);
+					if (allNum > 0 && wu)
+						wu.count=allNum;
+					fillLength=AreaL;
+					xml1=wallboardcalculate.onGetXMLData(tempUnit);
+					wu.TilingPoint=copyArray(_cur_Select_Area.point);
+					wu.scX=1;
+					wu.scY=1;
+					assembly.parseXML(xml1);
+					sendXMLDataTo3D(xml, 2, 1, 1);
+					obj=wallboardcalculate.create3DObject(xml1, _cur_Select_Area.point, 2, 1, 1);
+					insertArr(obj, wallViewPanel.currentIndex, _cur_Select_Area.index);
+					removehighlight();
+					return;
+				}
+				switch (value)
+				{
+					case 0:
+					{
+						fillLength=AreaL;
+						allNum=Math.ceil(AreaL / unit.L);
+						var a:Number=unit.L;
+						tempUnit.L=AreaL / allNum;
+						scx=dx=tempUnit.L / a;
+						wallboardcalculate.setAllBoardPosition(tempUnit, dx, 1);
+						var arr:Array=new Array;
+						arr.push(tempUnit.L, tempUnit.H, tempUnit.offGround);
+						refreshLengthHeightOffGround(arr);
+
+						break;
+					}
+					case 1:
+					{
+						fillLength=AreaL;
+						allNum=Math.floor(AreaL / unit.L);
+						if (allNum < 1)
+							allNum=1;
+						var b:Number=unit.L;
+						tempUnit.L=AreaL / allNum;
+						scx=dx=tempUnit.L / b;
+						var arr1:Array=new Array;
+						wallboardcalculate.setAllBoardPosition(tempUnit, dx, 1);
+
+						arr1.push(tempUnit.L, tempUnit.H, tempUnit.offGround);
+						refreshLengthHeightOffGround(arr1);
+
+						break;
+					}
+					case 2:
+					{
+						allNum=int(AreaL / unit.L);
+						fillLength=allNum * unit.L;
+					}
+						break;
+					case 3:
+					{
+						fillLength=AreaL;
+					}
+						break;
+				}
+				if (allNum > 0 && wu)
+					wu.count=allNum;
+				wu.TilingPoint=copyArray(_cur_Select_Area.point);
+				wu.scX=scx;
+				wu.scY=scy;
+				var xml2:XML=wallboardcalculate.onGetXMLData(tempUnit);
+				assembly.parseXML(xml2);
+				obj=wallboardcalculate.create3DObject(xml2, _cur_Select_Area.point, value, scx, scy);
+				insertArr(obj, wallViewPanel.currentIndex, _cur_Select_Area.index);
+				//				wallBoardFill(tempUnit,true);
+				removehighlight();
+				sendXMLDataTo3D(xml, value, scx, scy);
+			}
+
+			private function copyArray(arr:Array):Array
+			{
+				var arr1:Array=new Array;
+				for (var i:int=0; i < arr.length; i++)
+				{
+					var p:Vector3D=arr[i] as Vector3D;
+					arr1.push(p.clone());
+				}
+				return arr1;
+			}
+
+			/*阵列的时候添加数据*/
+			private function insertArr(obj:Object, wallIndex:int, AreaIndex:int):void
+			{
+				tempObjArr[wallIndex]||=[];
+				tempObjArr[wallIndex][AreaIndex]=obj;
+
+			}
+
+			//当前方案的xml type 当前方案的区域
+			public function sendXMLDataTo3D(xml:XML, type:int=2, scx:Number=1, scy:Number=1):void
+			{
+				return;
+				var obj:Object=wallboardcalculate.create3DObject(xml, type, scx, scy, 1);
+				//cloud 5.8
+				if (tilingPlanCallback != null)
+					tilingPlanCallback.call(null, obj);
+				//				fillWallBoard(unit,true);
+			}
+
+			/**
+			 * 阵列
+			 */
+			public function zhenlieFun():void
+			{
+				selectPanel=new WallBoardRoundSelectPanel();
+				selectPanel.partnerFun=selectTilingFunc;
+				selectPanel.popOpen();
+				if (_cur_sel_board_comp && _cur_sel_board_comp.board.hasOwnProperty("paramBoardLine"))
+					return;
+				if (_cur_sel_board_comp)
+					_cur_sel_board_comp.unhighlight();
+				addListener();
+				if (_unit[wallViewPanel.currentIndex] == null)
+					return;
+				var obj:Object=wallboardcalculate.findUnitFromAllUnit(_cur_Select_Area.index, _unit[wallViewPanel.currentIndex]);
+				if (obj != null)
+					var u:WallBoardUnit=obj.wbu;
+				if (u == null)
+					return;
+				var ucomp:BoardComp=wallboardcalculate.findBoardCompByUnit(_boards_comp, u);
+				if (!ucomp)
+					return;
+				ucomp.highlight();
+				_cur_sel_board_comp=ucomp;
+			}
+
+			private function addImage(obj:Object):void
+			{
+				var information:L3DMaterialInformations=obj.information;
+				for (var i:int=0; i < groupArray.length; i++)
+				{
+					if (groupArray[i].index == index)
+					{
+						var temp:Group=groupArray[i].groupTile as Group;
+						var bitmapdata:BitmapData=information.Preview;
+						var imgWidth:Number=bitmapdata.width;
+						var imgHeight:Number=bitmapdata.height;
+						var count:int=temp.width / imgWidth;
+						var row:int=temp.height / imgHeight;
+						for (var j:int=0; j < row; j++)
+						{
+							for (var z:int=0; z < count; z++)
+							{
+								var img:Image=new Image();
+								img.source=bitmapdata;
+								temp.addElement(img);
+								img.x=temp.x + z * 100;
+								img.y=temp.y + j * 100;
+							}
+						}
+					}
+				}
+			}
+
+			private var temp:BoardItem;
+
+			private function itemMouseDown(evt:MouseEvent):void
+			{
+				temp=evt.currentTarget as BoardItem;
+				temp.select=true;
+			}
+
+			private function itemMouseMove(evt:MouseEvent):void
+			{
+				if (temp == null)
+					return;
+				if (temp.select)
+				{
+					temp.x=evt.stageX - temp.width * 0.5;
+					temp.y=evt.stageY - temp.width * 0.5;
+				}
+				else
+				{
+
+				}
+			}
+
+			protected function itemMouseUp(event:MouseEvent):void
+			{
+				temp.select=false;
+			}
+
+			protected function onRightDown(evt:MouseEvent):void
+			{
+				removehighlight();
+			}
+
+			protected function removehighlight():void
+			{
+				if (_cur_sel_board_comp)
+					_cur_sel_board_comp.unhighlight();
+				var RegionView:L3DRegionView=getRegionView();
+				if (RegionView && RegionView.contains(leftSpape))
+				{
+					RegionView.removeChild(leftSpape);
+					RegionView.removeChild(topSpape);
+					RegionView.removeChild(rightSpape);
+					RegionView.removeChild(bottomSpape);
+					RegionView.removeChild(lefttext);
+					RegionView.removeChild(righttext);
+					RegionView.removeChild(toptext);
+					RegionView.removeChild(bottomtext);
+				}
+			}
+
+			protected function onKeyDown(event:KeyboardEvent):void
+			{
+				if (event.keyCode == 46)
+				{
+					for (var i:int=0; i < allData.length; i++)
+					{
+						if (allData[i].hasOwnProperty("item"))
+						{
+							if (allData[i].item == temp)
+							{
+								allData.removeAt(i);
+							}
+						}
+					}
+					PopUpManager.removePopUp(temp);
+				}
+				if (event.keyCode == Keyboard.DELETE)
+				{
+					deleBoardComFormView(_cur_sel_board_comp);
+				}
+				var off:Number=20 / _scale;
+				if (event.keyCode == Keyboard.DOWN)
+				{
+					this.onMoveCurrentBoard(0, -off);
+				}
+				else if (event.keyCode == Keyboard.UP)
+				{
+					this.onMoveCurrentBoard(0, off);
+				}
+				else if (event.keyCode == Keyboard.LEFT)
+				{
+					this.onMoveCurrentBoard(-off, 0);
+				}
+				else if (event.keyCode == Keyboard.RIGHT)
+				{
+					this.onMoveCurrentBoard(off, 0);
+				}
+				else if(event.keyCode == Keyboard.L)
+				{
+					//doAreaMove(5,5);
+				}
+			}
+			//设置在中间
+			public function setBoardToMiddle():void
+			{
+				isFromMiddle = true;
+				isFromRight = false;
+				rotateArea(1);
+			}
+			//设置在右边
+			public function setBoardToRight():void
+			{
+				isFromRight = true;
+				isFromMiddle = false;
+				rotateArea(0);
+			}
+			public function drawAreaFun():void
+			{
+				isDrawingArea = true;
+			}
+			private function checkPointInPanel(mousex:Number,mousey:Number):Boolean
+			{
+				var RegionView:L3DRegionView=getRegionView();
+				var tilePanel:TilePanel = getTilePanel();
+				scale=(wallViewPanel.wallPanel.tilePanels[wallViewPanel.wallPanel._index][0] as TilePanel).scale
+				var checkP:Point = RegionView.globalToLocal(new Point(mousex,mousey));
+				if(checkP.x < 2 || checkP.y < 2)
+				{
+					return false;
+				}
+				if(checkP.x > tilePanel.wid/scale - 2 || checkP.y > tilePanel.hgt/scale - 2)
+				{
+					return false;
+				}
+				return true;
+			}
+			protected function onMouseDown(evt:MouseEvent):void
+			{
+				if(evt.target is RichEditableText)
+					return;
+				if(!checkPointInPanel(this.mouseX, this.mouseY))
+				{
+					setTimeout(setWallComplete,150);
+					return;
+				}
+				if(isDrawingArea == false)
+				{
+					showAreaPos();
+					setCurSelectArea(this.mouseX, this.mouseY);
+				}
+				else
+				{
+					startDrawingArea(this.mouseX,this.mouseY);
+					wallViewPanel.addEventListener(MouseEvent.MOUSE_MOVE, onMouseMove);
+					wallViewPanel.addEventListener(KeyboardEvent.KEY_DOWN,onDrawAreaKey);
+					numCount = 0;
+					temp_size_height = "0";
+					temp_size_width = "0";
+				}
+			}
+
+			public function setCurSelectArea(x:Number, y:Number):void
+			{
+				var a:Array=wallViewPanel.currentWallRegions;
+				wallViewPanel.addFreeRegion(AreaRegionPoints[wallViewPanel.currentIndex]);
+				if (hasSelectedWall[wallViewPanel.wallPanel._index] == null)
+					hasSelectedWall.insertAt(wallViewPanel.wallPanel._index, a);
+				var output:Array=[];
+				_cur_Select_Area=new Object();
+				wallViewPanel.getRegion(x, y, true, output)
+				_cur_Select_Area["index"]=output[0];
+				_cur_Select_Area["point"]=output[1];
+				if (_cur_Select_Area.point && _cur_Select_Area.point.length > 0)
+				{
+					_cur_Select_Area["areaHeight"]=Math.abs(output[1][0].y - output[1][3].y);
+				}
+				if (!_cur_Select_Area.point)
+				{
+					setfirstArea();
+					return;
+				}
+				scale=(wallViewPanel.wallPanel.tilePanels[wallViewPanel.wallPanel._index][0] as TilePanel).scale;
+
+				onDrawCurrentWallAreaLine();
+			}
+
+			private function setfirstArea():void
+			{
+				if (!_cur_Select_Area.hasOwnProperty("point") || !_cur_Select_Area.point)
+				{
+					var a:Array=wallViewPanel.currentWallRegions;
+					wallViewPanel.addFreeRegion(AreaRegionPoints[wallViewPanel.currentIndex]);
+					scale=(wallViewPanel.wallPanel.tilePanels[wallViewPanel.wallPanel._index][0] as TilePanel).scale;
+					if (hasSelectedWall[wallViewPanel.wallPanel._index] == null)
+						hasSelectedWall.insertAt(wallViewPanel.wallPanel._index, a);
+					_cur_Select_Area["index"]=0;
+					_cur_Select_Area["point"]=a[0];
+					_cur_Select_Area["areaHeight"]=Math.abs(a[0][0].y - a[0][3].y);
+					_cur_sel_board_comp=null;
+					onDrawCurrentWallAreaLine();
+
+				}
+			}
+
+			//绘制当前墙面的所有区域边界
+			private function onDrawCurrentWallAreaLine():void
+			{
+				var l3dregion:L3DRegionView=getRegionView();
+				l3dregion.graphics.clear();
+				var curArr:Array=wallViewPanel.currentWallRegions;
+				wallViewPanel.addFreeRegion(AreaRegionPoints[wallViewPanel.currentIndex]);
+				scale=(wallViewPanel.wallPanel.tilePanels[wallViewPanel.wallPanel._index][0] as TilePanel).scale;
+				for each (var a:Array in curArr)
+				{
+					highlightArea(a, scale, false);
+				}
+				if (cur_Select_Area && cur_Select_Area.point)
+				{
+					highlightArea(cur_Select_Area.point, scale, false, 0xFF3820);
+				}
+
+			}
+
+			/*移动当前板件的处理事件*/
+			private function onMoveCurrentBoard(xoff:Number, yoff:Number):void
+			{
+				if (this._cur_sel_board_comp == null)
+					return;
+				var v2d:Point=new Point();
+				v2d.x=xoff;
+				v2d.y=yoff;
+				_cur_sel_board_comp.board.setTranslation(v2d);
+				_cur_sel_board_comp.onRefresh(this.origPoint);
+				for each (var BC:BoardComp in _boards_comp)
+				{
+					if (BC == _cur_sel_board_comp)
+						continue;
+					if(UserType.USER_BRAND == Brand.YaYi)
+					{
+						BC.board.setTranslation(v2d);
+						BC.onRefresh(null);
+					}
+					else
+					{
+						if (null != BC.board.parentUnit && (BC.board.parentUnit == _cur_sel_board_comp.board || findUnitForUnit(BC.board, _cur_sel_board_comp.board)))
+						{
+							BC.board.setTranslation(v2d);
+							BC.onRefresh(null);
+						}
+					}
+				}
+				var obj:Object=onGetCurArea();
+				if (obj == null)
+					return;
+				drawLine(this._cur_sel_board_comp.board as BasicWallBoard, obj as WallBoardUnit);
+			}
+			private var groupArray:Array=[];
+			private var groupTile:Group;
+			private var index:int;
+
+			private function deleteAllWall():void
+			{
+				for (var i:int=0; i < groupArray.length; i++)
+				{
+					PopUpManager.removePopUp(groupArray[i].groupTile);
+				}
+			}
+
+			/**
+			 * 得到当前的墙面区域尺寸
+			 */
+			private function getAreaSize():Array
+			{
+				if (_cur_Select_Area == null)
+					return null;
+				var arr:Array=_cur_Select_Area.point;
+				var a:Array=[Math.abs(arr[0].x - arr[1].x), Math.abs(arr[0].y - arr[2].y), arr[3]]
+				return a;
+			}
+
+			private var matrixFunc:Function=null;
+
+			private function matrixFun():void
+			{
+
+				if (matrixFunc != null)
+				{
+					matrixFunc(noDingzhiData);
+				}
+			}
+
+			//cloud
+			public function get lengthSetValue():Number
+			{
+				return board.chang;
+			}
+
+			public function set lengthSetValue(value:Number):void
+			{
+				board.shuruChangeFun(value);
+			}
+
+			public function get widthSetValue():Number
+			{
+				return board.kuan;
+			}
+
+			public function set widthSetValue(value:Number):void
+			{
+				board.shuruKuanFun(value);
+			}
+
+			public function get floorHeightSetValue():Number
+			{
+				return board.lidigao;
+			}
+
+			public function set floorHeightSetValue(value:Number):void
+			{
+				board.shuruLidigaoFun(value);
+			}
+
+			//获取当前选中墙的起点和终点
+			public function get currentWallPointObject():Object
+			{
+				return wallViewPanel.currentWallPointObject;
+			}
+
+			//获取当前墙体的索引
+			public function get currentWallIndex():int
+			{
+				return wallViewPanel == null ? -1 : wallViewPanel.currentIndex;
+			}
+
+			public function addClickListener(eventHandler:Function):void
+			{
+				board.addEventListener(ImageLabelVerticalItemRenderer.ImageLabelItemrendererClick, eventHandler);
+			}
+
+			public function removeClickListener(eventHandler:Function):void
+			{
+				board.removeEventListener(ImageLabelVerticalItemRenderer.ImageLabelItemrendererClick, eventHandler);
+			}
+
+			/**
+			 * 得到当前的墙面
+			 */
+			private function getTilePanel():TilePanel
+			{
+				return wallViewPanel.wallPanel.tilePanels[wallViewPanel.wallPanel._index][0] as TilePanel;
+			}
+
+			/**
+			 * 得到当前的墙面门窗围点
+			 */
+			private function getDoorWindowArrFromWall():Array
+			{
+				return wallViewPanel.wallPanel.tileLayerDW();
+			}
+
+			/**
+			 * 得到当前的墙面区域
+			 */
+			private function getRegionView():L3DRegionView
+			{
+				if (!wallViewPanel)
+				{
+					return null;
+				}
+				return wallViewPanel.wallPanel.tilePanels[wallViewPanel.wallPanel._index][1] as L3DRegionView;
+			}
+
+
+			//设置当前添加的部件坐标
+			private function setCurrentPart(boardCom:BoardComp, isAddNewPart:Boolean=true, direction:int=0):void
+			{
+				if (boardCom.board.type != WallBoardPartType.TOPLINE_BOARD && boardCom.board.type != WallBoardPartType.BELTLINE_BOARD && boardCom.board.type != WallBoardPartType.BOTTOMLINE_BOARD && boardCom.board.type != WallBoardPartType.UNIT_BOARD && boardCom.board.type != WallBoardPartType.FLOWER_BOARD && boardCom.board.type != WallBoardPartType.INTO_BOARD)
+				{
+					//添加单元件
+					this.addBoardComponent(boardCom);
+					this.addBoardEventListener(boardCom);
+					var p:Point=new Point();
+					p=new Point(boardCom.board.L / 2, 0);
+					boardCom.board.setOrigPoint(p);
+					boardCom.onRefresh(this.origPoint);
+					boardCom.board.TilingPoint=copyArray(_cur_Select_Area.point);
+					addUnit(boardCom.board);
+					this.cur_sel_unit=boardCom.board;
+					return;
+				}
+				if (!cur_sel_unit)
+					return;
+				var unit:Object=cur_sel_unit;
+				var pp:Point=unit.origPoint.clone();
+				var len:Number=unit.L;
+				var wid:Number=unit.H;
+
+				var parentBoard:WallBoardRectangle;
+				var pp1:Point;
+				var len1:Number;
+				var wid1:Number;
+				var hei1:Number;
+				var TP:Point;
+				if (isAddNewPart == false)
+				{
+					switch (boardCom.board.type)
+					{
+						case WallBoardPartType.INTO_BOARD:
+						{
+							if (boardCom.board.parentUnit.type == WallBoardPartType.INTO_BOARD)
+							{
+								//								parentBoard = (boardCom.board as WallBoardRectangle);
+								////								pp1 = parentBoard.origPoint.clone();
+								//								len1 = parentBoard.L;
+								//								wid1 = parentBoard.H;
+								//								hei1 = parentBoard.W;
+
+								parentBoard=(boardCom.board.parentUnit as WallBoardRectangle);
+								pp1=boardCom.board.origPoint;
+								parentBoard.paramBasicBoard=null;
+								pp1.x=pp1.x + (boardCom.board.L) / 2 + (len - boardCom.board.L) / 2;
+								boardCom.board.setOrigPoint(pp1);
+								//								parentBoard.paramBoard.push((boardCom.board as WallBoardRectangle));
+								this.addBoardComponent(boardCom);
+								this.addBoardEventListener(boardCom);
+								boardCom.onRefresh(this.origPoint);
+							}
+							else
+							{
+								TP=boardCom.board.origPoint;
+								TP.x=TP.x + (boardCom.board.L) / 2 + (len - boardCom.board.L) / 2;
+								boardCom.board.setOrigPoint(TP);
+								boardCom.board.parentUnit=cur_sel_unit;
+								addRectBoard((boardCom.board as WallBoardRectangle));
+								this.addBoardComponent(boardCom);
+								this.addBoardEventListener(boardCom);
+								boardCom.onRefresh(this.origPoint);
+							}
+							break;
+						}
+						case WallBoardPartType.UNIT_BOARD:
+						{
+							if (boardCom.board.parentUnit && boardCom.board.parentUnit.type == WallBoardPartType.INTO_BOARD)
+							{
+								//								parentBoard = (boardCom.board as WallBoardRectangle);
+								////								pp1 = parentBoard.origPoint.clone();
+								//								len1 = parentBoard.L;
+								//								wid1 = parentBoard.H;
+								//								hei1 = parentBoard.W;
+
+								parentBoard=(boardCom.board.parentUnit as WallBoardRectangle);
+								pp1=parentBoard.origPoint.clone();
+								pp1.y=pp1.y + parentBoard.lineWidth;
+								boardCom.board.setOrigPoint(pp1);
+								//								parentBoard.paramBoard.push((boardCom.board as WallBoardRectangle));
+								this.addBoardComponent(boardCom);
+								this.addBoardEventListener(boardCom);
+								boardCom.onRefresh(this.origPoint);
+							}
+							else
+							{
+								TP=boardCom.board.origPoint;
+								TP.x=TP.x + (boardCom.board.L) / 2 + (len - boardCom.board.L) / 2;
+								TP.y=TP.y + 50;
+
+								boardCom.board.setOrigPoint(TP);
+								//								boardCom.board.parentUnit = cur_sel_unit;
+								addRectBoard((boardCom.board as WallBoardRectangle));
+								this.addBoardComponent(boardCom);
+								this.addBoardEventListener(boardCom);
+								boardCom.onRefresh(this.origPoint);
+							}
+							break;
+						}
+						case WallBoardPartType.BELTLINE_BOARD:
+						{
+							TP=boardCom.board.origPoint;
+							TP.x=TP.x + boardCom.board.L / 2;
+							boardCom.board.setOrigPoint(TP);
+							addLineBoard((boardCom.board as WallBoardLine));
+							boardCom.board.parentUnit=_cur_sel_unit;
+							this.addBoardComponent(boardCom);
+							this.addBoardEventListener(boardCom);
+							boardCom.onRefresh(this.origPoint);
+							break;
+						}
+						case WallBoardPartType.TOPLINE_BOARD:
+						{
+							TP=boardCom.board.origPoint;
+							TP.x=TP.x + boardCom.board.L / 2;
+							boardCom.board.setOrigPoint(TP);
+							addLineBoard((boardCom.board as WallBoardLine));
+							boardCom.board.parentUnit=_cur_sel_unit;
+							this.addBoardComponent(boardCom);
+							this.addBoardEventListener(boardCom);
+							boardCom.onRefresh(this.origPoint);
+							break;
+						}
+						case WallBoardPartType.BOTTOMLINE_BOARD:
+						{
+							TP=boardCom.board.origPoint;
+							TP.x=TP.x + boardCom.board.L / 2;
+							boardCom.board.setOrigPoint(TP);
+							addLineBoard((boardCom.board as WallBoardLine));
+							boardCom.board.parentUnit=_cur_sel_unit;
+							this.addBoardComponent(boardCom);
+							this.addBoardEventListener(boardCom);
+							boardCom.onRefresh(this.origPoint);
+							break;
+						}
+						case WallBoardPartType.FLOWER_BOARD:
+						{
+							if (boardCom.board.parentUnit && boardCom.board.parentUnit.type == WallBoardPartType.INTO_BOARD)
+							{
+								//								parentBoard = (boardCom.board as WallBoardRectangle);
+								////								pp1 = parentBoard.origPoint.clone();
+								//								len1 = parentBoard.L;
+								//								wid1 = parentBoard.H;
+								//								hei1 = parentBoard.W;
+								parentBoard=(boardCom.board.parentUnit as WallBoardRectangle);
+								pp1=parentBoard.origPoint.clone();
+								if (direction == 0)
+								{
+									pp1.x=pp1.x - parentBoard.L * 0.5 + parentBoard.lineWidth + boardCom.board.L * 0.5;
+									pp1.y=pp1.y + parentBoard.H - boardCom.board.H - parentBoard.lineWidth;
+								}
+								else if (direction == 1)
+								{
+									pp1.x=pp1.x + parentBoard.L * 0.5 - parentBoard.lineWidth - boardCom.board.L * 0.5;
+									pp1.y=pp1.y + parentBoard.H - boardCom.board.H - parentBoard.lineWidth;
+								}
+								else if (direction == 2)
+								{
+									pp1.x=pp1.x - parentBoard.L * 0.5 + parentBoard.lineWidth + boardCom.board.L * 0.5;
+									pp1.y=pp1.y + parentBoard.lineWidth;
+								}
+								else
+								{
+									pp1.x=pp1.x + parentBoard.L * 0.5 - parentBoard.lineWidth - boardCom.board.L * 0.5;
+									pp1.y=pp1.y + parentBoard.lineWidth;
+								}
+
+								boardCom.board.setOrigPoint(pp1);
+								//								parentBoard.paramBoard.push((boardCom.board as WallBoardRectangle));
+								this.addBoardComponent(boardCom);
+								this.addBoardEventListener(boardCom);
+								boardCom.onRefresh(this.origPoint);
+							}
+
+							break;
+						}
+					}
+				}
+				else
+				{
+					switch (boardCom.board.type)
+					{
+						case WallBoardPartType.INTO_BOARD:
+							//						case WallBoardPartType.PANEL_BOARD:
+						{
+							if (null != _cur_sel_board_comp && _cur_sel_board_comp.board.type == WallBoardPartType.INTO_BOARD)
+							{
+								parentBoard=(_cur_sel_board_comp.board as WallBoardRectangle);
+								pp1=parentBoard.origPoint.clone();
+								len1=parentBoard.L;
+								wid1=parentBoard.H;
+								hei1=parentBoard.W;
+
+								boardCom.board.L=(len1 - parentBoard.lineWidth * 4);
+								boardCom.board.W=0;
+								boardCom.board.H=Math.ceil(wid1 - parentBoard.lineWidth * 4);
+								pp1.y=(wid1 - boardCom.board.H) / 2;
+								boardCom.board.setOrigPoint(pp1);
+								boardCom.board.parentUnit=parentBoard;
+								parentBoard.paramBoard.push((boardCom.board as WallBoardRectangle));
+								this.addBoardComponent(boardCom);
+								boardCom.onRefresh(this.origPoint);
+							}
+							else
+							{
+								boardCom.board.L=(len - 50 * 2);
+								boardCom.board.W=0;
+								boardCom.board.H=Math.ceil(wid / 3);
+								pp.y=pp.y + wid / 2 - boardCom.board.H / 2;
+								boardCom.board.setOrigPoint(pp);
+								boardCom.board.parentUnit=cur_sel_unit;
+								addRectBoard((boardCom.board as WallBoardRectangle));
+								this.addBoardComponent(boardCom);
+								boardCom.onRefresh(this.origPoint);
+							}
+							break;
+						}
+						case WallBoardPartType.BELTLINE_BOARD:
+						{
+							boardCom.board.L=len;
+							boardCom.board.W=0;
+							//boardCom.board.H = Math.ceil(wid/50);
+							pp.y=pp.y + wid / 4 - boardCom.board.H / 2;
+							boardCom.board.setOrigPoint(pp);
+							addLineBoard((boardCom.board as WallBoardLine));
+							boardCom.board.parentUnit=_cur_sel_unit;
+							this.addBoardComponent(boardCom);
+							boardCom.onRefresh(this.origPoint);
+							break;
+						}
+						case WallBoardPartType.TOPLINE_BOARD:
+						{
+							boardCom.board.L=len;
+							boardCom.board.W=0;
+							//							boardCom.board.H = Math.ceil(wid/30);
+							pp.y=pp.y + wid - boardCom.board.H;
+							boardCom.board.setOrigPoint(pp);
+							addLineBoard((boardCom.board as WallBoardLine));
+							boardCom.board.parentUnit=_cur_sel_unit;
+							this.addBoardComponent(boardCom);
+							boardCom.onRefresh(this.origPoint);
+							break;
+						}
+						case WallBoardPartType.BOTTOMLINE_BOARD:
+						{
+							boardCom.board.L=len;
+							boardCom.board.W=0;
+							//boardCom.board.H = Math.ceil(wid/25);
+							pp.y=pp.y;
+							boardCom.board.setOrigPoint(pp);
+							addLineBoard((boardCom.board as WallBoardLine));
+							boardCom.board.parentUnit=_cur_sel_unit;
+							this.addBoardComponent(boardCom);
+							boardCom.onRefresh(this.origPoint);
+							break;
+						}
+						case WallBoardPartType.FLOWER_BOARD:
+						{
+							if (boardCom.board.parentUnit && boardCom.board.parentUnit.type == WallBoardPartType.INTO_BOARD)
+							{
+								parentBoard=(boardCom.board.parentUnit as WallBoardRectangle);
+								pp1=parentBoard.origPoint.clone();
+								if (direction == 0)
+								{
+									pp1.x=pp1.x - parentBoard.L * 0.5 + parentBoard.lineWidth + boardCom.board.L * 0.5;
+									pp1.y=pp1.y + parentBoard.H - boardCom.board.H - parentBoard.lineWidth;
+								}
+								else if (direction == 1)
+								{
+									pp1.x=pp1.x + parentBoard.L * 0.5 - parentBoard.lineWidth - boardCom.board.L * 0.5;
+									pp1.y=pp1.y + parentBoard.H - boardCom.board.H - parentBoard.lineWidth;
+								}
+								else if (direction == 2)
+								{
+									pp1.x=pp1.x - parentBoard.L * 0.5 + parentBoard.lineWidth + boardCom.board.L * 0.5;
+									pp1.y=pp1.y + parentBoard.lineWidth;
+								}
+								else
+								{
+									pp1.x=pp1.x + parentBoard.L * 0.5 - parentBoard.lineWidth - boardCom.board.L * 0.5;
+									pp1.y=pp1.y + parentBoard.lineWidth;
+								}
+
+								boardCom.board.setOrigPoint(pp1);
+								//								parentBoard.paramBoard.push((boardCom.board as WallBoardRectangle));
+								this.addBoardComponent(boardCom);
+								this.addBoardEventListener(boardCom);
+								boardCom.onRefresh(this.origPoint);
+							}
+							break;
+						}
+					}
+				}
+
+			}
+
+			//得到当前区域id
+			private function onGetCurArea():Object
+			{
+				if (currentWallIndex < 0)
+					return null;
+				for each (var obj:WallBoardUnit in _unit[currentWallIndex])
+				{
+					if (obj.areaUnitIndex == _cur_Select_Area.index)
+					{
+						return obj;
+					}
+				}
+				return null;
+			}
+
+			/*移除画布监听事件*/
+			public function removeListener():void
+			{
+			}
+
+			/*增加画布监听事件*/
+			public function addListener():void
+			{
+				_isNotAddStageKeyEventListener=false;
+			}
+
+			private function onKeyUp(evt:KeyboardEvent):void
+			{
+
+			}
+
+			//从画布移除当前选中的板件
+			private function deleBoardComFormView(BC:BoardComp):void
+			{
+				if (getRegionView() == null)
+					return;
+				var i:int=0
+				if (BC == null)
+					return;
+				if (BC.board.type != WallBoardPartType.TOPLINE_BOARD && BC.board.type != WallBoardPartType.BELTLINE_BOARD && BC.board.type != WallBoardPartType.BOTTOMLINE_BOARD && BC.board.type != WallBoardPartType.FLOWER_BOARD && BC.board.type != WallBoardPartType.UNIT_BOARD && BC.board.type != WallBoardPartType.INTO_BOARD)
+				{
+					delUnit(BC);
+					if (_cur_Select_Area)
+						insertArr(null, wallViewPanel.currentIndex, _cur_Select_Area.index);
+					var tilePanel:TilePanel=getTilePanel();
+					var regionview:L3DRegionView=getRegionView();
+					for (i=0; i < tilePanel.numChildren; i++)
+					{
+						var child:DisplayObject=tilePanel.getChildAt(i);
+						if (child.name == "W" + wallViewPanel.currentIndex + "A" + _cur_Select_Area.index)
+						{
+							tilePanel.removeChildAt(i);
+							i--;
+						}
+					}
+					for (i=0; i < regionview.numChildren; i++)
+					{
+						if (regionview.getChildAt(i).name == "W" + wallViewPanel.currentIndex + "A" + _cur_Select_Area.index)
+						{
+							regionview.removeChildAt(i);
+							i--;
+						}
+					}
+					return;
+				}
+				var curRegion:L3DRegionView=getRegionView();
+
+				if (curRegion.contains(BC))
+					curRegion.removeChild(BC);
+				for (i=this._boards_comp.length - 1; i >= 0; --i)
+				{
+					if (this._boards_comp[i] == BC)
+					{
+						this._boards_comp.splice(i, 1);
+						break;
+					}
+				}
+				if (BC.board.parentUnit != null)
+				{
+					if (BC.board.type == WallBoardPartType.UNIT_BOARD)
+					{
+						BC.board.parentUnit.removeBasicBoard(BC.board);
+					}
+					else
+					{
+						BC.board.parentUnit.removeBoard(BC.board);
+					}
+				}
+				if (BC.board.hasOwnProperty("paramBoard") && (BC.board as WallBoardRectangle).paramBoard.length > 0)
+				{
+					for each (var b:WallBoardRectangle in(BC.board as WallBoardRectangle).paramBoard)
+					{
+						deleBoardComFormView((b.uiObject as BoardComp));
+					}
+				}
+
+				_cur_sel_board_comp=null;
+				removehighlight();
+			}
+
+			//删除面板unit
+			private function delUnit(BC:BoardComp):void
+			{
+				if (BC == null)
+					return;
+				var curRegion:L3DRegionView=getRegionView();
+				if (curRegion.contains(BC))
+					curRegion.removeChild(BC);
+				var arr:Array=new Array();
+				for each (var temp:BoardComp in _boards_comp)
+				{
+					if ((temp.board.parentUnit != null) && (temp.board.parentUnit == BC.board || findUnitForUnit(temp.board, BC.board)))
+					{
+						arr.push(temp);
+						if (curRegion.contains(temp))
+							curRegion.removeChild(temp);
+					}
+				}
+				for each (var tempp:BoardComp in arr)
+				{
+					var index:Number=_boards_comp.indexOf(tempp);
+					if (index != -1)
+						_boards_comp.splice(index, 1);
+				}
+				for (var i:int=0; i < _unit[currentWallIndex].length; i++)
+				{
+					if (_unit[currentWallIndex][i] == BC.board)
+						_unit[currentWallIndex].removeAt(i);
+				}
+				var tilePanel:TilePanel=getTilePanel();
+				tilePanel.graphics.clear();
+				this.cur_sel_unit=null;
+				this._cur_sel_board_comp=null;
+			}
+
+			//判断是否为引用的Unit
+			private function findUnitForUnit(findUnit:Object, vecUnit:Object):Boolean
+			{
+				// TODO Auto Generated method stub
+				if (findUnit == vecUnit)
+					return true;
+				if (findUnit.parentUnit)
+					return findUnitForUnit(findUnit.parentUnit, vecUnit);
+				return false;
+			}
+
+			/**
+			 * 高亮选中区域(清空之前的)
+			 * @param points
+			 *
+			 */
+			public function highlightArea(points:Array, sc:Number, isClear:Boolean=true, color:uint=0x00a600):void
+			{
+				var l3dregion:L3DRegionView=getRegionView();
+				var a:Vector3D=points[0] as Vector3D;
+				var b:Vector3D=points[1] as Vector3D;
+				var c:Vector3D=points[2] as Vector3D;
+				var d:Vector3D=points[3] as Vector3D;
+				if (isClear)
+				{
+					l3dregion.graphics.clear();
+					l3dregion.graphics.lineStyle(2, color, 1);
+					l3dregion.graphics.moveTo(a.x / sc, a.y / sc);
+					l3dregion.graphics.lineTo(b.x / sc, b.y / sc);
+					l3dregion.graphics.moveTo(b.x / sc, b.y / sc);
+					l3dregion.graphics.lineTo(c.x / sc, c.y / sc);
+					l3dregion.graphics.moveTo(c.x / sc, c.y / sc);
+					l3dregion.graphics.lineTo(d.x / sc, d.y / sc);
+					l3dregion.graphics.moveTo(d.x / sc, d.y / sc);
+					l3dregion.graphics.lineTo(a.x / sc, a.y / sc);
+				}
+				else
+				{
+					l3dregion.graphics.lineStyle(2, color, 1);
+					l3dregion.graphics.moveTo(a.x / sc, a.y / sc);
+					l3dregion.graphics.lineTo(b.x / sc, b.y / sc);
+					l3dregion.graphics.moveTo(b.x / sc, b.y / sc);
+					l3dregion.graphics.lineTo(c.x / sc, c.y / sc);
+					l3dregion.graphics.moveTo(c.x / sc, c.y / sc);
+					l3dregion.graphics.lineTo(d.x / sc, d.y / sc);
+					l3dregion.graphics.moveTo(d.x / sc, d.y / sc);
+					l3dregion.graphics.lineTo(a.x / sc, a.y / sc);
+				}
+				wallViewPanel.wallPanel.refshRegionDimession();
+
+			}
+
+			//反序列化XML，生成的unit添加到舞台中
+			private function deserilizeFromXML2Unit(temUnit:WallBoardUnit):void
+			{
+				//添加到当前的总unit容器中
+				clearAll();
+				//				clearWall();
+				//遍历unit查找所有的子件添加到舞台中，包括unit自己
+				addToViewFromUnit(temUnit);
+			}
+
+			private function deserilizeFrom3DToUnit(temUnit:WallBoardUnit, index:int, points:Array=null, areaIndex:int=0):void
+			{
+				addToAllWallFromUnit(temUnit, index, points, areaIndex);
+			}
+
+			private function clearWall():void
+			{
+				_cur_sel_board_comp=null;
+				cur_sel_unit=null;
+
+			}
+
+			private function clearAll():void
+			{
+				_cur_sel_board_comp=null;
+				cur_sel_unit=null;
+				var regionView:L3DRegionView=getRegionView();
+				for each (var tpc:BoardComp in _boards_comp)
+				{
+					if (regionView.contains(tpc) && tpc.board.hasOwnProperty("paramBoardLine") && tpc.board.areaUnitIndex == cur_Select_Area.index)
+					{
+						regionView.removeChild(tpc);
+						continue;
+					}
+					var RUnit:Object=findRootUnit(tpc.board);
+					if (RUnit == null)
+						continue;
+					if (regionView.contains(tpc) && RUnit.areaUnitIndex == cur_Select_Area.index)
+						regionView.removeChild(tpc);
+
+				}
+				var tilePanel:TilePanel=getTilePanel();
+				for (var i:int=0; i < tilePanel.numChildren; i++)
+				{
+					if (tilePanel.getChildAt(i).name == "W" + wallViewPanel.currentIndex + "A" + _cur_Select_Area.index)
+					{
+						tilePanel.removeChildAt(i);
+					}
+				}
+				_boards_comp.length=0;
+				_boards_comp=new Vector.<BoardComp>();
+				if (_unit[currentWallIndex] != null)
+				{
+					if (wallboardcalculate.findUnitFromAllUnit(_cur_Select_Area.index, _unit[currentWallIndex]))
+					{
+						var ind:int=wallboardcalculate.findUnitFromAllUnit(_cur_Select_Area.index, _unit[currentWallIndex]).index;
+						_unit[currentWallIndex].splice(ind, 1); // = null;
+					}
+				}
+			}
+			public function deleteArea():void
+			{
+				clearAll();
+				WeatherBoardDimension.Instance.deleteAreaDimension(getRegionView());
+				AreaRegionPoints[wallViewPanel.currentIndex] = [];
+				setCurSelectArea(this.mouseX, this.mouseY);
+			}
+
+			private function findRootUnit(obj:Object):Object
+			{
+				if (!obj)
+					return null;
+				if (null != obj.parentUnit)
+				{
+					if (obj.parentUnit.hasOwnProperty("areaUnitIndex"))
+						return obj.parentUnit;
+					else if (null != obj.parentUnit)
+					{
+						return findRootUnit(obj.parentUnit);
+					}
+				}
+				return null;
+			}
+
+			private function findRootUnit2(obj:Object):Object
+			{
+				if (!obj)
+					return null;
+				if (null != obj.parentUnit)
+				{
+					if (obj.parentUnit.hasOwnProperty("areaUnitIndex"))
+						return obj.parentUnit;
+					else if (null != obj.parentUnit)
+					{
+						return findRootUnit2(obj.parentUnit);
+					}
+				}
+				return obj;
+			}
+
+			private function removeAllBoardInStage():void
+			{
+				for (var i:int=0; i < wallViewPanel.wallPanel.tilePanels.length; i++)
+				{
+					var tp:TilePanel=wallViewPanel.wallPanel.tilePanels[i][0] as TilePanel;
+					tp.graphics.clear();
+					var rv:L3DRegionView=wallViewPanel.wallPanel.tilePanels[i][1] as L3DRegionView;
+					for each (var bc:BoardComp in _boards_comp)
+					{
+						if (rv.contains(bc))
+							rv.removeChild(bc);
+					}
+					rv.graphics.clear();
+				}
+			}
+
+			private function addToViewFromUnit(temUnit:WallBoardUnit):void
+			{
+				if (!temUnit)
+					return;
+				var BC:BoardComp;
+				var unit:Object=temUnit.clone();
+				var uBC:BoardComp=new BoardComp(materialHashMap, unit, scale);
+				var d:int=0;
+				setCurrentPart(uBC, false);
+				var wBR:WallBoardRectangle;
+				var wBR1:WallBoardRectangle;
+				for each (wBR in temUnit.paramBoardRectangle)
+				{
+					BC=new BoardComp(materialHashMap, wBR, scale);
+					wBR.parentUnit=cur_sel_unit;
+					setCurrentPart(BC, false);
+					if (wBR.paramBasicBoard.material != "")
+					{
+						BC=new BoardComp(materialHashMap, wBR.paramBasicBoard, scale);
+						wBR.paramBasicBoard.parentUnit=wBR;
+
+						setCurrentPart(BC, false);
+					}
+					d=0;
+					for each (var wbr2:BasicWallBoard in wBR.paramCornerBoard)
+					{
+						if (wbr2.code != "")
+						{
+							BC=new BoardComp(materialHashMap, wbr2, scale);
+							wbr2.parentUnit=wBR;
+							setCurrentPart(BC, false, d);
+							d++;
+						}
+					}
+
+					/*if(wBR.paramCornerBoard.code !="")
+					{
+					BC = new BoardComp(_materialHashMap,wBR.paramCornerBoard,scale);
+					}*/
+
+					for each (wBR1 in wBR.paramBoard)
+					{
+						wBR1.parentUnit=wBR;
+						BC=new BoardComp(materialHashMap, wBR1, scale);
+						setCurrentPart(BC, false);
+						if (wBR1.paramBasicBoard.material != "")
+						{
+							BC=new BoardComp(materialHashMap, wBR1.paramBasicBoard, scale);
+							wBR1.paramBasicBoard.parentUnit=wBR1;
+							setCurrentPart(BC, false);
+						}
+						d=0;
+						for each (var wbr:BasicWallBoard in wBR1.paramCornerBoard)
+						{
+							if (wbr.code != "")
+							{
+								BC=new BoardComp(materialHashMap, wbr, scale);
+								wbr.parentUnit=wBR1;
+								setCurrentPart(BC, false, d);
+								d++;
+							}
+						}
+					}
+				}
+				for each (var wBL:WallBoardLine in temUnit.paramBoardLine)
+				{
+					BC=new BoardComp(materialHashMap, wBL, scale);
+					setCurrentPart(BC, false);
+				}
+			}
+
+			//从3d返回数据显示会各个墙上
+			private function addToAllWallFromUnit(temUnit:WallBoardUnit, index:int, points:Array=null, areaIndex:int=0):void
+			{
+				var point:Point=new Point();
+				point.x=points[0].x;
+				point.y=points[0].y;
+				scale=(wallViewPanel.wallPanel.tilePanels[index][0] as TilePanel).scale;
+				if (!temUnit)
+					return;
+				var BC:BoardComp;
+				var unit:Object=temUnit.clone();
+				var uBC:BoardComp=new BoardComp(materialHashMap, unit, scale);
+				setCurrentPartToAllWall(uBC, index, false, point, areaIndex);
+				var wBR:WallBoardRectangle;
+				var wBR1:WallBoardRectangle;
+				for each (wBR in temUnit.paramBoardRectangle)
+				{
+					BC=new BoardComp(materialHashMap, wBR, scale);
+					wBR.parentUnit=cur_sel_unit;
+					setCurrentPartToAllWall(BC, index, false, point, areaIndex);
+					if (wBR.paramBasicBoard.material != "")
+					{
+						BC=new BoardComp(materialHashMap, wBR.paramBasicBoard, scale);
+						wBR.paramBasicBoard.parentUnit=wBR;
+
+						setCurrentPartToAllWall(BC, index, false, point, areaIndex);
+					}
+
+					var d:int=0;
+					for each (var wbr:BasicWallBoard in wBR.paramCornerBoard)
+					{
+						if (wbr.code != "")
+						{
+							BC=new BoardComp(materialHashMap, wbr, scale);
+							wbr.parentUnit=wBR;
+							setCurrentPartToAllWall(BC, index, false, point, areaIndex, d);
+							d++;
+						}
+					}
+					for each (wBR1 in wBR.paramBoard)
+					{
+						wBR1.parentUnit=wBR;
+						BC=new BoardComp(materialHashMap, wBR1, scale);
+						setCurrentPartToAllWall(BC, index, false, point, areaIndex);
+						if (wBR1.paramBasicBoard.material != "")
+						{
+							BC=new BoardComp(materialHashMap, wBR1.paramBasicBoard, scale);
+							wBR1.paramBasicBoard.parentUnit=wBR1;
+
+							setCurrentPartToAllWall(BC, index, false, point, areaIndex);
+						}
+						d=0;
+						for each (var wbr2:BasicWallBoard in wBR1.paramCornerBoard)
+						{
+							if (wbr2.code != "")
+							{
+								BC=new BoardComp(materialHashMap, wbr2, scale);
+								wbr2.parentUnit=wBR1;
+								setCurrentPartToAllWall(BC, index, false, point, areaIndex, d);
+								d++;
+							}
+						}
+
+					}
+				}
+				for each (var wBL:WallBoardLine in temUnit.paramBoardLine)
+				{
+					BC=new BoardComp(materialHashMap, wBL, scale);
+					setCurrentPartToAllWall(BC, index, false, point, areaIndex);
+				}
+			}
+
+			public function addUnitFrom3D(unit:Object, index:int, areaIndex:int):void
+			{
+				_unit[index][areaIndex]=unit;
+			}
+
+			private function setCurrentPartToAllWall(boardCom:BoardComp, index:int, isAddNewPart:Boolean=true, point:Point=null, areaIndex:int=0, direction:int=0):void
+			{
+				scale=(wallViewPanel.wallPanel.tilePanels[index][0] as TilePanel).scale;
+				if (boardCom.board.type != WallBoardPartType.TOPLINE_BOARD && boardCom.board.type != WallBoardPartType.BELTLINE_BOARD && boardCom.board.type != WallBoardPartType.BOTTOMLINE_BOARD && boardCom.board.type != WallBoardPartType.UNIT_BOARD && boardCom.board.type != WallBoardPartType.FLOWER_BOARD && boardCom.board.type != WallBoardPartType.INTO_BOARD)
+				{
+					origPoint=new Point(point.x / scale, point.y / scale);
+
+					//添加面板
+					this.addBoardComponentFrom3D(boardCom, index);
+					this.addBoardEventListener(boardCom);
+					var p:Point=new Point();
+					p=new Point(boardCom.board.L / 2, boardCom.board.offGround);
+					boardCom.board.setOrigPoint(p);
+					boardCom.onRefresh(this.origPoint);
+					this.cur_sel_unit=boardCom.board;
+					addUnitFrom3D(boardCom.board, index, areaIndex);
+					return;
+				}
+				if (!cur_sel_unit)
+					return;
+				var unit:Object=cur_sel_unit;
+				var pp:Point=unit.origPoint.clone();
+				var len:Number=unit.L;
+				var wid:Number=unit.H;
+
+				var parentBoard:WallBoardRectangle;
+				var pp1:Point;
+				var len1:Number;
+				var wid1:Number;
+				var hei1:Number;
+				var TP:Point;
+				if (isAddNewPart == false)
+				{
+					switch (boardCom.board.type)
+					{
+						case WallBoardPartType.INTO_BOARD:
+						{
+							if (boardCom.board.parentUnit.type == WallBoardPartType.INTO_BOARD)
+							{
+								parentBoard=(boardCom.board.parentUnit as WallBoardRectangle);
+								pp1=boardCom.board.origPoint;
+								pp1.x=pp1.x + (boardCom.board.L) / 2 + (len - boardCom.board.L) / 2;
+								boardCom.board.setOrigPoint(pp1);
+								//								parentBoard.paramBoard.push((boardCom.board as WallBoardRectangle));
+								this.addBoardComponentFrom3D(boardCom, index);
+								this.addBoardEventListener(boardCom);
+								boardCom.onRefresh(origPoint);
+							}
+							else
+							{
+								TP=boardCom.board.origPoint;
+								TP.x=TP.x + (boardCom.board.L) / 2 + (len - boardCom.board.L) / 2;
+								boardCom.board.setOrigPoint(TP);
+								if (_cur_sel_unit)
+									boardCom.board.parentUnit=cur_sel_unit;
+								addRectBoard((boardCom.board as WallBoardRectangle));
+								this.addBoardComponentFrom3D(boardCom, index);
+								this.addBoardEventListener(boardCom);
+								boardCom.onRefresh(origPoint);
+							}
+							break;
+						}
+						case WallBoardPartType.UNIT_BOARD:
+						{
+							if (boardCom.board.parentUnit && boardCom.board.parentUnit.type == WallBoardPartType.INTO_BOARD)
+							{
+								parentBoard=(boardCom.board.parentUnit as WallBoardRectangle);
+								pp1=parentBoard.origPoint.clone();
+								pp1.y=pp1.y + parentBoard.lineWidth;
+								boardCom.board.setOrigPoint(pp1);
+
+								this.addBoardComponentFrom3D(boardCom, index);
+								this.addBoardEventListener(boardCom);
+								boardCom.onRefresh(origPoint);
+							}
+							else
+							{
+								TP=boardCom.board.origPoint;
+								TP.x=TP.x + (boardCom.board.L) / 2 + (len - boardCom.board.L) / 2;
+								boardCom.board.setOrigPoint(TP);
+								addRectBoard((boardCom.board as WallBoardRectangle));
+
+								this.addBoardComponent(boardCom);
+								this.addBoardEventListener(boardCom);
+								boardCom.onRefresh(origPoint);
+							}
+							break;
+						}
+						case WallBoardPartType.BELTLINE_BOARD:
+						{
+							TP=boardCom.board.origPoint;
+							TP.x=TP.x + boardCom.board.L / 2;
+							boardCom.board.setOrigPoint(TP);
+							addLineBoard((boardCom.board as WallBoardLine));
+							if (_cur_sel_unit)
+								boardCom.board.parentUnit=_cur_sel_unit;
+							this.addBoardComponentFrom3D(boardCom, index);
+							this.addBoardEventListener(boardCom);
+							boardCom.onRefresh(origPoint);
+							break;
+						}
+						case WallBoardPartType.TOPLINE_BOARD:
+						{
+							TP=boardCom.board.origPoint;
+							TP.x=TP.x + boardCom.board.L / 2;
+							boardCom.board.setOrigPoint(TP);
+							addLineBoard((boardCom.board as WallBoardLine));
+							if (_cur_sel_unit)
+								boardCom.board.parentUnit=_cur_sel_unit;
+							this.addBoardComponentFrom3D(boardCom, index);
+							this.addBoardEventListener(boardCom);
+							boardCom.onRefresh(origPoint);
+							break;
+						}
+						case WallBoardPartType.BOTTOMLINE_BOARD:
+						{
+							TP=boardCom.board.origPoint;
+							TP.x=TP.x + boardCom.board.L / 2;
+							boardCom.board.setOrigPoint(TP);
+							addLineBoard((boardCom.board as WallBoardLine));
+							if (_cur_sel_unit)
+								boardCom.board.parentUnit=_cur_sel_unit;
+							this.addBoardComponentFrom3D(boardCom, index);
+							this.addBoardEventListener(boardCom);
+							boardCom.onRefresh(origPoint);
+							break;
+						}
+						case WallBoardPartType.FLOWER_BOARD:
+						{
+							if (boardCom.board.parentUnit && boardCom.board.parentUnit.type == WallBoardPartType.INTO_BOARD)
+							{
+								parentBoard=(boardCom.board.parentUnit as WallBoardRectangle);
+								pp1=parentBoard.origPoint.clone();
+								if (direction == 0)
+								{
+									pp1.x=pp1.x - parentBoard.L * 0.5 + parentBoard.lineWidth + boardCom.board.L * 0.5;
+									pp1.y=pp1.y + parentBoard.H - boardCom.board.H - parentBoard.lineWidth;
+								}
+								else if (direction == 1)
+								{
+									pp1.x=pp1.x + parentBoard.L * 0.5 - parentBoard.lineWidth - boardCom.board.L * 0.5;
+									pp1.y=pp1.y + parentBoard.H - boardCom.board.H - parentBoard.lineWidth;
+								}
+								else if (direction == 2)
+								{
+									pp1.x=pp1.x - parentBoard.L * 0.5 + parentBoard.lineWidth + boardCom.board.L * 0.5;
+									pp1.y=pp1.y + parentBoard.lineWidth;
+								}
+								else
+								{
+									pp1.x=pp1.x + parentBoard.L * 0.5 - parentBoard.lineWidth - boardCom.board.L * 0.5;
+									pp1.y=pp1.y + parentBoard.lineWidth;
+								}
+
+								boardCom.board.setOrigPoint(pp1);
+								//								parentBoard.paramBoard.push((boardCom.board as WallBoardRectangle));
+								this.addBoardComponentFrom3D(boardCom, index);
+								this.addBoardEventListener(boardCom);
+								boardCom.onRefresh(this.origPoint);
+							}
+							break;
+						}
+					}
+				}
+			}
+
+			private function rightMouseDownHandler(event:MouseEvent):void
+			{
+
+			}
+			
+			private function startDrawingArea(mouseX:Number, mouseY:Number):void
+			{
+				if(tempFirstPoint != null)
+				{
+					wallViewPanel.removeEventListener(MouseEvent.MOUSE_MOVE, onMouseMove);
+
+					pushAreaPoint(tempFirstPoint,fixAreaPoint(mouseX,mouseY));
+					wallViewPanel.addFreeRegion(AreaRegionPoints[wallViewPanel.currentIndex]);
+					setfirstArea();
+				}
+				else
+				{
+					tempFirstPoint = fixAreaPoint(mouseX,mouseY);
+				}
+			}
+			private function fixAreaPoint(mouseX:Number,mouseY:Number):Point
+			{
+				var RegionView:L3DRegionView=getRegionView();
+				var tilePanel:TilePanel = getTilePanel();
+				scale=(wallViewPanel.wallPanel.tilePanels[wallViewPanel.wallPanel._index][0] as TilePanel).scale
+				var checkP:Point = RegionView.globalToLocal(new Point(mouseX,mouseY));
+				if(checkP.x < 2)
+				{
+					checkP.x = 0;
+				}
+				if(checkP.y < 2)
+				{
+					checkP.y = 0;
+				}
+				if(checkP.x > tilePanel.wid/scale - 2)
+				{
+					checkP.x = tilePanel.wid/scale;
+				}
+				if(checkP.y > tilePanel.hgt/scale - 2)
+				{
+					checkP.y = tilePanel.hgt/scale;
+				}
+				return RegionView.localToGlobal(checkP);
+			}
+			private function pushAreaPoint(startP:Point, endP:Point):void
+			{
+				var arr:Array = calculatePointsArr(startP,endP);
+				tempFirstPoint = null;
+				var obj:Object = new Object();
+				obj.points = arr;
+				if(AreaRegionPoints[wallViewPanel.currentIndex] as Array == null)
+				{
+					AreaRegionPoints[wallViewPanel.currentIndex] = [];
+				}
+				var tempArr:Array = AreaRegionPoints[wallViewPanel.currentIndex] as Array;
+				tempArr.push(obj);
+				isDrawingArea = false;
+			}
+			private function calculatePointsArr(startP:Point,endP:Point):Array
+			{
+				var minX:Number;
+				var minY:Number;
+				var maxX:Number;
+				var maxY:Number;
+				if(startP.x > endP.x)
+				{
+					minX = endP.x;
+					maxX = startP.x;
+				}
+				else
+				{
+					minX = startP.x;
+					maxX = endP.x;
+				}
+				if(startP.y > endP.y)
+				{
+					minY = endP.y;
+					maxY = startP.y;
+				}
+				else
+				{
+					minY = startP.y;
+					maxY = endP.y
+				}
+				var arr:Array = [];
+				arr.push(new Point(minX,minY),new Point(maxX,minY),new Point(maxX,maxY),new Point(minX,maxY));
+				return arr;
+			}
+			protected function onMouseMove(event:MouseEvent):void
+			{
+				temp_size_width = "0";
+				temp_size_height = "0";
+				numCount = 0;
+				if(tempFirstPoint == null)
+					return;
+				var RegionView:L3DRegionView=getRegionView();
+				var endP:Point = RegionView.globalToLocal(fixAreaPoint(this.mouseX,this.mouseY));
+				var startP:Point = RegionView.globalToLocal(tempFirstPoint);
+				var arr:Array = calculatePointsArr(startP,endP);
+				for(var i:int = 0 ;i < arr.length;i++)
+				{
+					arr[i] = new Vector3D(arr[i].x,arr[i].y);
+				}
+				highlightArea(arr,1);
+			}
+			//垂直翻转一个位图
+			public static function flipVertical(bmpData:BitmapData, transparent:Boolean = true, fillColor:uint = 0):BitmapData
+			{
+				var matrix:Matrix = new Matrix();
+				matrix.d = -1;
+				matrix.ty = bmpData.height;
+				var bmpData_:BitmapData = new BitmapData(bmpData.width, bmpData.height, transparent, fillColor);
+				bmpData_.draw(bmpData, matrix);
+				return bmpData_;
+			}
+			
+			private function rotateArea(status:int):void
+			{
+				if(_cur_sel_board_comp == null )
+					return;
+				var AreaL:Number=Math.abs(_cur_Select_Area.point[0].x - _cur_Select_Area.point[1].x);
+				var fixX:Number;
+				var currX:Number;
+				if(status == 0)
+				{
+					currX = _cur_sel_board_comp.board.origPoint.x - _cur_sel_unit.L/2;
+					fixX = AreaL - _cur_sel_unit.L - currX;
+				}
+				else 
+				{
+					currX = _cur_sel_board_comp.board.origPoint.x - _cur_sel_unit.L/2;
+					fixX = (AreaL - _cur_sel_unit.L)/2 - currX;
+				}
+				onMoveCurrentBoard(fixX,0);
+			}
+			
+			protected function onDrawAreaKey(evt:KeyboardEvent):void
+			{
+				if(!isDrawingArea)
+					return;
+				switch (evt.keyCode)
+				{
+					case Keyboard.SPACE:
+					{
+						if(numCount == 0)
+						{
+							numCount++;
+						}
+						else
+						{
+							numCount = -1;
+							if(tempFirstPoint != null)
+							{
+								wallViewPanel.removeEventListener(MouseEvent.MOUSE_MOVE, onMouseMove);
+								scale=(wallViewPanel.wallPanel.tilePanels[wallViewPanel.wallPanel._index][0] as TilePanel).scale
+								var dist:Point = new Point(Number(temp_size_width)/scale,Number(temp_size_height)/scale);
+								pushAreaPoint(tempFirstPoint,new Point(tempFirstPoint.x + dist.x,tempFirstPoint.y + dist.y));
+								wallViewPanel.addFreeRegion(AreaRegionPoints[wallViewPanel.currentIndex]);
+								setfirstArea();
+							}
+							temp_size_width = "0";
+							temp_size_height = "0";
+							wallViewPanel.removeEventListener(KeyboardEvent.KEY_DOWN,onDrawAreaKey);
+						}
+					}
+						break;
+					default :
+					{
+						if(numCount == -1)
+							return;
+						if(evt.charCode >= 48 && evt.charCode <= 58)
+						{
+							if(numCount == 0)
+							{
+								if(Number(temp_size_width) == 0)
+									temp_size_width = "0";
+								temp_size_width += (evt.charCode-48);
+								evt.stopImmediatePropagation();
+							}
+							else
+							{
+								if(Number(temp_size_height) == 0)
+									temp_size_height = "0";
+								temp_size_height += (evt.charCode-48);
+								evt.stopImmediatePropagation();
+							}
+						}
+						updateInputSize(Number(temp_size_width),Number(temp_size_height));
+					}
+						break;
+				}
+			}
+			private function updateInputSize(wid:Number, hei:Number):void
+			{
+				var RegionView:L3DRegionView=getRegionView();
+				var startP:Point = RegionView.globalToLocal(tempFirstPoint);
+				scale=(wallViewPanel.wallPanel.tilePanels[wallViewPanel.wallPanel._index][0] as TilePanel).scale
+				var dist:Point = new Point(wid/scale,hei/scale);
+				var endP:Point = RegionView.globalToLocal(new Point(tempFirstPoint.x + dist.x,tempFirstPoint.y + dist.y));
+				var arr:Array = calculatePointsArr(startP,endP);
+				for(var i:int = 0 ;i < arr.length;i++)
+				{
+					arr[i] = new Vector3D(arr[i].x,arr[i].y);
+				}
+				highlightArea(arr,1);
+			}
+			//显示区域位置信息
+			private function showAreaPos():void
+			{
+				if(AreaRegionPoints[wallViewPanel.currentIndex] != null && AreaRegionPoints[wallViewPanel.currentIndex].length > 0)
+				{
+					GlobalManager.Instance.addEventListener("WeathBoardchangeAreaPos",changeAreaPos);
+					scale=(wallViewPanel.wallPanel.tilePanels[wallViewPanel.wallPanel._index][0] as TilePanel).scale
+					WeatherBoardDimension.Instance.drawAreaDimension(getRegionView(),AreaRegionPoints[wallViewPanel.currentIndex][0].points,scale,getTilePanel().wid,getTilePanel().hgt);
+				}
+			}
+			
+			private function doAreaMove(distX:Number,distY:Number = 0):void
+			{
+				var arr:Array = AreaRegionPoints[wallViewPanel.currentIndex];
+				for(var i:int = 0 ;i < arr.length; i++)
+				{
+					for(var j:int = 0 ;j < arr[i].points.length;j++)
+					{
+						var p:Point = arr[i].points[j];
+						p.x -= distX;
+						p.y -= distY;
+					}
+				}
+				wallViewPanel.addFreeRegion(AreaRegionPoints[wallViewPanel.currentIndex]);
+				setfirstArea();
+				setCurSelectArea(0,0);
+			}
+			protected function changeAreaPos(event:DatasEvent):void
+			{
+//				GlobalManager.Instance.removeEventListener(WeatherBoardDimension.WeathBoard_change_AreaPos,changeAreaPos);
+				var pp:Point = event.data as Point;
+				doAreaMove(-pp.x,-pp.y);
+				WeatherBoardDimension.Instance.drawAreaDimension(getRegionView(),AreaRegionPoints[wallViewPanel.currentIndex][0].points,scale,getTilePanel().wid,getTilePanel().hgt);
+			}
+			
+
+			protected function setWallComplete():void
+			{
+				showAreaPos();
+				setCurSelectArea(this.mouseX, this.mouseY);
+			}
+			
+		]]>
+	</fx:Script>
+	<cloudExtension:CClapboardRightMenu id="board"
+										height="100%"
+										right="0"
+										visible="false"/>
+
+</s:Group>

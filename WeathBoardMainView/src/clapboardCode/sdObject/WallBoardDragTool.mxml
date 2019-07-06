@@ -1,0 +1,646 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
+		 xmlns:s="library://ns.adobe.com/flex/spark"
+		 creationComplete="group1_creationCompleteHandler(event)"
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 xmlns:uiNew="com.lejia.wallTile.uiNew.*"
+		 xmlns:sdObject="clapboardCode.sdObject.*">
+	<fx:Script>
+		<![CDATA[
+			import mx.events.FlexEvent;
+
+			[Bindable]
+			private var lineSize:Number=3;
+			private var _maxWidth:Number=100;
+			private var _maxHeight:Number=100;
+			private var startX:Number=0;
+			private var startY:Number=0;
+			private var endX:Number=0;
+			private var endY:Number=0;
+
+			private var leftSpape:Shape=new Shape();
+			private var topSpape:Shape=new Shape();
+			private var rightSpape:Shape=new Shape();
+			private var bottomSpape:Shape=new Shape();
+
+			private function group1_creationCompleteHandler(event:FlexEvent):void
+			{
+				leftLine.lineBtn.addEventListener(MouseEvent.MOUSE_DOWN, leftLineMouseDown);
+				leftLine.lineBtn.addEventListener(MouseEvent.MOUSE_UP, leftLineMouseUp);
+
+				rightLine.lineBtn.addEventListener(MouseEvent.MOUSE_DOWN, rightLineMouseDown);
+				rightLine.lineBtn.addEventListener(MouseEvent.MOUSE_UP, rightLineMouseUp);
+
+				topLine.lineBtn.addEventListener(MouseEvent.MOUSE_DOWN, topLineMouseDown);
+				topLine.lineBtn.addEventListener(MouseEvent.MOUSE_UP, topLineMouseUp);
+
+				bottomLine.lineBtn.addEventListener(MouseEvent.MOUSE_DOWN, bottomLineMouseDown);
+				bottomLine.lineBtn.addEventListener(MouseEvent.MOUSE_UP, bottomLineMouseUp);
+				this.addEventListener(MouseEvent.MOUSE_DOWN, onMouseDown);
+				this.addEventListener(MouseEvent.MOUSE_UP, toolMouseUp);
+				drawLine();
+			}
+
+			private var callback:Function;
+			private var sc:Number=1;
+
+			public function setData(maxWidth:Number, maxHeight:Number, startX:Number, startY:Number, endX:Number, endY:Number, callback:Function=null, sc:Number=1):void
+			{
+				parent.addEventListener(MouseEvent.MOUSE_MOVE, onMouseMove);
+				parent.addEventListener(MouseEvent.MOUSE_UP, onMouseUp);
+				_maxWidth=maxWidth;
+				_maxHeight=maxHeight;
+				this.sc=sc;
+				this.startX=startX;
+				this.startY=startY;
+				this.endX=endX;
+				this.endY=endY;
+				this.width=endX - startX;
+				this.height=endY - startY;
+				this.callback=callback;
+				leftLine.textInput.text=(Number(this.left) * sc).toFixed(0);
+				topLine.textInput.text=(Number(this.top) * sc).toFixed(0);
+				rightLine.textInput.text=((_maxWidth - startX - this.width) * sc).toFixed(0);
+				bottomLine.textInput.text=((_maxHeight - startY - this.height) * sc).toFixed(0);
+				upData();
+			}
+
+			private function drawLine():void
+			{
+				if (uic)
+				{
+					leftSpape.graphics.clear();
+					topSpape.graphics.clear();
+					rightSpape.graphics.clear();
+					bottomSpape.graphics.clear();
+					leftSpape.graphics.lineStyle(1.5, 0);
+					topSpape.graphics.lineStyle(1.5, 0);
+					rightSpape.graphics.lineStyle(1.5, 0);
+					bottomSpape.graphics.lineStyle(1.5, 0);
+//					uic.addChild(leftSpape);
+//					uic.addChild(topSpape);
+//					uic.addChild(rightSpape);
+//					uic.addChild(bottomSpape);
+					leftSpape.graphics.moveTo(-Number(this.left), this.height * 0.5);
+					leftSpape.graphics.lineTo(0, this.height * 0.5);
+					topSpape.graphics.moveTo(this.width * 0.5, -Number(this.top));
+					topSpape.graphics.lineTo(this.width * 0.5, 0);
+					rightSpape.graphics.moveTo(this.width, this.height * 0.5);
+					rightSpape.graphics.lineTo(_maxWidth - startX, this.height * 0.5);
+					bottomSpape.graphics.moveTo(this.width * 0.5, this.height);
+					bottomSpape.graphics.lineTo(this.width * 0.5, _maxHeight - startY);
+				}
+			}
+
+			private function upData(bool:Boolean=true):void
+			{
+				leftLine.x=0;
+				leftLine.y=0;
+
+				rightLine.x=this.width - lineSize;
+				rightLine.y=0;
+
+				topLine.x=0;
+				topLine.y=0;
+
+				bottomLine.x=0;
+				bottomLine.y=this.height - lineSize;
+				if (isChangeTextInputText)
+				{
+					leftLine.textInput.text=(Number(this.left) * sc).toFixed(0);
+					topLine.textInput.text=(Number(this.top) * sc).toFixed(0);
+					rightLine.textInput.text=((_maxWidth - startX - this.width) * sc).toFixed(0);
+					bottomLine.textInput.text=((_maxHeight - startY - this.height) * sc).toFixed(0);
+				}
+				drawLine();
+			}
+
+			private function upData1(bool:Boolean=true):void
+			{
+				leftLine.x=0;
+				leftLine.y=0;
+
+				rightLine.x=this.width - lineSize;
+				rightLine.y=0;
+
+				topLine.x=0;
+				topLine.y=0;
+
+				bottomLine.x=0;
+				bottomLine.y=this.height - lineSize;
+				if (isChangeTextInputText)
+				{
+					leftLine.textInput.text=(Number(this.left) * sc).toFixed(0);
+					topLine.textInput.text=(Number(this.top) * sc).toFixed(0);
+					rightLine.textInput.text=((_maxWidth - startX - this.width) * sc).toFixed(0);
+					bottomLine.textInput.text=((_maxHeight - startY - this.height) * sc).toFixed(0);
+				}
+				drawLine();
+			}
+			private var moveWidth:Number=0;
+			private var startMove:Point=new Point();
+			private var isDown:Boolean=false;
+			private var mouseDownType:String="";
+			private var isChangeTextInputText:Boolean=false;
+
+			private function leftLineMouseDown(event:MouseEvent):void
+			{
+				event.stopImmediatePropagation();
+				mouseDownType="left";
+				moveWidth=_maxWidth - endX;
+				startMove.x=event.stageX;
+				startMove.y=event.stageY;
+				isChangeTextInputText=true;
+				isDown=true;
+			}
+
+			private function leftLineMouseUp(event:MouseEvent):void
+			{
+				isDown=false;
+				mouseDownType="";
+				isChangeTextInputText=false;
+				ThisData;
+				if (callback != null)
+					callback(ThisData);
+			}
+
+			private function leftLineMouseMove(event:MouseEvent):void
+			{
+				if (!isDown)
+					return;
+				startX=startX + (event.stageX - startMove.x);
+				startMove.x=event.stageX;
+				if (startX < 0)
+				{
+					isDown=false
+					startX=0;
+				}
+				if (startX > endX - (lineSize * 2))
+				{
+					isDown=false;
+					startX=endX - (lineSize * 2);
+				}
+				this.left=Number(this.left) + this.width - (endX - startX);
+				if (this.width < endX - startX)
+				{
+					this.x=this.x - (endX - startX - this.width);
+
+				}
+				else
+				{
+					this.x=this.x + (this.width - endX + startX);
+				}
+				this.width=endX - startX;
+				upData1();
+			}
+
+			private function rightLineMouseDown(event:MouseEvent):void
+			{
+				event.stopImmediatePropagation();
+				mouseDownType="right";
+				isChangeTextInputText=true;
+				isDown=true;
+				startMove.x=event.stageX;
+				startMove.y=event.stageX;
+			}
+
+			private function rightLineMouseUp(event:MouseEvent):void
+			{
+				isDown=false;
+				mouseDownType="";
+				isChangeTextInputText=false;
+				if (callback != null)
+					callback(ThisData);
+			}
+
+			private function rightLineMouseMove(event:MouseEvent):void
+			{
+				if (!isDown)
+					return;
+				endX=endX + (event.stageX - startMove.x);
+				startMove.x=event.stageX;
+				if (endX < startX + (lineSize * 2))
+				{
+					isDown=false;
+					endX=startX + (lineSize * 2);
+				}
+				if (endX > _maxWidth)
+				{
+					isDown=false;
+					endX=_maxWidth;
+				}
+				this.width=endX - startX;
+				upData();
+			}
+
+			private function topLineMouseDown(event:MouseEvent):void
+			{
+				event.stopImmediatePropagation();
+				mouseDownType="top";
+				isChangeTextInputText=true;
+				isDown=true;
+				startMove.x=event.stageX;
+				startMove.y=event.stageY;
+
+			}
+
+			private function topLineMouseUp(event:MouseEvent):void
+			{
+				mouseDownType="";
+				isDown=false;
+				isChangeTextInputText=false;
+				if (callback != null)
+					callback(ThisData);
+			}
+
+			private function topLineMouseMove(event:MouseEvent):void
+			{
+				if (!isDown)
+					return;
+				startY=startY + (event.stageY - startMove.y);
+				startMove.y=event.stageY;
+				if (startY < 0)
+				{
+					isDown=false;
+					startY=0;
+				}
+				if (startY > endY - (lineSize * 2))
+				{
+					isDown=false;
+					startY=endY - (lineSize * 2)
+				}
+				this.top=Number(this.top) + this.height - (endY - startY)
+				if (this.height < endY - startY)
+				{
+					this.y=this.y - (this.width - endY + startY);
+
+				}
+				else
+				{
+					this.y=this.y + (this.height - endY + startY);
+				}
+				this.height=endY - startY;
+				upData1();
+
+
+			}
+
+			private function bottomLineMouseDown(event:MouseEvent):void
+			{
+				event.stopImmediatePropagation();
+				mouseDownType="bottom";
+				isDown=true;
+				isChangeTextInputText=true;
+				startMove.x=event.stageX;
+				startMove.y=event.stageY;
+			}
+
+			private function bottomLineMouseUp(event:MouseEvent):void
+			{
+				mouseDownType="";
+				isDown=false;
+				isChangeTextInputText=false;
+				if (callback != null)
+					callback(ThisData);
+			}
+
+			private function onMouseUp(event:MouseEvent):void
+			{
+				if (mouseDownType != "" && isDown)
+				{
+					mouseDownType="";
+					isDown=false;
+					isChangeTextInputText=false;
+					if (callback != null)
+						callback(ThisData);
+				}
+//				if( moveToolPoint && isMoveTool )
+//				{
+//					if( callback != null )
+//						callback(ThisData);
+//				}
+//				
+				moveToolPoint=null;
+				isMoveTool=false;
+			}
+
+			private function bottomLineMouseMove(event:MouseEvent):void
+			{
+				if (!isDown)
+					return;
+				endY=endY + (event.stageY - startMove.y);
+				startMove.y=event.stageY;
+				if (endY < startY + (lineSize * 2))
+				{
+					isDown=false;
+					endY=startY + (lineSize * 2);
+				}
+				if (endY > _maxHeight)
+				{
+					isDown=false;
+					endY=_maxHeight;
+				}
+				this.height=endY - startY;
+				upData();
+			}
+
+			private function onMouseMove(event:MouseEvent):void
+			{
+				if (mouseDownType == "left")
+					leftLineMouseMove(event);
+				else if (mouseDownType == "right")
+					rightLineMouseMove(event);
+				else if (mouseDownType == "top")
+					topLineMouseMove(event);
+				else if (mouseDownType == "bottom")
+					bottomLineMouseMove(event);
+//				if( moveToolPoint && isMoveTool )
+//					toolMouseMove(event);
+
+			}
+
+			private function get ThisData():Array
+			{
+				var arg:Array=[];
+				arg.push(new Point(Number(this.left), Number(this.top)));
+				arg.push(new Point(Number(this.left) + this.width, Number(this.top)));
+				arg.push(new Point(Number(this.left) + this.width, Number(this.top) + this.height));
+				arg.push(new Point(Number(this.left), Number(this.top) + this.height));
+				arg.push(new Point(this.x, this.y));
+				return arg;
+			}
+
+			private function inputChangeFun(value:Number, type:String, bool:Boolean=true):void
+			{
+				var tempValue:Number=0;
+				if (type == "left")
+				{
+					tempValue=startX;
+					startX=value / sc;
+					if (startX < 0)
+					{
+						isDown=false
+						startX=0;
+					}
+					if (startX > _maxWidth - this.width)
+					{
+						isDown=false;
+						startX=_maxWidth - this.width;
+					}
+					this.left=Number(this.left) + this.width - (endX - startX);
+					endX=endX + startX - tempValue;
+					rightLine.textInput.text=(Number(rightLine.textInput.text) + (tempValue - startX) * sc).toFixed();
+					upData();
+				}
+				else if (type == "top")
+				{
+					tempValue=startY;
+					startY=value / sc;
+					if (startY < 0)
+					{
+						isDown=false;
+						startY=0;
+					}
+					if (startY > _maxHeight - this.height)
+					{
+						isDown=false;
+						startY=_maxHeight - this.height;
+					}
+					this.top=Number(this.top) + this.height - (endY - startY);
+					endY=endY + startY - tempValue;
+					bottomLine.textInput.text=(Number(bottomLine.textInput.text) + (tempValue - startY) * sc).toFixed();
+					upData();
+				}
+				else if (type == "right")
+				{
+					tempValue=endX;
+					endX=_maxWidth - value / sc;
+					if (endX < this.width)
+					{
+						isDown=false;
+						endX=this.width;
+					}
+					if (endX > _maxWidth)
+					{
+						isDown=false;
+						endX=_maxWidth;
+					}
+					this.left=Number(this.left) + (endX - tempValue);
+					startX=startX + (endX - tempValue);
+					leftLine.textInput.text=(Number(leftLine.textInput.text) + (endX - tempValue) * sc).toFixed();
+					upData();
+				}
+				else if (type == "bottom")
+				{
+					tempValue=endY;
+					endY=_maxHeight - value / sc;
+					if (endY < this.height)
+					{
+						isDown=false;
+						endY=this.height;
+					}
+					if (endY > _maxHeight)
+					{
+						isDown=false;
+						endY=_maxHeight;
+					}
+					this.top=Number(this.top) + (endY - tempValue);
+					startY=startY + (endY - tempValue);
+					topLine.textInput.text=(Number(topLine.textInput.text) + (endY - tempValue) * sc).toFixed();
+					upData();
+				}
+				if (callback != null && bool)
+					callback(ThisData);
+			}
+
+
+			public function changeSize(w:Number, h:Number):void
+			{
+				var tempw:Number=this.width;
+				var temph:Number=this.height;
+				this.width=w / sc;
+				this.height=h / sc;
+				if (this.width + startX > _maxWidth)
+				{
+					this.width=_maxWidth - startX;
+				}
+
+				if (this.height > endY)
+				{
+					this.height=endY;
+				}
+				startY=endY - this.height;
+				this.top=startY;
+				endX=endX - (tempw - this.width);
+				isChangeTextInputText=true;
+				upData();
+				isChangeTextInputText=false;
+				if (callback != null)
+					callback(ThisData);
+			}
+
+			private var moveGap:int=10;
+
+			public function changePoint(type:String):void
+			{
+				if (type == "left")
+				{
+					if (Number(this.left) == 0)
+					{
+						return;
+					}
+
+					if (Number(this.left) < moveGap / sc)
+					{
+						this.left=0;
+						startX=0;
+					}
+					else
+					{
+						this.left=Number(this.left) - moveGap / sc;
+						startX=startX - moveGap / sc;
+					}
+					endX=this.width + startX;
+				}
+				else if (type == "up")
+				{
+					if (Number(this.top) == 0)
+					{
+						return;
+					}
+					if (Number(this.top) < moveGap / sc)
+					{
+						this.top=0;
+						startY=0;
+					}
+					else
+					{
+						this.top=Number(this.top) - moveGap / sc;
+						startY=startY - moveGap / sc;
+					}
+					endY=this.height + startY;
+				}
+				else if (type == "right")
+				{
+					if (Number(this.left) == _maxWidth - this.width)
+					{
+						return;
+					}
+					if (Number(this.left) > _maxWidth - this.width - moveGap / sc)
+					{
+						this.left=(_maxWidth - this.width);
+						startX=(_maxWidth - this.width);
+					}
+					else
+					{
+						this.left=Number(this.left) + moveGap / sc;
+						startX=startX + moveGap / sc;
+					}
+					endX=this.width + startX;
+				}
+				else if (type == "down")
+				{
+					if (Number(this.top) == _maxHeight - this.height)
+					{
+						return;
+					}
+					if (Number(this.top) > _maxHeight - this.height - moveGap / sc)
+					{
+						this.top=_maxHeight - this.height;
+						startY=_maxHeight - this.height;
+					}
+					else
+					{
+						this.top=Number(this.top) + moveGap / sc;
+						startY=startY + moveGap / sc;
+					}
+					endY=this.height + startY;
+				}
+				else
+					return;
+
+				isChangeTextInputText=true;
+				upData();
+				isChangeTextInputText=false;
+				if (callback != null)
+					callback(ThisData);
+			}
+			private var _isMoveTool:Boolean=false;
+			private var _moveToolPoint:Point=null;
+
+			private function onMouseDown(event:MouseEvent):void
+			{
+				moveToolPoint=new Point(event.stageX, event.stageY);
+				isMoveTool=true;
+			}
+
+			private function toolMouseUp(event:MouseEvent):void
+			{
+				moveToolPoint=null;
+				isMoveTool=false;
+				if (callback != null)
+					callback(ThisData);
+			}
+
+			private function toolMouseMove(event:MouseEvent):void
+			{
+//				if( isMoveTool && moveToolPoint )
+//				{
+//					 var px:Number = (moveToolPoint.x - event.stageX);
+//					var py:Number = (moveToolPoint.y - event.stageY);
+//					moveToolPoint = new Point(event.stageX,event.stageY);
+//					this.left = Number(this.left) - px;
+//					startX = startX - px;
+//					endX = this.width + startX;
+//					this.top = Number(this.top) - py;
+//					startY = startY - py;
+//					endY = this.height + startY; 
+//					isChangeTextInputText = true;
+//					upData();
+//					isChangeTextInputText = false;
+//				}
+			}
+
+			public function get isMoveTool():Boolean
+			{
+				return _isMoveTool;
+			}
+
+			public function set isMoveTool(value:Boolean):void
+			{
+				_isMoveTool=value;
+			}
+
+			public function get moveToolPoint():Point
+			{
+				return _moveToolPoint;
+			}
+
+			public function set moveToolPoint(value:Point):void
+			{
+				_moveToolPoint=value;
+			}
+		]]>
+	</fx:Script>
+	<mx:UIComponent id="uic"/>
+	<sdObject:WallBoardLine width="{lineSize}"
+							height="100%"
+							id="leftLine"
+							type="left"
+							inputChangeFun="inputChangeFun"/>
+	<sdObject:WallBoardLine width="{lineSize}"
+							height="100%"
+							id="rightLine"
+							type="right"
+							inputChangeFun="inputChangeFun"/>
+	<sdObject:WallBoardLine width="100%"
+							height="{lineSize}"
+							id="topLine"
+							type="top"
+							inputChangeFun="inputChangeFun"/>
+	<sdObject:WallBoardLine width="100%"
+							height="{lineSize}"
+							id="bottomLine"
+							type="bottom"
+							inputChangeFun="inputChangeFun"/>
+</s:Group>

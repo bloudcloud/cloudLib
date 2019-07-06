@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<actionScriptProperties analytics="false" mainApplicationPath="WeathBoardMainView.as" projectUUID="e30cc9f3-077f-471e-aa8e-4fdde37c4086" version="11">
+  <compiler additionalCompilerArguments="-locale en_US" autoRSLOrdering="true" copyDependentFiles="false" fteInMXComponents="false" generateAccessible="false" htmlExpressInstall="true" htmlGenerate="false" htmlHistoryManagement="false" htmlPlayerVersionCheck="true" includeNetmonSwc="false" outputFolderLocation="DOCUMENTS/Lively3Dlibs" outputFolderPath="bin-debug" removeUnusedRSL="true" sourceFolderPath="src" strict="true" targetPlayerVersion="0.0.0" useApolloConfig="false" useDebugRSLSwfs="true" useFlashSDK="false" verifyDigests="true" warn="true">
+    <compilerSourcePath/>
+    <libraryPath defaultLinkType="0">
+      <libraryPathEntry kind="4" path="">
+        <excludedEntries>
+          <libraryPathEntry kind="3" linkType="1" path="${PROJECT_FRAMEWORKS}/libs/flex.swc" useDefaultLinkType="false"/>
+          <libraryPathEntry kind="3" linkType="1" path="${PROJECT_FRAMEWORKS}/libs/core.swc" useDefaultLinkType="false"/>
+        </excludedEntries>
+      </libraryPathEntry>
+      <libraryPathEntry kind="3" linkType="2" path="${DOCUMENTS}/Lively3Dlibs/L3DLibrary.swc" useDefaultLinkType="true"/>
+      <libraryPathEntry kind="3" linkType="2" path="${DOCUMENTS}/Lively3Dlibs/Alternativa3D.swc" useDefaultLinkType="true"/>
+      <libraryPathEntry kind="3" linkType="2" path="${DOCUMENTS}/Lively3Dlibs/ComponentsLib.swc" useDefaultLinkType="true"/>
+      <libraryPathEntry kind="3" linkType="2" path="${DOCUMENTS}/Lively3Dlibs/geomlib2d.swc" useDefaultLinkType="true"/>
+      <libraryPathEntry kind="3" linkType="2" path="${DOCUMENTS}/Lively3Dlibs/L3DRegion.swc" useDefaultLinkType="true"/>
+      <libraryPathEntry kind="3" linkType="2" path="${DOCUMENTS}/Lively3Dlibs/L3DSetupBarTest.swc" useDefaultLinkType="true"/>
+      <libraryPathEntry kind="3" linkType="2" path="${DOCUMENTS}/Lively3Dlibs/L3DTileCutView.swc" useDefaultLinkType="true"/>
+      <libraryPathEntry kind="3" linkType="2" path="${DOCUMENTS}/Lively3Dlibs/SVGExtension.swc" useDefaultLinkType="true"/>
+      <libraryPathEntry kind="3" linkType="2" path="${DOCUMENTS}/Lively3Dlibs/WallTiles.swc" useDefaultLinkType="true"/>
+      <libraryPathEntry kind="3" linkType="2" path="${DOCUMENTS}/Lively3Dlibs/L3DWeatherboardingView.swc" useDefaultLinkType="true"/>
+      <libraryPathEntry kind="3" linkType="2" path="${DOCUMENTS}/Lively3Dlibs/CWorldLib.swc" useDefaultLinkType="false"/>
+      <libraryPathEntry kind="3" linkType="2" path="${DOCUMENTS}/Lively3Dlibs/CLejiaLib.swc" useDefaultLinkType="false"/>
+      <libraryPathEntry kind="3" linkType="2" path="${DOCUMENTS}/Lively3Dlibs/L3DTilingSystem.swc" useDefaultLinkType="false"/>
+      <libraryPathEntry kind="3" linkType="2" path="${DOCUMENTS}/Lively3Dlibs/ToolExtension.swc" useDefaultLinkType="true"/>
+      <libraryPathEntry kind="3" linkType="2" path="${LJLib}/CWorldLib.swc" useDefaultLinkType="true"/>
+    </libraryPath>
+    <sourceAttachmentPath/>
+  </compiler>
+  <applications>
+    <application path="WeathBoardMainView.as"/>
+  </applications>
+  <modules/>
+  <workers/>
+  <buildCSSFiles/>
+  <flashCatalyst validateFlashCatalystCompatibility="false"/>
+</actionScriptProperties>
