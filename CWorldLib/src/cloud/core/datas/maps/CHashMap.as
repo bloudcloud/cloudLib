@@ -112,7 +112,7 @@ package  cloud.core.datas.maps
 				result = _props[key];
 				delete _props[key];
 				var index:int = _keys.indexOf(key);
-				_keys.splice(index,1);
+				_keys.removeAt(index);
 			}
 			return result;
 		}

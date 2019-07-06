@@ -36,6 +36,12 @@ package cloud.core.collections
 		 */		
 		function get isNegtive():Boolean;
 		/**
+		 * 获取中心点位置对象 
+		 * @return Vector3D
+		 * 
+		 */		
+		function get center():Vector3D;
+		/**
 		 * 初始化闭合区域结构 
 		 * @param lineDatas 区域边线集合
 		 * 

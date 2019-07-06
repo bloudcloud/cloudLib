@@ -26,7 +26,7 @@ package cloud.core.events
 			{
 				if( _events[i].type==type && _events[i].func==listener)
 				{
-					_events.splice(i,1);
+					_events.removeAt(i);
 					break;
 				}
 			}

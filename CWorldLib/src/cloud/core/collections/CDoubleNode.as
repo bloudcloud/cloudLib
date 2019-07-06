@@ -158,6 +158,24 @@ package cloud.core.collections
 		public function toString():String { 
 			return "[CDoubleNode, data=" + _data.toString() + "]"; 
 		}
-		
+		public function mapDoubleNode(callbackFunc:Function,...callbackParams):Boolean
+		{
+			var params:Array;
+			params=[];
+			params.push(this);
+			params=params.concat(callbackParams);
+			if(callbackFunc.apply(null,params))
+			{
+				return true;
+			}
+			if(_next==null)
+			{
+				return false;
+			}
+			params.length=0;
+			params.push(callbackFunc);
+			params=params.concat(callbackParams);
+			return _next.mapDoubleNode.apply(null,params);
+		}
 	} 
 }

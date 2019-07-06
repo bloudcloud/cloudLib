@@ -197,7 +197,7 @@ package cloud.core.collections
 		{
 			var index:int=changedVos.indexOf(nodeData);
 			if(index>=0)
-				changedVos.splice(index,1);
+				changedVos.removeAt(index);
 			doRemoveNode(nodeData);
 			updateList();
 			return changedVos.length>0?changedVos:null;

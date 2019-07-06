@@ -97,7 +97,7 @@ package cloud.core.utils
 				if(index>=0)
 				{
 					caches[index].clear();
-					caches.splice(index,1);
+					caches.removeAt(index);
 				}
 			}
 		}
@@ -137,7 +137,7 @@ package cloud.core.utils
 				if(index>=0)
 				{
 					datas[index].clear();
-					datas.splice(index,1);
+					datas.removeAt(index);
 				}
 			}
 		}

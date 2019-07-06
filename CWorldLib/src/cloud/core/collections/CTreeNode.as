@@ -63,7 +63,7 @@ package cloud.core.collections
 				if(_children[i]==node)
 				{
 					node.parent=null;
-					_children.splice(i,1);
+					_children.removeAt(i);
 					_numChildren--;
 					return true;
 				}

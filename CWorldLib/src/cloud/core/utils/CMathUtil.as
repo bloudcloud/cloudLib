@@ -26,9 +26,9 @@ package cloud.core.utils
 		 * @return Number
 		 * 
 		 */		
-		public function amendInt(val:Number):Number
+		public function amendInt(val:Number,tolerance:Number=.5):Number
 		{
-			return Number(val>0?int(val+.5):int(val-.5));
+			return Number(val>0?int(val+tolerance):int(val-tolerance));
 		}
 		
 		/**
@@ -47,9 +47,9 @@ package cloud.core.utils
 		 * @return Number
 		 * 
 		 */		
-		public function toDegrees(radians:Number):Number
+		public function toDegrees(radians:Number,isInt:Boolean=true):Number
 		{
-			return radians * CConst.RADIANS_TO_DEGREES;
+			return isInt?amendInt(radians * CConst.RADIANS_TO_DEGREES):radians * CConst.RADIANS_TO_DEGREES;
 		}
 
 		/**
@@ -160,9 +160,9 @@ package cloud.core.utils
 		 * @return Boolean
 		 * 
 		 */	
-		public function equalByValue(a:Number,b:Number,tolerance:Number=.001):Boolean
+		public function isEqual(a:Number,b:Number,tolerance:Number=.0001):Boolean
 		{
-			return Math.abs(a-b)<=.001;
+			return (Math.abs(a-b))<=tolerance;
 		}
 		/**
 		 * 计算两个向量的叉乘值，并更新输出向量

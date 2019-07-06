@@ -37,7 +37,7 @@ package cloud.ds.nodes
 			{
 				if(_contectNodes[i]==node)
 				{
-					_contectNodes.splice(i,1);
+					_contectNodes.removeAt(i);
 					return true;
 				}
 			}

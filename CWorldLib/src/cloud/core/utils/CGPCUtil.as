@@ -1,5 +1,7 @@
 package cloud.core.utils
 {
+	import flash.geom.Matrix;
+	import flash.geom.Matrix3D;
 	import flash.geom.Point;
 	import flash.geom.Vector3D;
 	
@@ -417,50 +419,6 @@ package cloud.core.utils
 //		}
 		/////////////////////////////////////		newGPC	//////////////////////////////////////////////////////
 		/**
-		 * 判断坐标点是否在多边形内部(用3D坐标)
-		 * @param polyValues	3D图形顶点坐标集合
-		 * @param px	目标点的X坐标
-		 * @param py	目标点的Y坐标
-		 * @param pz	目标点的Z坐标
-		 * @return Boolean
-		 * 
-		 */		
-		public function isIn3DPolyGon(polyValues:Vector.<Number>,px:Number,py:Number,pz:Number):Boolean
-		{
-			var i:int,len:int,next:int;
-			var curVec:Vector3D,lastVec:Vector3D;
-			var dotValue:Number;
-			var result:Boolean;
-			
-			result=true;
-			len=polyValues.length/3;
-			dotValue=1;
-			for(i=0; i<len; i++)
-			{
-				next=i==len-1?0:i+1;
-				curVec=CMathUtilForAS.Instance.crossByPosition3D(polyValues[i*3],polyValues[i*3+1],polyValues[i*3+2],polyValues[next*3],polyValues[next*3+1],polyValues[next*3+2],px,py,pz);
-				curVec.normalize();
-				if(lastVec)
-				{
-					dotValue*=curVec.dotProduct(lastVec);
-				}
-				if(dotValue<0)
-				{
-					result=false;
-					break;
-				}
-				else if(CMathUtilForAS.Instance.isEqualVector3D(curVec,CMathUtilForAS.ZERO) || dotValue==0)
-				{
-					if(CMathUtil.Instance.dotByPosition3D(px,py,pz,polyValues[i*3],polyValues[i*3+1],polyValues[i*3+2],polyValues[next*3],polyValues[next*3+1],polyValues[next*3+2])<=0)
-					{
-						break;
-					}
-				}
-				lastVec=curVec;
-			}
-			return result;
-		}
-		/**
 		 * 判断2D点a是否是凹角（前点b与后点c遵循正向旋转规则）
 		 * @param ax	
 		 * @param ay
@@ -501,29 +459,37 @@ package cloud.core.utils
 		/**
 		 * 统计图形的点 
 		 * @param point3Ds	图形顶点集合
-		 * @param normal	图形的法向向量
+		 * @param axisMatrix	图形的坐标系矩阵
 		 * @param convexIndice	凸角点索引集合
 		 * @param concaveIndice	凹角点索引集合
 		 * @param lobeIndice	耳朵角索引
 		 * @param isClockwise		顺时针是否遵循正向旋转规则（叉乘值大于0）
 		 * 
 		 */	
-		public function calculateGraphy3DPoints(point3Ds:Vector.<Number>,normal:Vector3D,convexIndice:Array,concaveIndice:Array,lobeIndice:Array,isClockwise:Boolean=false):void
+		public function calculateGraphy3DPoints(point3Ds:Vector.<Number>,axisMatrix:Matrix3D,convexIndice:Array,concaveIndice:Array,lobeIndice:Array,isClockwise:Boolean=false):void
 		{
 			var i:int,len:int,prev:int,next:int;
 			var triangle3DPoints:Vector.<Number>;
+			var axisMatrix:Matrix3D;
+			var rightAxis:Vector3D;
+			var normal:Vector3D;
+			var invertMatrix:Matrix3D;
+			
+			invertMatrix=axisMatrix.clone();
+			invertMatrix.invert();
+			normal=new Vector3D();
+			axisMatrix.copyColumnTo(2,normal);
 			len=point3Ds.length/3;
 			for(i=0; i<len; i++)
 			{
 				//判断凹凸角，并缓存对应的索引
-//				doUpdateGraphy3DPoint(point3Ds,normal,i,len,convexIndice,concaveIndice,lobeIndice,isClockwise);
 				prev=i==0?len-1:i-1;
 				next=i==len-1?0:i+1;
 				if(!is3DConcave(point3Ds[i*3],point3Ds[i*3+1],point3Ds[i*3+2],point3Ds[prev*3],point3Ds[prev*3+1],point3Ds[prev*3+2],point3Ds[next*3],point3Ds[next*3+1],point3Ds[next*3+2],normal))
 				{
 					convexIndice.push(i);
 					triangle3DPoints=Vector.<Number>([point3Ds[i*3],point3Ds[i*3+1],point3Ds[i*3+2],point3Ds[next*3],point3Ds[next*3+1],point3Ds[next*3+2],point3Ds[prev*3],point3Ds[prev*3+1],point3Ds[prev*3+2]]);
-					if(CGPCUtil.Instance.isLobe(point3Ds,triangle3DPoints,next==len-1?0:next+1,prev))
+					if(CGPCUtil.Instance.isLobe(point3Ds,triangle3DPoints,next==len-1?0:next+1,prev,invertMatrix))
 					{
 						lobeIndice.push(i);
 					}
@@ -533,58 +499,25 @@ package cloud.core.utils
 					concaveIndice.push(i);
 				}
 			}
-		
 		}
-//		/**
-//		 * 更新图形中的当前3D点的属性 
-//		 * @param point3Ds		图形中3D顶点坐标值集合
-//		 * @param normal		图形的3D法向向量
-//		 * @param curIndex		当前3D点在顶点集合中的索引
-//		 * @param len		图形中所有顶点的个数
-//		 * @param convexIndice	凸角索引集合
-//		 * @param concaveIndice		凹角索引集合
-//		 * @param isClockwise		顺时针方向是否是正向旋转方向
-//		 * 
-//		 */		
-//		private function doUpdateGraphy3DPoint(point3Ds:Vector.<Number>,normal:Vector3D,curIndex:int,len:int,convexIndice:Array,concaveIndice:Array,isClockwise:Boolean):void
-//		{
-//			var triangle3DPoints:Vector.<Number>;
-//			var prev:int,next:int;
-//			
-//			prev=curIndex==0?len-1:curIndex-1;
-//			next=curIndex==len-1?0:curIndex+1;
-//			if(!is3DConcave(point3Ds[curIndex*3],point3Ds[curIndex*3+1],point3Ds[curIndex*3+2],point3Ds[prev*3],point3Ds[prev*3+1],point3Ds[prev*3+2],point3Ds[next*3],point3Ds[next*3+1],point3Ds[next*3+2],normal))
-//			{
-//				convexIndice.push(curIndex);
-//				triangle3DPoints=Vector.<Number>([point3Ds[curIndex*3],point3Ds[curIndex*3+1],point3Ds[curIndex*3+2],point3Ds[next*3],point3Ds[next*3+1],point3Ds[next*3+2],point3Ds[prev*3],point3Ds[prev*3+1],point3Ds[prev*3+2]]);
-//				if(CGPCUtil.Instance.isLobe(point3Ds,triangle3DPoints,next==len-1?0:next+1,prev))
-//				{
-//					lobeIndice.push(index);
-//				}
-//			}
-//			else
-//			{
-//				concaveIndice.push(curIndex);
-//			}
-//		}
 		/**
 		 * 判断三角形中间角，在区域顶点集合中是否是耳尖角
 		 * @param area3DPoints	区域顶点3D坐标值集合
 		 * @param triangle3DPoints	三角形顶点3D坐标值集合
 		 * @param startIndex	区域顶点遍历的起点索引
 		 * @param endIndex		区域顶点遍历的终点索引
+		 * @param axisMatrix		用于判断的坐标轴
 		 * @return Boolean	返回是否是耳尖角
 		 * 
 		 */		
-		public function isLobe(area3DPoints:Vector.<Number>,triangle3DPoints:Vector.<Number>,startIndex:int,endIndex:int):Boolean
+		public function isLobe(area3DPoints:Vector.<Number>,triangle3DPoints:Vector.<Number>,startIndex:int,endIndex:int,axisMatrix:Matrix3D):Boolean
 		{
 			var bool:Boolean=true;
 			var len:int=area3DPoints.length/3;
 			var i:int=startIndex;
 			while(i!=endIndex)
 			{
-//				if(isIn3DPolyGon(triangle3DPoints,area3DPoints[i*3],area3DPoints[i*3+1],area3DPoints[i*3+2]))
-				if(CMathUtilForAS.Instance.judge3DPointInPolygon(area3DPoints[i*3],area3DPoints[i*3+1],area3DPoints[i*3+2],triangle3DPoints))
+				if(CMathUtilForAS.Instance.judgePointInPolygonByNumber(triangle3DPoints,area3DPoints[i*3],area3DPoints[i*3+1],area3DPoints[i*3+2],axisMatrix))
 				{
 					//有点在凸三角形中，不是耳尖角
 					bool=false;
